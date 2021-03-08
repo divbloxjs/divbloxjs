@@ -1,0 +1,28 @@
+{
+  "name": "divblox.js",
+  "version": "1.0.0",
+  "description": "The divblox node.js backend",
+  "main": "index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development node divblox.js",
+    "prod": "NODE_ENV=production node divblox.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohanGriesel/divblox.js.git"
+  },
+  "keywords": [
+    "Divblox",
+    "divblox"
+  ],
+  "author": "Johan Griesel, johan@stratusolve.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JohanGriesel/divblox.js/issues"
+  },
+  "homepage": "https://github.com/JohanGriesel/divblox.js#readme",
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "util": "^0.12.3"
+  }
+}
