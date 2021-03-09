@@ -7,5 +7,8 @@ class CustomDx extends Divblox {
 
 const test = new CustomDx(
     {"config_path":"./dxconfig.json",
-        "data_model_path":"./data-model.json",
-        "data_layer_implementation_class_path":"./custom-data-layer"});
+        "data_model_path":"./data-model.json"/*,
+        "data_layer_implementation_class_path":"./custom-data-layer"*/},onDivbloxReady);
+function onDivbloxReady() {
+        test.create("Account",{"name":"johan"});
+}

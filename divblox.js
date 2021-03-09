@@ -11,7 +11,7 @@ process.on('unhandledRejection', function(reason, p){
 });
 
 class Divblox {
-    constructor(options = {}) {
+    constructor(options = {},on_ready = function(){}) {
         if ((typeof options["config_path"] === "undefined") || (options["config_path"] === null)) {
             throw new Error("No config path provided");
         }
@@ -22,9 +22,9 @@ class Divblox {
         if (typeof options["data_layer_implementation_class_path"] !== "undefined") {
             this.data_layer_implementation_class_path = options["data_layer_implementation_class_path"];
         }
-        this.initDx(options["config_path"],options["data_model_path"]);
+        this.initDx(options["config_path"],options["data_model_path"],on_ready);
     }
-    async initDx(config_path = null,data_model_path = null) {
+    async initDx(config_path = null,data_model_path = null,on_ready = function(){}) {
         const config_data_str = await fs.readFile(config_path, "utf-8");
         this.config_obj = JSON.parse(config_data_str);
         if (typeof this.config_obj["environment_array"] === "undefined") {
@@ -46,11 +46,18 @@ class Divblox {
 
 
         console.log("Divblox loaded with config: "+JSON.stringify(this.config_obj["environment_array"][process.env.NODE_ENV]));
+        on_ready();
         await this.runDx();
     }
     async runDx() {
 
     }
+    //#region Data Layer
+    async create(entity_name = '',data = {}) {
+        await this.data_layer.create(entity_name,data);
+        console.dir(this.data_layer.getError());
+    }
+    //#endregion
 }
 
 module.exports = Divblox;

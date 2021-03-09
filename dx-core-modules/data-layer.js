@@ -1,12 +1,16 @@
 class DivbloxDataLayer {
     constructor(database_connector = null,data_model = {}) {
+        this.database_connector = database_connector;
         this.error_info = [];
         this.data_model = data_model;
         this.data_model_entities = Object.keys(this.data_model);
-        this.required_entities = ["Account"];
+        this.required_entities = ["account"];
         if (!this.validateDataModel()) {
             throw new Error("Error validating data model: "+JSON.stringify(this.error_info));
         }
+    }
+    getError() {
+        return this.error_info;
     }
     validateDataModel() {
         for (const entity of this.required_entities) {
@@ -20,17 +24,35 @@ class DivbloxDataLayer {
         }
         return true;
     }
-    create(entity_name = '',data = {}) {
+    async create(entity_name = '',data = {}) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(entity_name)) {
-            this.error_info.push("Entity "+entity_name+" does not exist");
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
             return false;
         }
-        
-        const query_str = "INSERT INTO `"+entity_name+"`"
+        const data_keys = Object.keys(data);
+        let keys_str = '';
+        let values_str = '';
+        for (const key of data_keys) {
+            keys_str += ", `"+this.getCamelCaseSplittedToLowerCase(key)+"`";
+            values_str += ", '"+data[key]+"'";
+        }
+        const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+            "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
+        console.log(query_str);
+        const query_result = await this.database_connector.queryDB(query_str);
+        console.dir(query_result);
+        if (typeof query_result["error"] !== "undefined") {
+            this.error_info.push(query_result["error"]);
+            return false;
+        }
+        return true;
     }
     checkEntityExistsInDataModel(entity_name = '') {
-        return this.data_model_entities.indexOf(entity_name.toLowerCase()) !== -1;
+        return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name)) !== -1;
+    }
+    getCamelCaseSplittedToLowerCase(entity_name = '') {
+        return entity_name.replace(/([a-z0-9])([A-Z0-9])/g, '$1_$2').toLowerCase();
     }
 }
 module.exports = DivbloxDataLayer;

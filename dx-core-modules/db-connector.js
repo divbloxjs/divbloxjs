@@ -90,7 +90,6 @@ class DivbloxDatabaseConnector {
         }
         return true;
     }
-
 }
 
 module.exports = DivbloxDatabaseConnector;
