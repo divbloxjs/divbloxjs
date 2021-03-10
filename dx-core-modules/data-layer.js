@@ -39,9 +39,7 @@ class DivbloxDataLayer {
         }
         const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
-        console.log(query_str);
         const query_result = await this.database_connector.queryDB(query_str);
-        console.dir(query_result);
         if (typeof query_result["error"] !== "undefined") {
             this.error_info.push(query_result["error"]);
             return false;
