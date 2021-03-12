@@ -11,11 +11,19 @@ const test = new CustomDx(
         "data_layer_implementation_class_path":"./custom-data-layer"*/});
 async function testDx() {
         await test.initDx();
-        if (!await test.create("Account",{"name":"johan"})) {
-             console.log("Failed to create new account: "+JSON.stringify(test.getError()));
+        const obj_id = await test.create("Account",{"name":"johan"});
+        if (obj_id === -1) {
+            console.log("Failed to create new account: "+JSON.stringify(test.getError()));
         } else {
-                console.log("New account created!");
+            console.log("New account created!");
+                const obj = await test.read("Account",obj_id);
+                if (obj !== null) {
+                        console.log("Found: "+obj["name"]);
+                } else {
+                        console.log("Not found: "+JSON.stringify(test.getError()));
+                }
         }
+
 }
 
 testDx();

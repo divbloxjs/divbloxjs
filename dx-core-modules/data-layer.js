@@ -40,11 +40,31 @@ class DivbloxDataLayer {
         const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
         const query_result = await this.database_connector.queryDB(query_str);
+        console.dir(query_result);
         if (typeof query_result["error"] !== "undefined") {
             this.error_info.push(query_result["error"]);
-            return false;
+            return -1;
         }
-        return true;
+        return query_result["insertId"];
+    }
+    async read(entity_name = '',id = -1) {
+        this.error_info = [];
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+            return null;
+        }
+        const query_str = "SELECT * FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+            "WHERE `id` = '"+id+"' LIMIT 1;";
+        const query_result = await this.database_connector.queryDB(query_str);
+        if (typeof query_result["error"] !== "undefined") {
+            this.error_info.push(query_result["error"]);
+            return null;
+        }
+        if (query_result.length === 0) {
+            this.error_info.push("Object not found for id: "+id);
+            return null;
+        }
+        return query_result[0];
     }
     checkEntityExistsInDataModel(entity_name = '') {
         return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name)) !== -1;

@@ -52,11 +52,18 @@ class Divblox {
     }
     //#region Data Layer
     async create(entity_name = '',data = {}) {
-        if (!await this.data_layer.create(entity_name,data)) {
+        const obj_id = await this.data_layer.create(entity_name,data);
+        if (obj_id === -1) {
             this.error_info = this.data_layer.getError();
-            return false;
         }
-        return true;
+        return obj_id;
+    }
+    async read(entity_name = '',id = -1) {
+        const data_obj = await this.data_layer.read(entity_name,id);
+        if (data_obj === null) {
+            this.error_info = this.data_layer.getError();
+        }
+        return data_obj;
     }
     //#endregion
 }
