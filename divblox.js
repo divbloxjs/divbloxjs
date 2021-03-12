@@ -65,6 +65,20 @@ class Divblox {
         }
         return data_obj;
     }
+    async update(entity_name = '',data = {}) {
+        if (!await this.data_layer.update(entity_name,data)) {
+            this.error_info = this.data_layer.getError();
+            return false;
+        }
+        return true;
+    }
+    async delete(entity_name = '',id = -1) {
+        if (!await this.data_layer.delete(entity_name,id)) {
+            this.error_info = this.data_layer.getError();
+            return false;
+        }
+        return true;
+    }
     //#endregion
 }
 

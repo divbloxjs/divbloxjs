@@ -11,7 +11,7 @@ const test = new CustomDx(
         "data_layer_implementation_class_path":"./custom-data-layer"*/});
 async function testDx() {
         await test.initDx();
-        const obj_id = await test.create("Account",{"name":"johan"});
+        const obj_id = await test.create("Account",{"name":"johan","id_number":"123"});
         if (obj_id === -1) {
             console.log("Failed to create new account: "+JSON.stringify(test.getError()));
         } else {
@@ -21,6 +21,16 @@ async function testDx() {
                         console.log("Found: "+obj["name"]);
                 } else {
                         console.log("Not found: "+JSON.stringify(test.getError()));
+                }
+                if (!await test.update("Account",{"id":obj_id,"name":"UpdateName","id_number":"888"})) {
+                        console.log("Error updating: "+JSON.stringify(test.getError()));
+                } else {
+                        console.log("Updated!");
+                }
+                if (!await test.delete("Account",1)) {
+                        console.log("Error deleting: "+JSON.stringify(test.getError()));
+                } else {
+                        console.log("Deleted!");
                 }
         }
 

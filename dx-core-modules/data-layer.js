@@ -40,7 +40,6 @@ class DivbloxDataLayer {
         const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
         const query_result = await this.database_connector.queryDB(query_str);
-        console.dir(query_result);
         if (typeof query_result["error"] !== "undefined") {
             this.error_info.push(query_result["error"]);
             return -1;
@@ -65,6 +64,58 @@ class DivbloxDataLayer {
             return null;
         }
         return query_result[0];
+    }
+    async update(entity_name = '',data = {}) {
+        this.error_info = [];
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+            return false;
+        }
+        if (typeof data["id"] === "undefined") {
+            this.error_info.push("No id provided");
+            return false;
+        }
+        const data_keys = Object.keys(data);
+        let update_str = '';
+        for (const key of data_keys) {
+            if (key === 'id') {
+                continue;
+            }
+            update_str += ", `"+this.getCamelCaseSplittedToLowerCase(key)+"` = '"+data[key]+"'";
+        }
+        update_str = update_str.substring(1,update_str.length);
+        const query_str = "UPDATE `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+            "SET "+update_str+" WHERE " +
+            "`"+this.getCamelCaseSplittedToLowerCase(entity_name)+"`.`id` = "+data["id"];
+        const query_result = await this.database_connector.queryDB(query_str);
+        if (typeof query_result["error"] !== "undefined") {
+            this.error_info.push(query_result["error"]);
+            return false;
+        }
+        if (query_result["affectedRows"] < 1) {
+            this.error_info.push("No rows were updated");
+            return false;
+        }
+        return true;
+    }
+    async delete(entity_name = '',id = -1) {
+        this.error_info = [];
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+            return null;
+        }
+        const query_str = "DELETE FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+            "WHERE `id` = '"+id+"';";
+        const query_result = await this.database_connector.queryDB(query_str);
+        if (typeof query_result["error"] !== "undefined") {
+            this.error_info.push(query_result["error"]);
+            return null;
+        }
+        if (query_result["affectedRows"] < 1) {
+            this.error_info.push("No rows were deleted");
+            return false;
+        }
+        return true;
     }
     checkEntityExistsInDataModel(entity_name = '') {
         return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name)) !== -1;
