@@ -39,9 +39,8 @@ class DivbloxDataLayer {
         }
         const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
-        const query_result = await this.database_connector.queryDB(query_str);
-        if (typeof query_result["error"] !== "undefined") {
-            this.error_info.push(query_result["error"]);
+        const query_result = await this.executeQuery(query_str);
+        if (query_result === null) {
             return -1;
         }
         return query_result["insertId"];
@@ -54,13 +53,8 @@ class DivbloxDataLayer {
         }
         const query_str = "SELECT * FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "WHERE `id` = '"+id+"' LIMIT 1;";
-        const query_result = await this.database_connector.queryDB(query_str);
-        if (typeof query_result["error"] !== "undefined") {
-            this.error_info.push(query_result["error"]);
-            return null;
-        }
-        if (query_result.length === 0) {
-            this.error_info.push("Object not found for id: "+id);
+        const query_result = await this.executeQuery(query_str);
+        if (query_result === null) {
             return null;
         }
         return query_result[0];
@@ -87,16 +81,8 @@ class DivbloxDataLayer {
         const query_str = "UPDATE `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "SET "+update_str+" WHERE " +
             "`"+this.getCamelCaseSplittedToLowerCase(entity_name)+"`.`id` = "+data["id"];
-        const query_result = await this.database_connector.queryDB(query_str);
-        if (typeof query_result["error"] !== "undefined") {
-            this.error_info.push(query_result["error"]);
-            return false;
-        }
-        if (query_result["affectedRows"] < 1) {
-            this.error_info.push("No rows were updated");
-            return false;
-        }
-        return true;
+        const query_result = await this.executeQuery(query_str);
+        return query_result !== null;
     }
     async delete(entity_name = '',id = -1) {
         this.error_info = [];
@@ -106,22 +92,31 @@ class DivbloxDataLayer {
         }
         const query_str = "DELETE FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
             "WHERE `id` = '"+id+"';";
+        const query_result = await this.executeQuery(query_str);
+        return query_result !== null;
+    }
+    async executeQuery(query_str = null) {
+        if (query_str === null) {
+            this.error_info.push("No query provided");
+            return null;
+        }
         const query_result = await this.database_connector.queryDB(query_str);
         if (typeof query_result["error"] !== "undefined") {
             this.error_info.push(query_result["error"]);
             return null;
         }
-        if (query_result["affectedRows"] < 1) {
-            this.error_info.push("No rows were deleted");
-            return false;
+        if ((typeof query_result["affectedRows"] !== "undefined") &&
+            (query_result["affectedRows"] < 1)) {
+            this.error_info.push("No rows were affected");
+            return null;
         }
-        return true;
+        return query_result;
     }
     checkEntityExistsInDataModel(entity_name = '') {
         return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name)) !== -1;
     }
-    getCamelCaseSplittedToLowerCase(entity_name = '') {
-        return entity_name.replace(/([a-z0-9])([A-Z0-9])/g, '$1_$2').toLowerCase();
+    getCamelCaseSplittedToLowerCase(camel_case_str = '') {
+        return camel_case_str.replace(/([a-z0-9])([A-Z0-9])/g, '$1_$2').toLowerCase();
     }
 }
 module.exports = DivbloxDataLayer;

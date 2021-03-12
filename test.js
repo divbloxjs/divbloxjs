@@ -27,7 +27,7 @@ async function testDx() {
                 } else {
                         console.log("Updated!");
                 }
-                if (!await test.delete("Account",1)) {
+                if (!await test.delete("Account",2)) {
                         console.log("Error deleting: "+JSON.stringify(test.getError()));
                 } else {
                         console.log("Deleted!");
