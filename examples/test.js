@@ -1,17 +1,16 @@
 // This file should be deleted
-const Divblox = require('./divblox');
-const DivbloxDataLayer = require('./dx-core-modules/data-layer');
+const Divblox = require('../divblox');
 class CustomDx extends Divblox {
 
 }
 
 const test = new CustomDx(
-    {"config_path":"./dxconfig.json",
-        "data_model_path":"./data-model.json"/*,
-        "data_layer_implementation_class_path":"./custom-data-layer"*/});
+    {"config_path":"./divblox_config/dxconfig.json",
+        "data_model_path":"./divblox_config/data-model.json",
+        "data_layer_implementation_class_path":"./divblox_config/custom-data-layer"});
 async function testDx() {
         await test.initDx();
-        const obj_id = await test.create("Account",{"name":"johan","id_number":"123"});
+        const obj_id = await test.create("Account",{"name":"john doe","id_number":"123"});
         if (obj_id === -1) {
             console.log("Failed to create new account: "+JSON.stringify(test.getError()));
         } else {

@@ -1,4 +1,4 @@
-const DivbloxDataLayer = require('./dx-core-modules/data-layer');
+const DivbloxDataLayer = require('./divblox.js/dx-core-modules/data-layer');
 class CustomDxDataLayer extends DivbloxDataLayer {
 
 }
