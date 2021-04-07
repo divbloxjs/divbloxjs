@@ -32,9 +32,12 @@ const dx_config_default = {
 
 const dx_data_model_default = {};
 
-if (!fs.existsSync(data_model_file_name)) {
-    return await fs_async.writeFile(data_model_file_name, JSON.stringify(dx_data_model_default,null,2));
-}
-if (!fs.existsSync(dx_config_file_name)) {
-    return await fs_async.writeFile(dx_config_file_name, JSON.stringify(dx_config_file_name,null,2));
+createDefaults();
+async function createDefaults() {
+    if (!fs.existsSync(data_model_file_name)) {
+        await fs_async.writeFile(data_model_file_name, JSON.stringify(dx_data_model_default,null,2));
+    }
+    if (!fs.existsSync(dx_config_file_name)) {
+        await fs_async.writeFile(dx_config_file_name, JSON.stringify(dx_config_file_name,null,2));
+    }
 }
