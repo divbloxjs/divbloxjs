@@ -2,6 +2,10 @@ const fs = require("fs");
 const fs_async = require("fs").promises;
 const dx_utils = require("dx-utils");
 const DivbloxDatabaseConnector = require('./dx-core-modules/db-connector');
+const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
+class DivbloxDataLayer extends DivbloxDataLayerBase {
+
+}
 
 process.on('uncaughtException', function(error) {
     console.log("Unhandled exception caught: "+error);
@@ -30,13 +34,9 @@ class Divblox {
         if (!fs.existsSync(this.data_model_path)){
             throw new Error("Invalid data model path provided");
         }
-        this.data_layer_implementation_class_path = './dx-core-modules/data-layer.js';
-        if (typeof options["data_layer_implementation_class_path"] !== "undefined") {
-            this.data_layer_implementation_class_path = options["data_layer_implementation_class_path"];
-        }
-        if ((this.data_layer_implementation_class_path !== './dx-core-modules/data-layer.js') &&
-            !fs.existsSync(this.data_layer_implementation_class_path)){
-            throw new Error("Invalid data layer implementation class path ("+this.data_layer_implementation_class_path+") provided");
+        if ((typeof options["data_layer_implementation_class"] !== "undefined") &&
+            (options["data_layer_implementation_class"] !== null)) {
+            DivbloxDataLayer = options["data_layer_implementation_class"];
         }
     }
     getError() {
@@ -58,8 +58,8 @@ class Divblox {
 
         const data_model_data_str = await fs_async.readFile(this.data_model_path, "utf-8");
         this.data_model_obj = JSON.parse(data_model_data_str);
-        const DataLayer = require(this.data_layer_implementation_class_path);
-        this.data_layer = new DataLayer(this.database_connector,this.data_model_obj);
+
+        this.data_layer = new DivbloxDataLayer(this.database_connector,this.data_model_obj);
         if (!await this.data_layer.validateDataModel()) {
             const sync_str = await dx_utils.getCommandLineInput(
                 "Error validating data model: "+JSON.stringify(this.error_info,null,2)+"; Synchronize data model with database now? [y/n]");
