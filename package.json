@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/JohanGriesel/divblox.js#readme",
   "dependencies": {
+    "dx-utils": "github:JohanGriesel/dx-utils",
     "mysql": "^2.18.1",
     "util": "^0.12.3"
   }

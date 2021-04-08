@@ -1,6 +1,6 @@
 const fs = require("fs");
 const fs_async = require("fs").promises;
-const dx_utils = require("./dx-core-modules/utilities");
+const dx_utils = require("dx-utils");
 const DivbloxDatabaseConnector = require('./dx-core-modules/db-connector');
 
 process.on('uncaughtException', function(error) {
