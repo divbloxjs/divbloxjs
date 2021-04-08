@@ -34,7 +34,8 @@ class Divblox {
         if (typeof options["data_layer_implementation_class_path"] !== "undefined") {
             this.data_layer_implementation_class_path = options["data_layer_implementation_class_path"];
         }
-        if (!fs.existsSync(this.data_layer_implementation_class_path)){
+        if ((this.data_layer_implementation_class_path !== './dx-core-modules/data-layer.js') &&
+            !fs.existsSync(this.data_layer_implementation_class_path)){
             throw new Error("Invalid data layer implementation class path ("+this.data_layer_implementation_class_path+") provided");
         }
     }
