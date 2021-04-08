@@ -5,14 +5,12 @@ class DivbloxDataLayer {
         this.data_model = data_model;
         this.data_model_entities = Object.keys(this.data_model);
         this.required_entities = ["account"];
-        if (!this.validateDataModel()) {
-            throw new Error("Error validating data model: "+JSON.stringify(this.error_info));
-        }
+
     }
     getError() {
         return this.error_info;
     }
-    validateDataModel() {
+    async validateDataModel() {
         for (const entity of this.required_entities) {
             if (this.data_model_entities.indexOf(entity) === -1) {
                 this.error_info.push("Entity '"+entity+"' not present");
@@ -22,7 +20,14 @@ class DivbloxDataLayer {
             this.error_info.unshift("Required entities are missing");
             return false;
         }
+        return await this.validateDataModelAgainstDatabase();
+    }
+    async validateDataModelAgainstDatabase() {
+        return false;
+    }
+    async syncDataModelWithDatabase() {
         return true;
+        return false;//TODO: Implement this function. It should return false if sync failed
     }
     async create(entity_name = '',data = {}) {
         this.error_info = [];

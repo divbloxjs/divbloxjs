@@ -5,8 +5,8 @@ class CustomDx extends Divblox {
 }
 
 const test = new CustomDx(
-    {"config_path":"./divblox_config/dxconfig.json",
-        "data_model_path":"./divblox_config/data-model.json"/*,
+    {"config_path":"./examples/divblox_config/dxconfig.json",
+        "data_model_path":"./examples/divblox_config/data-model.json"/*,
         "data_layer_implementation_class_path":"./divblox_config/custom-data-layer.js"*/});
 async function testDx() {
         await test.initDx();

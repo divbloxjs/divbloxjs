@@ -1,4 +1,6 @@
-const fs = require("fs").promises;
+const fs = require("fs");
+const fs_async = require("fs").promises;
+const dx_utils = require("./dx-core-modules/utilities");
 const DivbloxDatabaseConnector = require('./dx-core-modules/db-connector');
 
 process.on('uncaughtException', function(error) {
@@ -10,6 +12,7 @@ process.on('unhandledRejection', function(reason, p){
     process.exit(1);
 });
 
+
 class Divblox {
     constructor(options = {}) {
         this.error_info = [];
@@ -17,20 +20,29 @@ class Divblox {
             throw new Error("No config path provided");
         }
         this.config_path = options["config_path"];
+        if (!fs.existsSync(this.config_path)){
+            throw new Error("Invalid config path ("+this.config_path+") provided");
+        }
         if ((typeof options["data_model_path"] === "undefined") || (options["data_model_path"] === null)) {
             throw new Error("No data model path provided");
         }
         this.data_model_path = options["data_model_path"];
+        if (!fs.existsSync(this.data_model_path)){
+            throw new Error("Invalid data model path provided");
+        }
         this.data_layer_implementation_class_path = './dx-core-modules/data-layer.js';
         if (typeof options["data_layer_implementation_class_path"] !== "undefined") {
             this.data_layer_implementation_class_path = options["data_layer_implementation_class_path"];
+        }
+        if (!fs.existsSync(this.data_layer_implementation_class_path)){
+            throw new Error("Invalid data layer implementation class path ("+this.data_layer_implementation_class_path+") provided");
         }
     }
     getError() {
         return this.error_info;
     }
     async initDx() {
-        const config_data_str = await fs.readFile(this.config_path, "utf-8");
+        const config_data_str = await fs_async.readFile(this.config_path, "utf-8");
         this.config_obj = JSON.parse(config_data_str);
         if (typeof this.config_obj["environment_array"] === "undefined") {
             throw new Error("No environments configured");
@@ -43,10 +55,21 @@ class Divblox {
         }
         this.database_connector = new DivbloxDatabaseConnector(this.config_obj["environment_array"][process.env.NODE_ENV]["db_config"])
 
-        const data_model_data_str = await fs.readFile(this.data_model_path, "utf-8");
+        const data_model_data_str = await fs_async.readFile(this.data_model_path, "utf-8");
         this.data_model_obj = JSON.parse(data_model_data_str);
         const DataLayer = require(this.data_layer_implementation_class_path);
         this.data_layer = new DataLayer(this.database_connector,this.data_model_obj);
+        if (!await this.data_layer.validateDataModel()) {
+            const sync_str = await dx_utils.getCommandLineInput(
+                "Error validating data model: "+JSON.stringify(this.error_info,null,2)+"; Synchronize data model with database now? [y/n]");
+            if (sync_str.toLowerCase() !== "y") {
+                throw new Error("Data model is invalid. Cannot initialize Divblox");
+            } else {
+                if (!await this.data_layer.syncDataModelWithDatabase()) {
+                    throw new Error("Error synchronizing data model: "+JSON.stringify(this.error_info,null,2));
+                }
+            }
+        }
 
         console.log("Divblox loaded with config: "+JSON.stringify(this.config_obj["environment_array"][process.env.NODE_ENV]));
     }
