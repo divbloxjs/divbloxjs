@@ -14,23 +14,23 @@ class DivbloxDatabaseConnector {
             const connection = mysql.createConnection(this.database_config);
             return {
                 query( sql, args ) {
-                    return util.promisify( connection.query )
-                        .call( connection, sql, args );
+                    return util.promisify(connection.query)
+                        .call(connection, sql, args);
                 },
                 beginTransaction() {
-                    return util.promisify( connection.beginTransaction )
-                        .call( connection );
+                    return util.promisify(connection.beginTransaction)
+                        .call(connection);
                 },
                 commit() {
-                    return util.promisify( connection.commit )
-                        .call( connection );
+                    return util.promisify(connection.commit)
+                        .call(connection);
                 },
                 rollback() {
-                    return util.promisify( connection.rollback )
-                        .call( connection );
+                    return util.promisify(connection.rollback)
+                        .call(connection);
                 },
                 close() {
-                    return util.promisify( connection.end ).call( connection );
+                    return util.promisify(connection.end).call(connection);
                 }
             };
         } catch (error) {
@@ -56,10 +56,10 @@ class DivbloxDatabaseConnector {
         const database = this.connectDB();
         let query_result = {};
         try {
-            await queryWithTransaction( database, async () => {
+            await queryWithTransaction(database, async () => {
                 let temp_data = [];
                 for (const query_str of query_strings_arr) {
-                    temp_data.push(await database.query( query_str ));
+                    temp_data.push(await database.query(query_str));
                 }
                 query_result = temp_data;
             } );
@@ -69,12 +69,12 @@ class DivbloxDatabaseConnector {
         }
         return query_result;
     }
-    async queryWithTransaction( db, callback ) {
+    async queryWithTransaction(db, callback) {
         try {
             await db.beginTransaction();
             await callback();
             await db.commit();
-        } catch ( err ) {
+        } catch (err) {
             await db.rollback();
             throw err;
         } finally {
