@@ -33,7 +33,7 @@ class DivbloxDataLayer {
         this.error_info = [];
         if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
             this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
-            return false;
+            return -1;
         }
         const data_keys = Object.keys(data);
         let keys_str = '';

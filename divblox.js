@@ -71,7 +71,6 @@ class Divblox {
                 }
             }
         }
-
         console.log("Divblox loaded with config: "+JSON.stringify(this.config_obj["environment_array"][process.env.NODE_ENV]));
     }
     //#region Data Layer
