@@ -66,7 +66,7 @@ class Divblox {
             if (sync_str.toLowerCase() !== "y") {
                 throw new Error("Data model is invalid. Cannot initialize Divblox");
             } else {
-                if (!await this.data_layer.syncDataModelWithDatabase()) {
+                if (!await this.data_layer.syncDatabase()) {
                     throw new Error("Error synchronizing data model: "+JSON.stringify(this.error_info,null,2));
                 }
             }

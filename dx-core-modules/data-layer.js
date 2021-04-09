@@ -25,7 +25,7 @@ class DivbloxDataLayer {
     async validateDataModelAgainstDatabase() {
         return false;
     }
-    async syncDataModelWithDatabase() {
+    async syncDatabase() {
         return true;
         return false;//TODO: Implement this function. It should return false if sync failed
     }
