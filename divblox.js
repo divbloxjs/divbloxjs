@@ -61,19 +61,34 @@ class Divblox {
 
         this.data_layer = new DivbloxDataLayer(this.database_connector,this.data_model_obj);
         if (!await this.data_layer.validateDataModel()) {
-            const sync_str = await dx_utils.getCommandLineInput(
-                "Error validating data model: "+JSON.stringify(this.error_info,null,2)+"; Synchronize data model with database now? [y/n]");
-            if (sync_str.toLowerCase() !== "y") {
-                throw new Error("Data model is invalid. Cannot initialize Divblox");
-            } else {
-                if (!await this.data_layer.syncDatabase()) {
-                    throw new Error("Error synchronizing data model: "+JSON.stringify(this.error_info,null,2));
-                }
-            }
+            throw new Error("Error validating data model: "+
+                JSON.stringify(this.error_info,null,2)+
+                "; Please try re-synchronizing by running:\n" +
+                "$ node /divblox-config/sync_db.js");
         }
         console.log("Divblox loaded with config: "+JSON.stringify(this.config_obj["environment_array"][process.env.NODE_ENV]));
     }
+    closeDx(error_message = null) {
+        if (error_message === null){
+            console.log("Divblox closed by user");
+            process.exit(0);
+        } else {
+            console.log("Divblox closed with error: "+error_message);
+            process.exit(1);
+        }
+    }
     //#region Data Layer
+    async syncDatabase() {
+        const sync_str = await dx_utils.getCommandLineInput(
+            "Synchronize data model with database now? [y/n]");
+        if (sync_str.toLowerCase() === "y") {
+            if (!await this.data_layer.syncDatabase()) {
+                throw new Error("Error synchronizing data model: "+JSON.stringify(this.error_info,null,2));
+            }
+            return;
+        }
+        console.log("Synchronization cancelled");
+    }
     async create(entity_name = '',data = {}) {
         const obj_id = await this.data_layer.create(entity_name,data);
         if (obj_id === -1) {
