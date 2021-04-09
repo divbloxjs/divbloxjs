@@ -43,6 +43,9 @@ class Divblox {
         return this.error_info;
     }
     async initDx() {
+        if (typeof process.env.NODE_ENV === "undefined") {
+            throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified.");
+        }
         const config_data_str = await fs_async.readFile(this.config_path, "utf-8");
         this.config_obj = JSON.parse(config_data_str);
         if (typeof this.config_obj["environment_array"] === "undefined") {
