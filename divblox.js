@@ -63,8 +63,8 @@ class Divblox {
         if (!await this.data_layer.validateDataModel()) {
             throw new Error("Error validating data model: "+
                 JSON.stringify(this.error_info,null,2)+
-                "; Please try re-synchronizing by running:\n" +
-                "$ node /divblox-config/sync_db.js");
+                "; Please try re-synchronizing by running the folling from your project root:\n" +
+                "$ NODE_ENV="+process.env.NODE_ENV+" node ./divblox-config/sync_db.js");
         }
         console.log("Divblox loaded with config: "+JSON.stringify(this.config_obj["environment_array"][process.env.NODE_ENV]));
     }

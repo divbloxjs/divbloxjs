@@ -1,7 +1,7 @@
 const DivbloxBase = require("divblox.js/divblox");
 const dx = new DivbloxBase(
-    {"config_path":"./dxconfig.json",
-    "data_model_path":"./data-model.json"
+    {"config_path":"./divblox_config/dxconfig.json",
+    "data_model_path":"./divblox_config/data-model.json"
     });
 async function runDx() {
     await dx.initDx();

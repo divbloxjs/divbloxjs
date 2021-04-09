@@ -30,8 +30,8 @@ const dx_config_default = {
 const dx_data_model_default = {};
 const dx_sync_db_default = 'const DivbloxBase = require("divblox.js/divblox");\n' +
     'const dx = new DivbloxBase(\n' +
-    '    {"config_path":"./dxconfig.json",\n' +
-    '    "data_model_path":"./data-model.json"\n' +
+    '    {"config_path":"./divblox_config/dxconfig.json",\n' +
+    '    "data_model_path":"./divblox_config/data-model.json"\n' +
     '    });\n' +
     'async function runDx() {\n' +
     '    await dx.initDx();\n' +
