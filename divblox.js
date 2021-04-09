@@ -61,6 +61,7 @@ class Divblox {
 
         this.data_layer = new DivbloxDataLayer(this.database_connector,this.data_model_obj);
         if (!await this.data_layer.validateDataModel()) {
+            this.error_info = this.data_layer.getError();
             throw new Error("Error validating data model: "+
                 JSON.stringify(this.error_info,null,2)+
                 "\nPlease ensure that the data model is correct and then try re-synchronizing by running the following from your project root:\n" +
