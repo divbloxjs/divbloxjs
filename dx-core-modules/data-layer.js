@@ -5,7 +5,6 @@ class DivbloxDataLayer {
         this.data_model = data_model;
         this.data_model_entities = Object.keys(this.data_model);
         this.required_entities = ["account"];
-
     }
     getError() {
         return this.error_info;
