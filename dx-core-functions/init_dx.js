@@ -75,7 +75,10 @@ const dx_sync_db_default = 'const DivbloxBase = require("divblox.js/divblox");\n
     '}\n' +
     'runDx();'
 
-createDefaults();
+/**
+ * Creates the minimum configuration files needed for Divblox to be initiated
+ * @returns {Promise<void>}
+ */
 async function createDefaults() {
     console.log("Initializing Divblox...");
     if (!fs.existsSync(divblox_root)){
@@ -95,3 +98,4 @@ async function createDefaults() {
         await fs_async.writeFile(dx_sync_db_file_name, dx_sync_db_default);
     }
 }
+createDefaults();

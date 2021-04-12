@@ -187,4 +187,4 @@ class DivbloxBase {
     //#endregion
 }
 
-module.exports = Divblox;
+module.exports = DivbloxBase;
