@@ -1,5 +1,6 @@
 {
-    "module": {
+    "modules": [
+        {
         "module_name": "main",
         "entities": {
             "account": {
@@ -7,12 +8,13 @@
                     "name": "varchar(50)",
                     "surname": "varchar(50)",
                     "cell": "varchar(50) unique"
-                },
+                    },
                 "relationships": {
                     "user_role": ["main_role","second_role"],
                     "password_reset_token":["token"]
+                    }
                 }
             }
         }
-    }
+    ]
 }

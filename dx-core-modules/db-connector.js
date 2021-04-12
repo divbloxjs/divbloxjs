@@ -2,16 +2,30 @@ const mysql = require('mysql');
 const util = require('util');
 
 class DivbloxDatabaseConnector {
-    constructor(database_config = {}) {
-        this.database_config = database_config;
+    constructor(database_config_array = {}) {
+        this.database_config = {};
+        this.error_info = [];
+        this.module_array = Object.keys(database_config_array);
+        console.dir(this.module_array);
+        for (const module_name_str of this.module_array) {
+            this.database_config[module_name_str] = database_config_array[module_name_str];
+        }
+        console.dir(this.database_config);
         this.init();
     }
     async init() {
         await this.checkDBConnection();
     }
-    connectDB() {
+    getError() {
+        return this.error_info;
+    }
+    connectDB(module_name_str = null) {
+        if (module_name_str === null) {
+            this.error_info.push("Invalid module name NULL provided");
+            return null;
+        }
         try {
-            const connection = mysql.createConnection(this.database_config);
+            const connection = mysql.createConnection(this.database_config[module_name_str]);
             return {
                 query( sql, args ) {
                     return util.promisify(connection.query)
@@ -39,8 +53,14 @@ class DivbloxDatabaseConnector {
         }
 
     }
-    async queryDB(query_str) {
-        const database = this.connectDB();
+    async queryDB(query_str = null,module_name_str = null) {
+        if (query_str === null) {
+            this.error_info.push("Invalid query_str NULL provided");
+        }
+        const database = this.connectDB(module_name_str);
+        if (database === null) {
+            return null;
+        }
         let query_result = {};
         try {
             query_result = await database.query(query_str);
@@ -52,8 +72,11 @@ class DivbloxDatabaseConnector {
         }
         return query_result;
     }
-    async queryDBMultiple(query_strings_arr = []) {
-        const database = this.connectDB();
+    async queryDBMultiple(query_strings_arr = [], module_name_str = null) {
+        const database = this.connectDB(module_name_str);
+        if (database === null) {
+            return null;
+        }
         let query_result = {};
         try {
             await queryWithTransaction(database, async () => {
@@ -69,24 +92,32 @@ class DivbloxDatabaseConnector {
         }
         return query_result;
     }
-    async queryWithTransaction(db, callback) {
+    async queryWithTransaction(database, callback) {
+        if (database === null) {
+            return null;
+        }
         try {
-            await db.beginTransaction();
+            await database.beginTransaction();
             await callback();
-            await db.commit();
+            await database.commit();
         } catch (err) {
-            await db.rollback();
+            await database.rollback();
             throw err;
         } finally {
-            await db.close();
+            await database.close();
         }
     }
     async checkDBConnection() {
-        try {
-            const database = this.connectDB();
-            await database.close();
-        } catch (error) {
-            throw new Error("Error connecting to database: "+error);
+        for (const module_name_str of this.module_array) {
+            try {
+                const database = this.connectDB(module_name_str);
+                if (database === null) {
+                    throw new Error("Error connecting to database: "+JSON.stringify(this.getError(),null,2));
+                }
+                await database.close();
+            } catch (error) {
+                throw new Error("Error connecting to database: "+error);
+            }
         }
         return true;
     }

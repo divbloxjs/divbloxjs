@@ -8,16 +8,20 @@ class DivbloxDataLayer extends DivbloxDataLayerBase {
 }
 
 process.on('uncaughtException', function(error) {
-    console.log("Unhandled exception caught: "+error);
+    console.trace("Unhandled exception caught: "+error);
     process.exit(1);
 });
 process.on('unhandledRejection', function(reason, p){
-    console.log("Unhandled promise rejection caught: "+reason);
+    console.trace("Unhandled promise rejection caught: "+reason);
     process.exit(1);
 });
 
 
 class Divblox {
+    /**
+     *
+     * @param options
+     */
     constructor(options = {}) {
         this.error_info = [];
         if ((typeof options["config_path"] === "undefined") || (options["config_path"] === null)) {
@@ -54,10 +58,10 @@ class Divblox {
         if (typeof this.config_obj["environment_array"][process.env.NODE_ENV] === "undefined") {
             throw new Error("No environments configured for NODE_ENV: "+process.env.NODE_ENV);
         }
-        if (typeof this.config_obj["environment_array"][process.env.NODE_ENV]["db_config"] === "undefined") {
-            throw new Error("No databases configured for the environement: "+process.env.NODE_ENV);
+        if (typeof this.config_obj["environment_array"][process.env.NODE_ENV]["modules"] === "undefined") {
+            throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
-        this.database_connector = new DivbloxDatabaseConnector(this.config_obj["environment_array"][process.env.NODE_ENV]["db_config"])
+        this.database_connector = new DivbloxDatabaseConnector(this.config_obj["environment_array"][process.env.NODE_ENV]["modules"])
 
         const data_model_data_str = await fs_async.readFile(this.data_model_path, "utf-8");
         this.data_model_obj = JSON.parse(data_model_data_str);

@@ -3,16 +3,25 @@ class DivbloxDataLayer {
         this.database_connector = database_connector;
         this.error_info = [];
         this.data_model = data_model;
-        this.data_model_entities = Object.keys(this.data_model);
+        this.module_array = {};
+        this.data_model_entities = [];
+        this.entity_array = {};
+        for (const module_obj of this.data_model["modules"]) {
+            this.module_array[module_obj["module_name"]] = module_obj["entities"];
+            for (const entity_name_str of Object.keys(module_obj["entities"])) {
+                this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)] = module_obj["module_name"];
+                this.data_model_entities.push(this.getCamelCaseSplittedToLowerCase(entity_name_str));
+            }
+        }
         this.required_entities = ["account"];
     }
     getError() {
         return this.error_info;
     }
     async validateDataModel() {
-        for (const entity of this.required_entities) {
-            if (this.data_model_entities.indexOf(entity) === -1) {
-                this.error_info.push("Entity '"+entity+"' not present");
+        for (const entity_name_str of this.required_entities) {
+            if (this.data_model_entities.indexOf(entity_name_str) === -1) {
+                this.error_info.push("Entity '"+entity_name_str+"' not present");
             }
         }
         if (this.error_info.length > 0) {
@@ -29,10 +38,17 @@ class DivbloxDataLayer {
         return true;
         return false;//TODO: Implement this function. It should return false if sync failed
     }
-    async create(entity_name = '',data = {}) {
+    getModuleNameFromEntityName(entity_name_str = '') {
+        console.dir(this.entity_array);
+        if (typeof this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)] === "undefined") {
+            return null;
+        }
+        return this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)];
+    }
+    async create(entity_name_str = '',data = {}) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
             return -1;
         }
         const data_keys = Object.keys(data);
@@ -42,32 +58,32 @@ class DivbloxDataLayer {
             keys_str += ", `"+this.getCamelCaseSplittedToLowerCase(key)+"`";
             values_str += ", '"+data[key]+"'";
         }
-        const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+        const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
             "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
-        const query_result = await this.executeQuery(query_str);
+        const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         if (query_result === null) {
             return -1;
         }
         return query_result["insertId"];
     }
-    async read(entity_name = '',id = -1) {
+    async read(entity_name_str = '',id = -1) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
             return null;
         }
-        const query_str = "SELECT * FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+        const query_str = "SELECT * FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
             "WHERE `id` = '"+id+"' LIMIT 1;";
-        const query_result = await this.executeQuery(query_str);
+        const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         if (query_result === null) {
             return null;
         }
         return query_result[0];
     }
-    async update(entity_name = '',data = {}) {
+    async update(entity_name_str = '',data = {}) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
             return false;
         }
         if (typeof data["id"] === "undefined") {
@@ -83,29 +99,33 @@ class DivbloxDataLayer {
             update_str += ", `"+this.getCamelCaseSplittedToLowerCase(key)+"` = '"+data[key]+"'";
         }
         update_str = update_str.substring(1,update_str.length);
-        const query_str = "UPDATE `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+        const query_str = "UPDATE `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
             "SET "+update_str+" WHERE " +
-            "`"+this.getCamelCaseSplittedToLowerCase(entity_name)+"`.`id` = "+data["id"];
-        const query_result = await this.executeQuery(query_str);
+            "`"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"`.`id` = "+data["id"];
+        const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         return query_result !== null;
     }
-    async delete(entity_name = '',id = -1) {
+    async delete(entity_name_str = '',id = -1) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
+            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
             return null;
         }
-        const query_str = "DELETE FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name)+"` " +
+        const query_str = "DELETE FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
             "WHERE `id` = '"+id+"';";
-        const query_result = await this.executeQuery(query_str);
+        const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         return query_result !== null;
     }
-    async executeQuery(query_str = null) {
+    async executeQuery(query_str = null, module_name_str = null) {
         if (query_str === null) {
             this.error_info.push("No query provided");
             return null;
         }
-        const query_result = await this.database_connector.queryDB(query_str);
+        const query_result = await this.database_connector.queryDB(query_str,module_name_str);
+        if (query_result === null) {
+            this.error_info = this.database_connector.getError();
+            return null;
+        }
         if (typeof query_result["error"] !== "undefined") {
             this.error_info.push(query_result["error"]);
             return null;
@@ -117,8 +137,8 @@ class DivbloxDataLayer {
         }
         return query_result;
     }
-    checkEntityExistsInDataModel(entity_name = '') {
-        return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name)) !== -1;
+    checkEntityExistsInDataModel(entity_name_str = '') {
+        return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name_str)) !== -1;
     }
     getCamelCaseSplittedToLowerCase(camel_case_str = '') {
         return camel_case_str.replace(/([a-z0-9])([A-Z0-9])/g, '$1_$2').toLowerCase();
