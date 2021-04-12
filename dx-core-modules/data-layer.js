@@ -39,7 +39,6 @@ class DivbloxDataLayer {
         return false;//TODO: Implement this function. It should return false if sync failed
     }
     getModuleNameFromEntityName(entity_name_str = '') {
-        console.dir(this.entity_array);
         if (typeof this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)] === "undefined") {
             return null;
         }
