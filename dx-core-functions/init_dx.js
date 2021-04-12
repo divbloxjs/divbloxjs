@@ -4,30 +4,65 @@ const divblox_root = "../../divblox_config";
 const data_model_file_name = divblox_root+'/data-model.json';
 const dx_config_file_name = divblox_root+'/dxconfig.json';
 const dx_sync_db_file_name = divblox_root+'/sync_db.js';
+/**
+ * @type {{environment_array: {development: {modules: {main: {password: string, database: string, port: number,
+ * host: string, user: string, ssl: boolean}}}, production: {modules: {main: {password: string, database: string, port: number, host: string, user: string, ssl: boolean}}}}}}
+ */
 const dx_config_default = {
-    "environment_array":{
-        "development":{
-            "db_config": {
-                "host": "localhost",
-                "user": "dbuser",
-                "password": "123",
-                "database": "local_dx_db",
-                "port": 3306,
-                "ssl": false
+        "environment_array":{
+            "development":{
+                "modules": {
+                    "main": {
+                        "host": "localhost",
+                        "user": "dbuser",
+                        "password": "123",
+                        "database": "local_dx_db",
+                        "port": 3306,
+                        "ssl": false
+                    }
+                }
+            },
+            "production":{
+                "modules": {
+                    "main": {
+                        "host": "localhost",
+                        "user": "dbuser",
+                        "password": "123",
+                        "database": "local_dx_db",
+                        "port": 3306,
+                        "ssl": false
+                    }
+                }
             }
-        },
-        "production":{
-            "db_config": {
-                "host": "localhost",
-                "user": "dbuser",
-                "password": "123",
-                "database": "local_dx_db",
-                "port": 3306,
-                "ssl": false
+        }
+    };
+/**
+ * @type {{modules: [{entities: {account: {relationships: {user_role: [string, string], password_reset_token: [string]},
+ * attributes: {surname: string, name: string, cell: string}}}, module_name: string}]}}
+ */
+const dx_data_model_default = {
+        "modules": [
+            {
+                "module_name": "main",
+                "entities": {
+                    "account": {
+                        "attributes": {
+                            "name": "varchar(50)",
+                            "surname": "varchar(50)",
+                            "cell": "varchar(50) unique"
+                        },
+                        "relationships": {
+                            "user_role": ["main_role","second_role"],
+                            "password_reset_token":["token"]
+                        }
+                    }
+                }
             }
-        }}
-};
-const dx_data_model_default = {};
+        ]
+    };
+/**
+ * @type {string} The default sync script content
+ */
 const dx_sync_db_default = 'const DivbloxBase = require("divblox.js/divblox");\n' +
     'const dx = new DivbloxBase(\n' +
     '    {"config_path":"./divblox_config/dxconfig.json",\n' +
