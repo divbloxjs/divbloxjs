@@ -17,12 +17,13 @@
     "divblox"
   ],
   "author": "Johan Griesel, johan@stratusolve.com (Stratusolve (Pty) Ltd)",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/JohanGriesel/divblox.js/issues"
   },
   "homepage": "https://github.com/JohanGriesel/divblox.js#readme",
   "dependencies": {
+    "dx-db-connector": "github:JohanGriesel/dx-db-connector",
     "dx-utils": "github:JohanGriesel/dx-utils",
     "mysql": "^2.18.1",
     "util": "^0.12.3"

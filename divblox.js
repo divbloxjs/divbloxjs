@@ -1,7 +1,7 @@
 const fs = require("fs");
 const fs_async = require("fs").promises;
 const dx_utils = require("dx-utils");
-const DivbloxDatabaseConnector = require('./dx-core-modules/db-connector');
+const DivbloxDatabaseConnector = require("dx-db-connector");
 const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
 class DivbloxDataLayer extends DivbloxDataLayerBase {
 
@@ -82,7 +82,7 @@ class DivbloxBase {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
         this.database_connector = new DivbloxDatabaseConnector(this.config_obj["environment_array"][process.env.NODE_ENV]["modules"])
-
+        await this.database_connector.init();
         const data_model_data_str = await fs_async.readFile(this.data_model_path, "utf-8");
         this.data_model_obj = JSON.parse(data_model_data_str);
 
