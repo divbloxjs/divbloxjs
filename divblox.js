@@ -33,20 +33,23 @@ class DivbloxBase {
      */
     constructor(options = {}) {
         this.error_info = [];
+
         if ((typeof options["config_path"] === "undefined") || (options["config_path"] === null)) {
             throw new Error("No config path provided");
         }
         this.config_path = options["config_path"];
-        if (!fs.existsSync(this.config_path)){
+        if (!fs.existsSync(this.config_path)) {
             throw new Error("Invalid config path ("+this.config_path+") provided");
         }
+
         if ((typeof options["data_model_path"] === "undefined") || (options["data_model_path"] === null)) {
             throw new Error("No data model path provided");
         }
         this.data_model_path = options["data_model_path"];
-        if (!fs.existsSync(this.data_model_path)){
+        if (!fs.existsSync(this.data_model_path)) {
             throw new Error("Invalid data model path provided");
         }
+
         if ((typeof options["data_layer_implementation_class"] !== "undefined") &&
             (options["data_layer_implementation_class"] !== null)) {
             DivbloxDataLayer = options["data_layer_implementation_class"];
