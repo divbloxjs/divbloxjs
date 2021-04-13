@@ -1,3 +1,4 @@
+const dx_utils = require("dx-utils");
 /**
  * The DivbloxDataLayer is responsible for managing the interaction of logic of your app with the database, honouring
  * the provided data model
@@ -18,8 +19,8 @@ class DivbloxDataLayer {
         for (const module_obj of this.data_model["modules"]) {
             this.module_array[module_obj["module_name"]] = module_obj["entities"];
             for (const entity_name_str of Object.keys(module_obj["entities"])) {
-                this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)] = module_obj["module_name"];
-                this.data_model_entities.push(this.getCamelCaseSplittedToLowerCase(entity_name_str));
+                this.entity_array[dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")] = module_obj["module_name"];
+                this.data_model_entities.push(dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_"));
             }
         }
         this.required_entities = ["account"];
@@ -76,10 +77,10 @@ class DivbloxDataLayer {
      * @returns {null|*}
      */
     getModuleNameFromEntityName(entity_name_str = '') {
-        if (typeof this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)] === "undefined") {
+        if (typeof this.entity_array[dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")] === "undefined") {
             return null;
         }
-        return this.entity_array[this.getCamelCaseSplittedToLowerCase(entity_name_str)];
+        return this.entity_array[dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")];
     }
 
     /**
@@ -90,18 +91,18 @@ class DivbloxDataLayer {
      */
     async create(entity_name_str = '',data = {}) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_"))) {
+            this.error_info.push("Entity "+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+" does not exist");
             return -1;
         }
         const data_keys = Object.keys(data);
         let keys_str = '';
         let values_str = '';
         for (const key of data_keys) {
-            keys_str += ", `"+this.getCamelCaseSplittedToLowerCase(key)+"`";
+            keys_str += ", `"+dx_utils.getCamelCaseSplittedToLowerCase(key,"_")+"`";
             values_str += ", '"+data[key]+"'";
         }
-        const query_str = "INSERT INTO `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
+        const query_str = "INSERT INTO `"+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+"` " +
             "(`id`"+keys_str+") VALUES (NULL"+values_str+");";
         const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         if (query_result === null) {
@@ -118,11 +119,11 @@ class DivbloxDataLayer {
      */
     async read(entity_name_str = '',id = -1) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_"))) {
+            this.error_info.push("Entity "+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+" does not exist");
             return null;
         }
-        const query_str = "SELECT * FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
+        const query_str = "SELECT * FROM `"+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+"` " +
             "WHERE `id` = '"+id+"' LIMIT 1;";
         const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         if (query_result === null) {
@@ -139,8 +140,8 @@ class DivbloxDataLayer {
      */
     async update(entity_name_str = '',data = {}) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_"))) {
+            this.error_info.push("Entity "+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+" does not exist");
             return false;
         }
         if (typeof data["id"] === "undefined") {
@@ -153,12 +154,12 @@ class DivbloxDataLayer {
             if (key === 'id') {
                 continue;
             }
-            update_str += ", `"+this.getCamelCaseSplittedToLowerCase(key)+"` = '"+data[key]+"'";
+            update_str += ", `"+dx_utils.getCamelCaseSplittedToLowerCase(key,"_")+"` = '"+data[key]+"'";
         }
         update_str = update_str.substring(1,update_str.length);
-        const query_str = "UPDATE `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
+        const query_str = "UPDATE `"+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+"` " +
             "SET "+update_str+" WHERE " +
-            "`"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"`.`id` = "+data["id"];
+            "`"+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+"`.`id` = "+data["id"];
         const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         return query_result !== null;
     }
@@ -171,11 +172,11 @@ class DivbloxDataLayer {
      */
     async delete(entity_name_str = '',id = -1) {
         this.error_info = [];
-        if (!this.checkEntityExistsInDataModel(this.getCamelCaseSplittedToLowerCase(entity_name_str))) {
-            this.error_info.push("Entity "+this.getCamelCaseSplittedToLowerCase(entity_name_str)+" does not exist");
+        if (!this.checkEntityExistsInDataModel(dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_"))) {
+            this.error_info.push("Entity "+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+" does not exist");
             return false;
         }
-        const query_str = "DELETE FROM `"+this.getCamelCaseSplittedToLowerCase(entity_name_str)+"` " +
+        const query_str = "DELETE FROM `"+dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")+"` " +
             "WHERE `id` = '"+id+"';";
         const query_result = await this.executeQuery(query_str, this.getModuleNameFromEntityName(entity_name_str));
         return query_result !== null;
@@ -215,16 +216,7 @@ class DivbloxDataLayer {
      * @returns {boolean} true if the validation passed, false if not
      */
     checkEntityExistsInDataModel(entity_name_str = '') {
-        return this.data_model_entities.indexOf(this.getCamelCaseSplittedToLowerCase(entity_name_str)) !== -1;
-    }
-
-    /**
-     * Splits a camel case string into a lower case string, separated with underscores "_"
-     * @param camel_case_str The string to split
-     * @returns {string} The splitted string in lower case
-     */
-    getCamelCaseSplittedToLowerCase(camel_case_str = '') {
-        return camel_case_str.replace(/([a-z0-9])([A-Z0-9])/g, '$1_$2').toLowerCase();
+        return this.data_model_entities.indexOf(dx_utils.getCamelCaseSplittedToLowerCase(entity_name_str,"_")) !== -1;
     }
 }
 module.exports = DivbloxDataLayer;
