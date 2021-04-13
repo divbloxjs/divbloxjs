@@ -3,9 +3,12 @@ const fs_async = require("fs").promises;
 const dx_utils = require("dx-utils");
 const DivbloxDatabaseConnector = require("dx-db-connector");
 const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
-class DivbloxDataLayer extends DivbloxDataLayerBase {
 
-}
+/**
+ * This class overrides the default DivbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
+ * meaning, the developer can create their own version of DivbloxDataLayer if they want to modify how it should work
+ */
+class DivbloxDataLayer extends DivbloxDataLayerBase {}
 
 //TODO: Decide if this is truly needed. If Divblox will only deal with data and logic, this might not be needed.
 // If Divblox will provide the web server via express or something, then this might be needed but updated
@@ -73,6 +76,7 @@ class DivbloxBase {
         if (typeof process.env.NODE_ENV === "undefined") {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified.");
         }
+
         const config_data_str = await fs_async.readFile(this.config_path, "utf-8");
         this.config_obj = JSON.parse(config_data_str);
         if (typeof this.config_obj["environment_array"] === "undefined") {
@@ -84,8 +88,10 @@ class DivbloxBase {
         if (typeof this.config_obj["environment_array"][process.env.NODE_ENV]["modules"] === "undefined") {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
+
         this.database_connector = new DivbloxDatabaseConnector(this.config_obj["environment_array"][process.env.NODE_ENV]["modules"])
         await this.database_connector.init();
+
         const data_model_data_str = await fs_async.readFile(this.data_model_path, "utf-8");
         this.data_model_obj = JSON.parse(data_model_data_str);
 
@@ -105,7 +111,7 @@ class DivbloxBase {
      * @param error_message An optional message to provide when closing
      */
     closeDx(error_message = null) {
-        if (error_message === null){
+        if (error_message === null) {
             console.log("Divblox closed by user");
             process.exit(0);
         } else {
