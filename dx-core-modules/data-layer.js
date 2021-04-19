@@ -68,6 +68,37 @@ class DivbloxDataLayer {
      */
     async syncDatabase() {
         return true;
+
+        // get all the entity (table) names and details (attributes, types, etc) from current connected database and store in a json object
+
+        // get all the entity (table) names and details (attributes, types, etc) from data model json and store in a json object
+
+        // get all the entity (table) names from current connected database's json object and create a new database entity (table) names json object
+
+        // get all the entity (table) names from data model's json object and create a new data model entity (table) names json object
+
+        // do a diff between the database json object and the data model json object to determine which entities (tables)
+        // should be dropped or created
+        // those which exist in database json object but not in data model json object should be dropped, create a to be dropped json object
+        // those which exist in the data model json object and not in the database json object should be created, create a to be created json object
+
+        // check for relationships linked to the entities that needs to be dropped in the to be dropped json object and drop these relationships
+
+        // if an entity should be dropped, do so now
+
+        // if an entity should be created
+        // get the entity details (attributes and relationships) from the data model json as json object for entity (table)
+        // this json object should then be sent to the createTable / createEntity function as parameter,
+        // function should then create the entity (table) and attributes as indicated and return true upon success
+        //      update the current connected database json object to reflect the added entities (tables)
+        //      update the database entity (table) names json object to reflect the added entities (tables)
+        // and false upon failure with the error_info array populated with error
+
+        // get all the entity (table) names and details (attributes, types, etc) from current connected database again and update the database json object
+        // now loop over all the entities (tables) that exist in the database and retrieve their attribute names and column types
+        // and store in json object
+        // update the database entity (table) names json object to reflect the dropped and created entities (tables)
+
         return false;//TODO: Implement this function. It should return false if sync failed
     }
 
