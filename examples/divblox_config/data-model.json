@@ -1,17 +1,17 @@
 {
     "modules": [
         {
-        "module_name": "main",
+        "moduleName": "main",
         "entities": {
-            "account": {
+            "Account": {
                 "attributes": {
-                    "name": "varchar(50)",
-                    "surname": "varchar(50)",
+                    "firstName": "varchar(50)",
+                    "lastName": "varchar(50)",
                     "cell": "varchar(50) unique"
                     },
                 "relationships": {
-                    "user_role": ["main_role","second_role"],
-                    "password_reset_token":["token"]
+                    "userRole": ["mainRole","secondRole"],
+                    "passwordResetToken":["token"]
                     }
                 }
             }

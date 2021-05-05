@@ -1,8 +1,8 @@
 const fs = require("fs");
-const fs_async = require("fs").promises;
-const dx_utils = require("dx-utils");
+const fsAsync = require("fs").promises;
+const dxUtils = require("dx-utils");
 const DivbloxDatabaseConnector = require("dx-db-connector");
-const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
+const DivbloxDataLayerBase = require('./dx_core_modules/data-layer');
 
 /**
  * This class overrides the default DivbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
@@ -29,43 +29,43 @@ class DivbloxBase {
     /**
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
-     * @param options.config_path The path to the dxconfig.json file that defines the environment related variables
-     * @param options.data_model_path The path to the data-model.json file that contains the project's data model
-     * @param options.data_layer_implementation_class An optional class implementation for the Divblox Data Layer. This
+     * @param options.configPath The path to the dxconfig.json file that defines the environment related variables
+     * @param options.dataModelPath The path to the data-model.json file that contains the project's data model
+     * @param options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
      * is useful when you want to override the default Divblox data layer behaviour
      */
     constructor(options = {}) {
-        this.error_info = [];
+        this.errorInfo = [];
 
-        if ((typeof options["config_path"] === "undefined") || (options["config_path"] === null)) {
+        if ((typeof options["configPath"] === "undefined") || (options["configPath"] === null)) {
             throw new Error("No config path provided");
         }
-        this.config_path = options["config_path"];
-        if (!fs.existsSync(this.config_path)) {
-            throw new Error("Invalid config path ("+this.config_path+") provided");
+        this.configPath = options["configPath"];
+        if (!fs.existsSync(this.configPath)) {
+            throw new Error("Invalid config path ("+this.configPath+") provided");
         }
 
-        if ((typeof options["data_model_path"] === "undefined") || (options["data_model_path"] === null)) {
+        if ((typeof options["dataModelPath"] === "undefined") || (options["dataModelPath"] === null)) {
             throw new Error("No data model path provided");
         }
-        this.data_model_path = options["data_model_path"];
-        if (!fs.existsSync(this.data_model_path)) {
+        this.dataModelPath = options["dataModelPath"];
+        if (!fs.existsSync(this.dataModelPath)) {
             throw new Error("Invalid data model path provided");
         }
 
-        if ((typeof options["data_layer_implementation_class"] !== "undefined") &&
-            (options["data_layer_implementation_class"] !== null)) {
-            DivbloxDataLayer = options["data_layer_implementation_class"];
+        if ((typeof options["dataLayerImplementationClass"] !== "undefined") &&
+            (options["dataLayerImplementationClass"] !== null)) {
+            DivbloxDataLayer = options["dataLayerImplementationClass"];
         }
     }
 
     /**
-     * Whenever Divblox encounters an error, the error_info array is populated with details about the error. This
-     * function simply returns that error_info array for debugging purposes
+     * Whenever Divblox encounters an error, the errorInfo array is populated with details about the error. This
+     * function simply returns that errorInfo array for debugging purposes
      * @returns {[]}
      */
     getError() {
-        return this.error_info;
+        return this.errorInfo;
     }
 
     /**
@@ -77,45 +77,45 @@ class DivbloxBase {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified.");
         }
 
-        const config_data_str = await fs_async.readFile(this.config_path, "utf-8");
-        this.config_obj = JSON.parse(config_data_str);
-        if (typeof this.config_obj["environment_array"] === "undefined") {
+        const configDataStr = await fsAsync.readFile(this.configPath, "utf-8");
+        this.configObj = JSON.parse(configDataStr);
+        if (typeof this.configObj["environmentArray"] === "undefined") {
             throw new Error("No environments configured");
         }
-        if (typeof this.config_obj["environment_array"][process.env.NODE_ENV] === "undefined") {
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV] === "undefined") {
             throw new Error("No environments configured for NODE_ENV: "+process.env.NODE_ENV);
         }
-        if (typeof this.config_obj["environment_array"][process.env.NODE_ENV]["modules"] === "undefined") {
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
 
-        this.database_connector = new DivbloxDatabaseConnector(this.config_obj["environment_array"][process.env.NODE_ENV]["modules"])
-        await this.database_connector.init();
+        this.databaseConnector = new DivbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
+        await this.databaseConnector.init();
 
-        const data_model_data_str = await fs_async.readFile(this.data_model_path, "utf-8");
-        this.data_model_obj = JSON.parse(data_model_data_str);
+        const dataModelDataStr = await fsAsync.readFile(this.dataModelPath, "utf-8");
+        this.dataModelObj = JSON.parse(dataModelDataStr);
 
-        this.data_layer = new DivbloxDataLayer(this.database_connector,this.data_model_obj);
-        if (!await this.data_layer.validateDataModel()) {
-            this.error_info = this.data_layer.getError();
+        this.dataLayer = new DivbloxDataLayer(this.databaseConnector,this.dataModelObj);
+        if (!await this.dataLayer.validateDataModel()) {
+            this.errorInfo = this.dataLayer.getError();
             throw new Error("Error validating data model: "+
-                JSON.stringify(this.error_info,null,2)+
+                JSON.stringify(this.errorInfo,null,2)+
                 "\nPlease ensure that the data model is correct and then try re-synchronizing by running the following from your project root:\n" +
-                "$ NODE_ENV="+process.env.NODE_ENV+" node ./divblox_config/sync_db.js");
+                "$ NODE_ENV="+process.env.NODE_ENV+" node ./divbloxConfig/sync_db.js");
         }
-        console.log("Divblox loaded with config: "+JSON.stringify(this.config_obj["environment_array"][process.env.NODE_ENV]));
+        console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
     }
 
     /**
      * Closes the Divblox instance
-     * @param error_message An optional message to provide when closing
+     * @param errorMessage An optional message to provide when closing
      */
-    closeDx(error_message = null) {
-        if (error_message === null) {
+    closeDx(errorMessage = null) {
+        if (errorMessage === null) {
             console.log("Divblox closed by user");
             process.exit(0);
         } else {
-            console.log("Divblox closed with error: "+error_message);
+            console.log("Divblox closed with error: "+errorMessage);
             process.exit(1);
         }
     }
@@ -127,11 +127,11 @@ class DivbloxBase {
      * @returns {Promise<void>}
      */
     async syncDatabase() {
-        const sync_str = await dx_utils.getCommandLineInput(
+        const syncStr = await dxUtils.getCommandLineInput(
             "Synchronize data model with database now? [y/n]");
-        if (sync_str.toLowerCase() === "y") {
-            if (!await this.data_layer.syncDatabase()) {
-                throw new Error("Error synchronizing data model: "+JSON.stringify(this.error_info,null,2));
+        if (syncStr.toLowerCase() === "y") {
+            if (!await this.dataLayer.syncDatabase()) {
+                throw new Error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
             }
             return;
         }
@@ -139,56 +139,56 @@ class DivbloxBase {
     }
 
     /**
-     * Attempts to insert a new row in the data base for the table matching the entity_name
-     * @param entity_name The name of the table to insert a row for
+     * Attempts to insert a new row in the data base for the table matching the entityName
+     * @param entityName The name of the table to insert a row for
      * @param data The relevant key/value data pairs for this entry
      * @returns {Promise<number|*>}
      */
-    async create(entity_name = '',data = {}) {
-        const obj_id = await this.data_layer.create(entity_name,data);
-        if (obj_id === -1) {
-            this.error_info = this.data_layer.getError();
+    async create(entityName = '',data = {}) {
+        const objId = await this.dataLayer.create(entityName,data);
+        if (objId === -1) {
+            this.errorInfo = this.dataLayer.getError();
         }
-        return obj_id;
+        return objId;
     }
 
     /**
-     * Selects a row from the database for the table matching entity_name and id
-     * @param entity_name The name of the table to select from
+     * Selects a row from the database for the table matching entityName and id
+     * @param entityName The name of the table to select from
      * @param id The primary key id of the relevant row
      * @returns {Promise<*>}
      */
-    async read(entity_name = '',id = -1) {
-        const data_obj = await this.data_layer.read(entity_name,id);
-        if (data_obj === null) {
-            this.error_info = this.data_layer.getError();
+    async read(entityName = '',id = -1) {
+        const dataObj = await this.dataLayer.read(entityName,id);
+        if (dataObj === null) {
+            this.errorInfo = this.dataLayer.getError();
         }
-        return data_obj;
+        return dataObj;
     }
 
     /**
-     * Attempts to modify a row in the database for the table matching the entity_name
-     * @param entity_name The name of the table to update a row for
+     * Attempts to modify a row in the database for the table matching the entityName
+     * @param entityName The name of the table to update a row for
      * @param data The relevant key/value data pairs for this entry. Only the provided keys will be updated
      * @returns {Promise<number|*>}
      */
-    async update(entity_name = '',data = {}) {
-        if (!await this.data_layer.update(entity_name,data)) {
-            this.error_info = this.data_layer.getError();
+    async update(entityName = '',data = {}) {
+        if (!await this.dataLayer.update(entityName,data)) {
+            this.errorInfo = this.dataLayer.getError();
             return false;
         }
         return true;
     }
 
     /**
-     * Attempts to delete a row in the database for the table matching the entity_name
-     * @param entity_name The name of the table to delete a row for
+     * Attempts to delete a row in the database for the table matching the entityName
+     * @param entityName The name of the table to delete a row for
      * @param id The primary key id of the relevant row
      * @returns {Promise<boolean>}
      */
-    async delete(entity_name = '',id = -1) {
-        if (!await this.data_layer.delete(entity_name,id)) {
-            this.error_info = this.data_layer.getError();
+    async delete(entityName = '',id = -1) {
+        if (!await this.dataLayer.delete(entityName,id)) {
+            this.errorInfo = this.dataLayer.getError();
             return false;
         }
         return true;

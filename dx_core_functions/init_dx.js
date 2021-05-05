@@ -1,15 +1,15 @@
 const fs = require("fs");
-const fs_async = require("fs").promises;
-const divblox_root = "../../divblox_config";
-const data_model_file_name = divblox_root+'/data-model.json';
-const dx_config_file_name = divblox_root+'/dxconfig.json';
-const dx_sync_db_file_name = divblox_root+'/sync_db.js';
+const fsAsync = require("fs").promises;
+const divbloxRoot = "../../divblox_config";
+const dataModelFileName = divbloxRoot+'/data-model.json';
+const dxConfigFileName = divbloxRoot+'/dxconfig.json';
+const dxSyncDbFileName = divbloxRoot+'/sync_db.js';
 /**
- * @type {{environment_array: {development: {modules: {main: {password: string, database: string, port: number,
+ * @type {{environmentArray: {development: {modules: {main: {password: string, database: string, port: number,
  * host: string, user: string, ssl: boolean}}}, production: {modules: {main: {password: string, database: string, port: number, host: string, user: string, ssl: boolean}}}}}}
  */
-const dx_config_default = {
-        "environment_array":{
+const dxConfigDefault = {
+        "environmentArray":{
             "development":{
                 "modules": {
                     "main": {
@@ -37,23 +37,23 @@ const dx_config_default = {
         }
     };
 /**
- * @type {{modules: [{entities: {account: {relationships: {user_role: [string, string], password_reset_token: [string]},
- * attributes: {surname: string, name: string, cell: string}}}, module_name: string}]}}
+ * @type {{modules: [{entities: {account: {relationships: {userRole: [string, string], passwordResetToken: [string]},
+ * attributes: {surname: string, name: string, cell: string}}}, moduleName: string}]}}
  */
-const dx_data_model_default = {
+const dxDataModelDefault = {
         "modules": [
             {
-                "module_name": "main",
+                "moduleName": "main",
                 "entities": {
-                    "account": {
+                    "Account": {
                         "attributes": {
-                            "name": "varchar(50)",
-                            "surname": "varchar(50)",
+                            "firstName": "varchar(50)",
+                            "lastName": "varchar(50)",
                             "cell": "varchar(50) unique"
                         },
                         "relationships": {
-                            "user_role": ["main_role","second_role"],
-                            "password_reset_token":["token"]
+                            "userRole": ["mainRole","secondRole"],
+                            "passwordResetToken":["token"]
                         }
                     }
                 }
@@ -63,10 +63,10 @@ const dx_data_model_default = {
 /**
  * @type {string} The default sync script content
  */
-const dx_sync_db_default = 'const DivbloxBase = require("divblox.js/divblox");\n' +
+const dxSyncDbDefault = 'const DivbloxBase = require("divblox.js/divblox");\n' +
     'const dx = new DivbloxBase(\n' +
-    '    {"config_path":"./divblox_config/dxconfig.json",\n' +
-    '    "data_model_path":"./divblox_config/data-model.json"\n' +
+    '    {"configPath":"./divblox_config/dxconfig.json",\n' +
+    '    "dataModelPath":"./divblox_config/data-model.json"\n' +
     '    });\n' +
     'async function runDx() {\n' +
     '    await dx.initDx();\n' +
@@ -81,21 +81,21 @@ const dx_sync_db_default = 'const DivbloxBase = require("divblox.js/divblox");\n
  */
 async function createDefaults() {
     console.log("Initializing Divblox...");
-    if (!fs.existsSync(divblox_root)){
+    if (!fs.existsSync(divbloxRoot)){
         console.log("Creating Divblox config directory...");
-        fs.mkdirSync(divblox_root);
+        fs.mkdirSync(divbloxRoot);
     }
-    if (!fs.existsSync(data_model_file_name)) {
+    if (!fs.existsSync(dataModelFileName)) {
         console.log("Creating Divblox data model...");
-        await fs_async.writeFile(data_model_file_name, JSON.stringify(dx_data_model_default,null,2));
+        await fsAsync.writeFile(dataModelFileName, JSON.stringify(dxDataModelDefault,null,2));
     }
-    if (!fs.existsSync(dx_config_file_name)) {
+    if (!fs.existsSync(dxConfigFileName)) {
         console.log("Creating Divblox default config file...");
-        await fs_async.writeFile(dx_config_file_name, JSON.stringify(dx_config_default,null,2));
+        await fsAsync.writeFile(dxConfigFileName, JSON.stringify(dxConfigDefault,null,2));
     }
-    if (!fs.existsSync(dx_sync_db_file_name)) {
-        console.log("Creating Divblox sync_db script...");
-        await fs_async.writeFile(dx_sync_db_file_name, dx_sync_db_default);
+    if (!fs.existsSync(dxSyncDbFileName)) {
+        console.log("Creating Divblox syncDb script...");
+        await fsAsync.writeFile(dxSyncDbFileName, dxSyncDbDefault);
     }
 }
 createDefaults();
