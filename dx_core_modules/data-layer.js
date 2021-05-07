@@ -7,8 +7,8 @@ const dxUtils = require("dx-utils");
 class DivbloxDataLayer {
     /**
      * Configures the various modules and entities that are available for database interaction
-     * @param databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
-     * @param dataModel An object that represents the various entities and their attributes in the data structure
+     * @param {*} databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
+     * @param {*} dataModel An object that represents the various entities and their attributes in the data structure
      */
     constructor(databaseConnector = null,dataModel = {}) {
         this.databaseConnector = databaseConnector;
@@ -17,6 +17,7 @@ class DivbloxDataLayer {
         this.moduleArray = {};
         this.dataModelEntities = [];
         this.entityArray = {};
+
         for (const moduleObj of this.dataModel["modules"]) {
             this.moduleArray[moduleObj["moduleName"]] = moduleObj["entities"];
             for (const entityName of Object.keys(moduleObj["entities"])) {
@@ -24,6 +25,7 @@ class DivbloxDataLayer {
                 this.dataModelEntities.push(this.getSqlReadyName(entityName));
             }
         }
+        //TODO: Complete this array
         this.requiredEntities = ["Account"];
     }
 
@@ -47,10 +49,12 @@ class DivbloxDataLayer {
                 this.errorInfo.push("Entity '"+entityName+"' not present");
             }
         }
+
         if (this.errorInfo.length > 0) {
             this.errorInfo.unshift("Required entities are missing");
             return false;
         }
+
         return await this.validateDataModelAgainstDatabase();
     }
 
@@ -74,133 +78,175 @@ class DivbloxDataLayer {
 
     /**
      * Determines the module in which the provided entity resides
-     * @param entityName The name of the entity to get the module for
+     * @param {string} entityName The name of the entity to get the module for
      * @returns {null|*}
      */
     getModuleNameFromEntityName(entityName = '') {
         if (typeof this.entityArray[this.getSqlReadyName(entityName)] === "undefined") {
             return null;
         }
+
         return this.entityArray[this.getSqlReadyName(entityName)];
     }
 
     /**
      * Responsible for performing an insert query on the database for the relevant entity
-     * @param entityName The entity to create (Name of the row to perform an insert for)
-     * @param data An object who's properties deterimines the fields to set values for when inserting
+     * @param {string} entityName The entity to create (Name of the row to perform an insert for)
+     * @param {*} data An object who's properties determines the fields to set values for when inserting
      * @returns {Promise<number|*>} Returns the primary key id of the inserted item or -1
      */
     async create(entityName = '',data = {}) {
         this.errorInfo = [];
+
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return -1;}
 
         const dataKeys = Object.keys(data);
-        let keysStr = '';
-        let valuesStr = '';
+        let sqlKeys = '';
+        let sqlPlaceholders = '';
+        let sqlValues = [];
+
         for (const key of dataKeys) {
-            keysStr += ", `"+this.getSqlReadyName(key)+"`";
-            valuesStr += ", '"+this.getSqlReadyValue(data[key])+"'";
+            sqlKeys += ", `"+this.getSqlReadyName(key)+"`";
+            sqlPlaceholders += ", ?";
+            sqlValues.push(this.getSqlReadyValue(data[key]));
         }
-        const queryStr = "INSERT INTO `"+this.getSqlReadyName(entityName)+"` " +
-            "(`id`"+keysStr+") VALUES (NULL"+valuesStr+");";
-        const queryResult = await this.executeQuery(queryStr, this.getModuleNameFromEntityName(entityName));
+
+        const query = "INSERT INTO `"+this.getSqlReadyName(entityName)+"` " +
+            "(`id`"+sqlKeys+") VALUES (NULL"+sqlPlaceholders+");";
+
+        const queryResult = await this.executeQuery(query, 
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues);
+
         if (queryResult === null) {
             return -1;
         }
+
         return queryResult["insertId"];
     }
 
     /**
      * Loads the data for a specific entity from the database
-     * @param entityName The entity type to load for (The table to perform a select query on)
-     * @param id The primary key id of the relevant row
+     * @param {string} entityName The entity type to load for (The table to perform a select query on)
+     * @param {number} id The primary key id of the relevant row
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
     async read(entityName = '',id = -1) {
         this.errorInfo = [];
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
 
-        const queryStr = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `id` = '"+id+"' LIMIT 1;";
-        const queryResult = await this.executeQuery(queryStr, this.getModuleNameFromEntityName(entityName));
+        const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
+            "WHERE `id` = ? LIMIT 1;";
+        const sqlValues = [id];
+
+        const queryResult = await this.executeQuery(query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues);
+
         if (queryResult === null) {
             return null;
         }
-        //TODO: Here we must convert the properties of the object to camelCase first
+
         return this.transformSqlObjectToJs(queryResult[0]);
     }
 
     /**
      * Performs an update query on the database for the relevant entity
-     * @param entityName The entity type to perform the update for (The table to perform a update query on)
-     * @param data The primary key id of the relevant row
+     * @param {string} entityName The entity type to perform the update for (The table to perform a update query on)
+     * @param {*} data The primary key id of the relevant row
      * @returns {Promise<boolean>} Returns true if the update was successful, false otherwise
      */
     async update(entityName = '',data = {}) {
         this.errorInfo = [];
+
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
 
         if (typeof data["id"] === "undefined") {
             this.errorInfo.push("No id provided");
             return false;
         }
+
         const dataKeys = Object.keys(data);
-        let updateStr = '';
+        let sqlUpdateKeys = '';
+        let sqlUpdateValues = [];
+
         for (const key of dataKeys) {
             if (key === 'id') {
                 continue;
             }
-            updateStr += ", `"+this.getSqlReadyName(key,"")+"` = '"+this.getSqlReadyValue(data[key])+"'";
+            sqlUpdateKeys += ", `"+this.getSqlReadyName(key,"")+"` = ?";
+            sqlUpdateValues.push(this.getSqlReadyValue(data[key]));
         }
-        updateStr = updateStr.substring(1,updateStr.length);
-        const queryStr = "UPDATE `"+this.getSqlReadyName(entityName)+"` " +
-            "SET "+updateStr+" WHERE " +
-            "`"+this.getSqlReadyName(entityName)+"`.`id` = "+data["id"];
-        const queryResult = await this.executeQuery(queryStr, this.getModuleNameFromEntityName(entityName));
+
+        sqlUpdateValues.push(this.getSqlReadyValue(data["id"]));
+        sqlUpdateKeys = sqlUpdateKeys.substring(1,sqlUpdateKeys.length);
+
+        const query = "UPDATE `"+this.getSqlReadyName(entityName)+"` " +
+            "SET "+sqlUpdateKeys+" WHERE " +
+            "`"+this.getSqlReadyName(entityName)+"`.`id` = ?";
+
+        const queryResult = await this.executeQuery(query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlUpdateValues);
+
         return queryResult !== null;
     }
 
     /**
      * Removes a specific entity from the database
-     * @param entityName The entity type to remove (The table to perform a delete query on)
-     * @param id The primary key id of the relevant row
+     * @param {string} entityName The entity type to remove (The table to perform a delete query on)
+     * @param {number} id The primary key id of the relevant row
      * @returns {Promise<boolean>} Returns true if the delete was successful, false otherwise
      */
     async delete(entityName = '',id = -1) {
         this.errorInfo = [];
+
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
 
-        const queryStr = "DELETE FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `id` = '"+id+"';";
-        const queryResult = await this.executeQuery(queryStr, this.getModuleNameFromEntityName(entityName));
+        const query = "DELETE FROM `"+this.getSqlReadyName(entityName)+"` " +
+            "WHERE `id` = ?;";
+
+        const sqlValues = [id];
+
+        const queryResult = await this.executeQuery(query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues);
+
         return queryResult !== null;
     }
 
     /**
      * Performs a specified query on the relevant database, based on the provide module name
-     * @param queryStr The query to be performed
-     * @param moduleNameStr The name of the module that determines the database where the query needs to be performed
+     * @param {string} query The query to be performed
+     * @param {string} moduleName The name of the module that determines the database where the query needs to be performed
+     * @param {[]} values Any values to insert into placeholders in sql. If not provided, it is assumed that the query
+     * can execute as is
      * @returns {Promise<*|null>} Returns the database query result if successful, or NULL if not
      */
-    async executeQuery(queryStr = null, moduleNameStr = null) {
-        if (queryStr === null) {
+    async executeQuery(query, moduleName, values) {
+        if (typeof query === undefined) {
             this.errorInfo.push("No query provided");
             return null;
         }
-        const queryResult = await this.databaseConnector.queryDB(queryStr,moduleNameStr);
+
+        const queryResult = await this.databaseConnector.queryDB(query, moduleName, values);
+
         if (queryResult === null) {
             this.errorInfo = this.databaseConnector.getError();
             return null;
         }
+
         if (typeof queryResult["error"] !== "undefined") {
             this.errorInfo.push(queryResult["error"]);
             return null;
         }
+
         if ((typeof queryResult["affectedRows"] !== "undefined") &&
             (queryResult["affectedRows"] < 1)) {
             this.errorInfo.push("No rows were affected");
             return null;
         }
+
         return queryResult;
     }
 
@@ -214,12 +260,13 @@ class DivbloxDataLayer {
             this.errorInfo.push("Entity '"+entityName+"' does not exist");
             return false;
         }
+
         return true;
     }
 
     /**
      * Validates whether the provided entity is defined in the data model
-     * @param entityName The name of the entity to validate
+     * @param {string} entityName The name of the entity to validate
      * @returns {boolean} true if the validation passed, false if not
      */
     checkEntityExistsInDataModel(entityName = '') {
@@ -267,9 +314,11 @@ class DivbloxDataLayer {
      */
     transformSqlObjectToJs(sqlObject = {}) {
         let returnObject = {};
+
         for (const key of Object.keys(sqlObject)) {
             returnObject[this.convertSqlNameToProperty(key,false)] = sqlObject[key];
         }
+
         return returnObject;
     }
 }

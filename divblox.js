@@ -108,10 +108,10 @@ class DivbloxBase {
 
     /**
      * Closes the Divblox instance
-     * @param errorMessage An optional message to provide when closing
+     * @param {string} errorMessage An optional message to provide when closing
      */
-    closeDx(errorMessage = null) {
-        if (errorMessage === null) {
+    closeDx(errorMessage) {
+        if (typeof errorMessage === "undefined") {
             console.log("Divblox closed by user");
             process.exit(0);
         } else {
@@ -129,19 +129,21 @@ class DivbloxBase {
     async syncDatabase() {
         const syncStr = await dxUtils.getCommandLineInput(
             "Synchronize data model with database now? [y/n]");
+
         if (syncStr.toLowerCase() === "y") {
             if (!await this.dataLayer.syncDatabase()) {
                 throw new Error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
             }
             return;
         }
+
         console.log("Synchronization cancelled");
     }
 
     /**
      * Attempts to insert a new row in the data base for the table matching the entityName
-     * @param entityName The name of the table to insert a row for
-     * @param data The relevant key/value data pairs for this entry
+     * @param {string} entityName The name of the table to insert a row for
+     * @param {*} data The relevant key/value data pairs for this entry
      * @returns {Promise<number|*>}
      */
     async create(entityName = '',data = {}) {
@@ -149,13 +151,14 @@ class DivbloxBase {
         if (objId === -1) {
             this.errorInfo = this.dataLayer.getError();
         }
+
         return objId;
     }
 
     /**
      * Selects a row from the database for the table matching entityName and id
-     * @param entityName The name of the table to select from
-     * @param id The primary key id of the relevant row
+     * @param {string} entityName The name of the table to select from
+     * @param {number} id The primary key id of the relevant row
      * @returns {Promise<*>}
      */
     async read(entityName = '',id = -1) {
@@ -163,13 +166,14 @@ class DivbloxBase {
         if (dataObj === null) {
             this.errorInfo = this.dataLayer.getError();
         }
+
         return dataObj;
     }
 
     /**
      * Attempts to modify a row in the database for the table matching the entityName
-     * @param entityName The name of the table to update a row for
-     * @param data The relevant key/value data pairs for this entry. Only the provided keys will be updated
+     * @param {string} entityName The name of the table to update a row for
+     * @param {*} data The relevant key/value data pairs for this entry. Only the provided keys will be updated
      * @returns {Promise<number|*>}
      */
     async update(entityName = '',data = {}) {
@@ -177,13 +181,14 @@ class DivbloxBase {
             this.errorInfo = this.dataLayer.getError();
             return false;
         }
+
         return true;
     }
 
     /**
      * Attempts to delete a row in the database for the table matching the entityName
-     * @param entityName The name of the table to delete a row for
-     * @param id The primary key id of the relevant row
+     * @param {string} entityName The name of the table to delete a row for
+     * @param {number} id The primary key id of the relevant row
      * @returns {Promise<boolean>}
      */
     async delete(entityName = '',id = -1) {
@@ -191,6 +196,7 @@ class DivbloxBase {
             this.errorInfo = this.dataLayer.getError();
             return false;
         }
+        
         return true;
     }
     //#endregion
