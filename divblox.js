@@ -10,17 +10,6 @@ const DivbloxDataLayerBase = require('./dx_core_modules/data-layer');
  */
 class DivbloxDataLayer extends DivbloxDataLayerBase {}
 
-//TODO: Decide if this is truly needed. If Divblox will only deal with data and logic, this might not be needed.
-// If Divblox will provide the web server via express or something, then this might be needed but updated
-process.on('uncaughtException', function(error) {
-    console.trace("Unhandled exception caught: "+error);
-    process.exit(1);
-});
-process.on('unhandledRejection', function(reason, p){
-    console.trace("Unhandled promise rejection caught: "+reason);
-    process.exit(1);
-});
-
 /**
  * DivbloxBase serves as the base Divblox class that provides the relevant backend nodejs functionality for a Divblox
  * application
@@ -105,20 +94,6 @@ class DivbloxBase {
                 "$ NODE_ENV="+process.env.NODE_ENV+" node ./divbloxConfig/sync_db.js");
         }
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
-    }
-
-    /**
-     * Closes the Divblox instance
-     * @param {string} errorMessage An optional message to provide when closing
-     */
-    closeDx(errorMessage) {
-        if (typeof errorMessage === "undefined") {
-            console.log("Divblox closed by user");
-            process.exit(0);
-        } else {
-            console.log("Divblox closed with error: "+errorMessage);
-            process.exit(1);
-        }
     }
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
