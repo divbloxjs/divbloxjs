@@ -53,7 +53,8 @@ const dxDataModelDefault = {
                         "attributes": {
                             "firstName": "varchar(50)",
                             "lastName": "varchar(50)",
-                            "cell": "varchar(50) unique"
+                            "cell": "varchar(50) unique",
+                            "idNumber": "varchar(25)"
                         },
                         "relationships": {
                             "userRole": ["mainRole","secondRole"],
@@ -97,7 +98,7 @@ const dxExampleScript = 'const DivbloxBase = require("divblox.js/divblox");\n' +
     'const dx = new Divblox(\n' +
     '    {"configPath":"./divblox_config/dxconfig.json",\n' +
     '        "dataModelPath":"./divblox_config/data-model.json",\n' +
-    '        "dataLayerImplementationClass":null});\n' +
+    '        "dataLayerImplementationClass":DivbloxDataLayer/*Can also be null if you want to use the default data layer*/});\n' +
     'async function dxDx() {\n' +
     '    await dx.initDx();\n' +
     '    const objId = await dx.create("account",{"firstName":"john","lastName":"Doe","idNumber":"123"});\n' +
