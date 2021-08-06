@@ -132,9 +132,9 @@ const dxExampleScript = 'const DivbloxBase = require("divblox.js/divblox");\n' +
  */
 async function createDefaults() {
     console.log("Initializing Divblox...");
-    if (!fs.existsSync(divbloxRoot)){
+    if (!fs.existsSync(divbloxConfigRoot)){
         console.log("Creating Divblox config directory...");
-        fs.mkdirSync(divbloxRoot);
+        fs.mkdirSync(divbloxConfigRoot);
     }
     if (!fs.existsSync(dataModelFileName)) {
         console.log("Creating Divblox data model...");
