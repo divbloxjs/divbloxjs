@@ -45,7 +45,7 @@ const dxDataModelDefault = {
             {
                 "moduleName": "main",
                 "entities": {
-                    "Account": {
+                    "account": {
                         "attributes": {
                             "firstName": "varchar(50)",
                             "lastName": "varchar(50)",

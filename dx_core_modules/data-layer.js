@@ -26,7 +26,7 @@ class DivbloxDataLayer {
             }
         }
         //TODO: Complete this array
-        this.requiredEntities = ["Account"];
+        this.requiredEntities = ["account"];
     }
 
     /**
@@ -114,7 +114,7 @@ class DivbloxDataLayer {
         const query = "INSERT INTO `"+this.getSqlReadyName(entityName)+"` " +
             "(`id`"+sqlKeys+") VALUES (NULL"+sqlPlaceholders+");";
 
-        const queryResult = await this.executeQuery(query, 
+        const queryResult = await this.executeQuery(query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues);
 

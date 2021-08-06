@@ -17,23 +17,23 @@ const dx = new Divblox(
         "dataLayerImplementationClass":null});
 async function dxDx() {
     await dx.initDx();
-    const objId = await dx.create("Account",{"firstName":"john","lastName":"Doe","idNumber":"123"});
+    const objId = await dx.create("account",{"firstName":"john","lastName":"Doe","idNumber":"123"});
     if (objId === -1) {
         console.log("Failed to create new account: "+JSON.stringify(dx.getError()));
     } else {
         console.log("New account created!");
-        const obj = await dx.read("Account",objId);
+        const obj = await dx.read("account",objId);
         if (obj !== null) {
             console.log("Found: "+JSON.stringify(obj,null,2));
         } else {
             console.log("Not found: "+JSON.stringify(dx.getError()));
         }
-        if (!await dx.update("Account",{"id":objId,"firstName":"UpdateName","idNumber":"888"})) {
+        if (!await dx.update("account",{"id":objId,"firstName":"UpdateName","idNumber":"888"})) {
             console.log("Error updating: "+JSON.stringify(dx.getError()));
         } else {
             console.log("Updated!");
         }
-        if (!await dx.delete("Account",2)) {
+        if (!await dx.delete("account",2)) {
             console.log("Error deleting: "+JSON.stringify(dx.getError()));
         } else {
             console.log("Deleted!");
