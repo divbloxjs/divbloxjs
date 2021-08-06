@@ -1,9 +1,12 @@
 const fs = require("fs");
 const fsAsync = require("fs").promises;
-const divbloxRoot = "../../divblox_config";
-const dataModelFileName = divbloxRoot+'/data-model.json';
-const dxConfigFileName = divbloxRoot+'/dxconfig.json';
-const dxSyncDbFileName = divbloxRoot+'/sync_db.js';
+const divbloxRoot = "../..";
+const divbloxConfigRoot = divbloxRoot+"/divblox_config";
+const dataModelFileName = divbloxConfigRoot+'/data-model.json';
+const dxConfigFileName = divbloxConfigRoot+'/dxconfig.json';
+const dxSyncDbFileName = divbloxConfigRoot+'/sync_db.js';
+const dxExampleScriptFileName = divbloxRoot+'/divblox_example.js';
+
 /**
  * @type {{environmentArray: {development: {modules: {main: {password: string, database: string, port: number,
  * host: string, user: string, ssl: boolean}}}, production: {modules: {main: {password: string, database: string, port: number, host: string, user: string, ssl: boolean}}}}}}
@@ -36,6 +39,7 @@ const dxConfigDefault = {
             }
         }
     };
+
 /**
  * @type {{modules: [{entities: {account: {relationships: {userRole: [string, string], passwordResetToken: [string]},
  * attributes: {surname: string, name: string, cell: string}}}, moduleName: string}]}}
@@ -60,6 +64,7 @@ const dxDataModelDefault = {
             }
         ]
     };
+
 /**
  * @type {string} The default sync script content
  */
@@ -74,6 +79,52 @@ const dxSyncDbDefault = 'const DivbloxBase = require("divblox.js/divblox");\n' +
     '    dx.closeDx();\n' +
     '}\n' +
     'runDx();'
+/**
+ * @type {string} The example script content
+ */
+const dxExampleScript = 'const DivbloxBase = require("divblox.js/divblox");\n' +
+    'const DivbloxDataLayerBase = require("divblox.js/dx_core_modules/data-layer");\n' +
+    'class DivbloxDataLayer extends DivbloxDataLayerBase {\n' +
+    '    constructor(databaseConnector = null,dataModel = {}) {\n' +
+    '        super(databaseConnector,dataModel);\n' +
+    '        console.log("My own data layer");\n' +
+    '    }\n' +
+    '}\n' +
+    'class Divblox extends DivbloxBase {\n' +
+    '\n' +
+    '}\n' +
+    '\n' +
+    'const dx = new Divblox(\n' +
+    '    {"configPath":"./divblox_config/dxconfig.json",\n' +
+    '        "dataModelPath":"./divblox_config/data-model.json",\n' +
+    '        "dataLayerImplementationClass":null});\n' +
+    'async function dxDx() {\n' +
+    '    await dx.initDx();\n' +
+    '    const objId = await dx.create("account",{"firstName":"john","lastName":"Doe","idNumber":"123"});\n' +
+    '    if (objId === -1) {\n' +
+    '        console.log("Failed to create new account: "+JSON.stringify(dx.getError()));\n' +
+    '    } else {\n' +
+    '        console.log("New account created!");\n' +
+    '        const obj = await dx.read("account",objId);\n' +
+    '        if (obj !== null) {\n' +
+    '            console.log("Found: "+JSON.stringify(obj,null,2));\n' +
+    '        } else {\n' +
+    '            console.log("Not found: "+JSON.stringify(dx.getError()));\n' +
+    '        }\n' +
+    '        if (!await dx.update("account",{"id":objId,"firstName":"UpdateName","idNumber":"888"})) {\n' +
+    '            console.log("Error updating: "+JSON.stringify(dx.getError()));\n' +
+    '        } else {\n' +
+    '            console.log("Updated!");\n' +
+    '        }\n' +
+    '        if (!await dx.delete("account",2)) {\n' +
+    '            console.log("Error deleting: "+JSON.stringify(dx.getError()));\n' +
+    '        } else {\n' +
+    '            console.log("Deleted!");\n' +
+    '        }\n' +
+    '    }\n' +
+    '\n' +
+    '}\n' +
+    'dxDx();';
 
 /**
  * Creates the minimum configuration files needed for Divblox to be initiated
@@ -96,6 +147,10 @@ async function createDefaults() {
     if (!fs.existsSync(dxSyncDbFileName)) {
         console.log("Creating Divblox syncDb script...");
         await fsAsync.writeFile(dxSyncDbFileName, dxSyncDbDefault);
+    }
+    if (!fs.existsSync(dxExampleScriptFileName)) {
+        console.log("Creating Divblox example script...");
+        await fsAsync.writeFile(dxExampleScriptFileName, dxExampleScript);
     }
 }
 createDefaults();
