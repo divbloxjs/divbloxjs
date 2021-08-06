@@ -4,7 +4,6 @@ const divbloxRoot = "../..";
 const divbloxConfigRoot = divbloxRoot+"/divblox_config";
 const dataModelFileName = divbloxConfigRoot+'/data-model.json';
 const dxConfigFileName = divbloxConfigRoot+'/dxconfig.json';
-const dxSyncDbFileName = divbloxConfigRoot+'/sync_db.js';
 const dxExampleScriptFileName = divbloxRoot+'/divblox_example.js';
 
 /**
@@ -66,20 +65,6 @@ const dxDataModelDefault = {
         ]
     };
 
-/**
- * @type {string} The default sync script content
- */
-const dxSyncDbDefault = 'const DivbloxBase = require("divblox.js/divblox");\n' +
-    'const dx = new DivbloxBase(\n' +
-    '    {"configPath":"./divblox_config/dxconfig.json",\n' +
-    '    "dataModelPath":"./divblox_config/data-model.json"\n' +
-    '    });\n' +
-    'async function runDx() {\n' +
-    '    await dx.initDx();\n' +
-    '    await dx.syncDatabase();\n' +
-    '    dx.closeDx();\n' +
-    '}\n' +
-    'runDx();'
 /**
  * @type {string} The example script content
  */
@@ -144,10 +129,6 @@ async function createDefaults() {
     if (!fs.existsSync(dxConfigFileName)) {
         console.log("Creating Divblox default config file...");
         await fsAsync.writeFile(dxConfigFileName, JSON.stringify(dxConfigDefault,null,2));
-    }
-    if (!fs.existsSync(dxSyncDbFileName)) {
-        console.log("Creating Divblox syncDb script...");
-        await fsAsync.writeFile(dxSyncDbFileName, dxSyncDbDefault);
     }
     if (!fs.existsSync(dxExampleScriptFileName)) {
         console.log("Creating Divblox example script...");
