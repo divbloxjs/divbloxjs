@@ -3,6 +3,10 @@
 The divblox nodejs library
 
 ##Getting Started
+`npm install --save https://github.com/JohanGriesel/divblox.js.git`
+
+then
+
 `cd node_modules/divblox.js/`
 
 then
