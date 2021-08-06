@@ -88,10 +88,9 @@ class DivbloxBase {
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector,this.dataModelObj);
         if (!await this.dataLayer.validateDataModel()) {
             this.errorInfo = this.dataLayer.getError();
-            throw new Error("Error validating data model: "+
-                JSON.stringify(this.errorInfo,null,2)+
-                "\nPlease ensure that the data model is correct and then try re-synchronizing by running the following from your project root:\n" +
-                "$ NODE_ENV="+process.env.NODE_ENV+" node ./divbloxConfig/sync_db.js");
+            console.log("Error validating data model: "+
+                JSON.stringify(this.errorInfo,null,2));
+            await this.syncDatabase(false);
         }
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
     }
@@ -100,20 +99,29 @@ class DivbloxBase {
     /**
      * Performs a synchronization of the provided data model with the configured database(s) to ensure that the actual
      * underlying database(s) reflect(s) what is defined in the data model
+     * @param {boolean} handleErrorSilently If set to true, the function will not throw an exception when it fails
+     * to sync
      * @returns {Promise<void>}
      */
-    async syncDatabase() {
+    async syncDatabase(handleErrorSilently = false) {
         const syncStr = await dxUtils.getCommandLineInput(
             "Synchronize data model with database now? [y/n]");
 
         if (syncStr.toLowerCase() === "y") {
             if (!await this.dataLayer.syncDatabase()) {
-                throw new Error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
+                if (handleErrorSilently) {
+                    console.error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
+                } else {
+                    throw new Error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
+                }
             }
             return;
         }
-
-        console.log("Synchronization cancelled");
+        if (handleErrorSilently) {
+            console.log("Synchronization cancelled");
+        } else {
+            throw new Error("Synchronization cancelled. Cannot continue.");
+        }
     }
 
     /**
