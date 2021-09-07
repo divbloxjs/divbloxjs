@@ -8,8 +8,8 @@ const DivbloxDataLayerBase = require("divblox.js/dx_core_modules/data-layer");
  * We don't need to create this class if we don't want to and we are happy with the standard Divblox data layer.
  */
 class DivbloxDataLayer extends DivbloxDataLayerBase {
-    constructor(databaseConnector = null,dataModel = {}) {
-        super(databaseConnector,dataModel);
+    constructor(databaseConnector = null, dataModel = {}) {
+        super(databaseConnector, dataModel);
         console.log("My own data layer");
     }
 }
@@ -38,7 +38,7 @@ async function startDx() {
     await dx.initDx();
 
     // Let's create a new row for the object of type "Account" in the database with some parameters
-    const objId = await dx.create("account",{"firstName":"john","lastName":"Doe","idNumber":"123"});
+    const objId = await dx.create("account", {"firstName":"john","lastName":"Doe","idNumber":"123"});
     if (objId === -1) {
         console.log("Failed to create new account: "+JSON.stringify(dx.getError()));
     } else {
@@ -46,22 +46,22 @@ async function startDx() {
         console.log("New account created!");
 
         // Let's read the entry from the database. This basically performs a "SELECT from `account` WHERE `id` = objId"
-        const obj = await dx.read("account",objId);
+        const obj = await dx.read("account", objId);
         if (obj !== null) {
-            console.log("Found: "+JSON.stringify(obj,null,2));
+            console.log("Found: "+JSON.stringify(obj, null, 2));
         } else {
             console.log("Not found: "+JSON.stringify(dx.getError()));
         }
 
         // Let's try and change something on this object using the "update" function
-        if (!await dx.update("account",{"id":objId,"firstName":"UpdateName","idNumber":"888"})) {
+        if (!await dx.update("account", {"id":objId, "firstName":"UpdateName", "idNumber":"888"})) {
             console.log("Error updating: "+JSON.stringify(dx.getError()));
         } else {
             console.log("Updated!");
         }
 
         //Let's try deleting an account using the "delete" function and specifying the account's id
-        if (!await dx.delete("account",2)) {
+        if (!await dx.delete("account", 2)) {
             console.log("Error deleting: "+JSON.stringify(dx.getError()));
         } else {
             console.log("Deleted!");
