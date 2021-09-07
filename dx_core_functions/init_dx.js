@@ -128,7 +128,9 @@ async function createDefaults() {
     }
     if (!fs.existsSync(dxConfigFileName)) {
         console.log("Creating Divblox default config file...");
-        await fsAsync.writeFile(dxConfigFileName, JSON.stringify(dxConfigDefault,null,2));
+        const dxConfigDefaultStr = await fsAsync.readFile('templates/dxconfig.json');
+        await fsAsync.writeFile(dxConfigFileName, dxConfigDefaultStr);
+        //await fsAsync.writeFile(dxConfigFileName, JSON.stringify(dxConfigDefault,null,2));
     }
     if (!fs.existsSync(dxExampleScriptFileName)) {
         console.log("Creating Divblox example script...");

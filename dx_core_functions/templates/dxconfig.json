@@ -1,0 +1,28 @@
+{
+  "environmentArray": {
+    "development": {
+      "modules": {
+        "main": {
+          "host": "localhost",
+          "user": "dbuser",
+          "password": "123",
+          "database": "local_dx_db",
+          "port": 3306,
+          "ssl": false
+        }
+      }
+    },
+    "production": {
+      "modules": {
+        "main": {
+          "host": "localhost",
+          "user": "dbuser",
+          "password": "123",
+          "database": "local_dx_db",
+          "port": 3306,
+          "ssl": false
+        }
+      }
+    }
+  }
+}
