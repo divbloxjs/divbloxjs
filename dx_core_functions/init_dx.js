@@ -31,5 +31,6 @@ async function createDefaults() {
         const dxExampleScriptStr = await fsAsync.readFile('dx_core_functions/templates/divblox_example.js');
         await fsAsync.writeFile(dxExampleScriptFileName, dxExampleScriptStr);
     }
+    console.log("Done! You can now go back to the nodejs root with 'cd ../..'");
 }
 createDefaults();
