@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JohanGriesel/divblox.js.git"
+    "url": "git+https://github.com/divbloxjs/divbloxjs.git"
   },
   "keywords": [
     "Divblox",
@@ -19,12 +19,12 @@
   "author": "Johan Griesel, johan@stratusolve.com (Stratusolve (Pty) Ltd)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JohanGriesel/divblox.js/issues"
+    "url": "https://github.com/divbloxjs/divbloxjs/issues"
   },
-  "homepage": "https://github.com/JohanGriesel/divblox.js#readme",
+  "homepage": "https://github.com/divbloxjs/divbloxjs#readme",
   "dependencies": {
-    "dx-db-connector": "github:JohanGriesel/dx-db-connector",
-    "dx-utils": "github:JohanGriesel/dx-utils",
+    "dx-db-connector": "github:divbloxjs/dx-db-connector",
+    "dx-utils": "github:divbloxjs/dx-utils",
     "mysql": "^2.18.1",
     "util": "^0.12.3"
   }
