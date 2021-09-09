@@ -14,7 +14,6 @@ class DivbloxDataLayer extends DivbloxObjectBase {
     constructor(databaseConnector = null, dataModel = {}) {
         super();
         this.databaseConnector = databaseConnector;
-        this.errorInfo = [];
         this.dataModel = dataModel;
         this.moduleArray = {};
         this.dataModelEntities = [];
@@ -32,15 +31,6 @@ class DivbloxDataLayer extends DivbloxObjectBase {
     }
 
     /**
-     * Whenever Divblox encounters an error, the errorInfo array is populated with details about the error. This
-     * function simply returns that errorInfo array for debugging purposes
-     * @returns {[]}
-     */
-    getError() {
-        return this.errorInfo;
-    }
-
-    /**
      * Validates the data model against what Divblox expects should be present at a minimum and then calls the functions
      * that validates against what is actually in the database
      * @returns {Promise<boolean>}
@@ -48,12 +38,12 @@ class DivbloxDataLayer extends DivbloxObjectBase {
     async validateDataModel() {
         for (const entityName of this.requiredEntities) {
             if (this.dataModelEntities.indexOf(this.getSqlReadyName(entityName)) === -1) {
-                this.errorInfo.push("Entity '"+entityName+"' not present");
+                this.populateError("Entity '"+entityName+"' not present")
             }
         }
 
-        if (this.errorInfo.length > 0) {
-            this.errorInfo.unshift("Required entities are missing");
+        if (this.getError().length > 0) {
+            this.populateError("Required entities are missing",true);
             return false;
         }
 
@@ -98,8 +88,6 @@ class DivbloxDataLayer extends DivbloxObjectBase {
      * @returns {Promise<number|*>} Returns the primary key id of the inserted item or -1
      */
     async create(entityName = '',data = {}) {
-        this.errorInfo = [];
-
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return -1;}
 
         const dataKeys = Object.keys(data);
@@ -134,7 +122,6 @@ class DivbloxDataLayer extends DivbloxObjectBase {
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
     async read(entityName = '',id = -1) {
-        this.errorInfo = [];
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
 
         const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
@@ -159,12 +146,11 @@ class DivbloxDataLayer extends DivbloxObjectBase {
      * @returns {Promise<boolean>} Returns true if the update was successful, false otherwise
      */
     async update(entityName = '',data = {}) {
-        this.errorInfo = [];
 
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
 
         if (typeof data["id"] === "undefined") {
-            this.errorInfo.push("No id provided");
+            this.populateError("No id provided");
             return false;
         }
 
@@ -201,8 +187,6 @@ class DivbloxDataLayer extends DivbloxObjectBase {
      * @returns {Promise<boolean>} Returns true if the delete was successful, false otherwise
      */
     async delete(entityName = '',id = -1) {
-        this.errorInfo = [];
-
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
 
         const query = "DELETE FROM `"+this.getSqlReadyName(entityName)+"` " +
@@ -227,25 +211,25 @@ class DivbloxDataLayer extends DivbloxObjectBase {
      */
     async executeQuery(query, moduleName, values) {
         if (typeof query === undefined) {
-            this.errorInfo.push("No query provided");
+            this.populateError("No query provided");
             return null;
         }
 
         const queryResult = await this.databaseConnector.queryDB(query, moduleName, values);
 
         if (queryResult === null) {
-            this.errorInfo = this.databaseConnector.getError();
+            this.populateError(this.databaseConnector.getError(), false, true);
             return null;
         }
 
         if (typeof queryResult["error"] !== "undefined") {
-            this.errorInfo.push(queryResult["error"]);
+            this.populateError(queryResult["error"]);
             return null;
         }
 
         if ((typeof queryResult["affectedRows"] !== "undefined") &&
             (queryResult["affectedRows"] < 1)) {
-            this.errorInfo.push("No rows were affected");
+            this.populateError("No rows were affected");
             return null;
         }
 
@@ -259,7 +243,7 @@ class DivbloxDataLayer extends DivbloxObjectBase {
      */
     doPreDatabaseInteractionCheck(entityName = '') {
         if (!this.checkEntityExistsInDataModel(this.getSqlReadyName(entityName))) {
-            this.errorInfo.push("Entity '"+entityName+"' does not exist");
+            this.populateError("Entity '"+entityName+"' does not exist");
             return false;
         }
 

@@ -7,7 +7,6 @@ const DivbloxObjectBase = require('./object-base');
 class DivbloxWebService extends DivbloxObjectBase {
     constructor(dataModel = {}, apiConfig = {}, apiEndPointRoot = '/dx-api-root') {
         super();
-        this.errorInfo = [];
         this.dataModel = dataModel;
         this.apiEndPointRoot = apiEndPointRoot;
         this.apiConfig = apiConfig;

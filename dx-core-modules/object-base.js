@@ -21,14 +21,18 @@ class DivbloxGlobalBase {
     
     /**
      * Pushes a new error object/array into the error array
-     * @param {{}|[]} errorToPush An object or array containing error information
+     * @param {{}|[]|string} errorToPush An object, array or string containing error information
      * @param {boolean} mustClean If true, the errorInfo array will first be emptied before adding the new error.
      */
-    populateError(errorToPush = [], mustClean = false) {
+    populateError(errorToPush = [], addAtStart = false, mustClean = false) {
         if (mustClean) {
             this.errorInfo = [];
         }
-        this.errorInfo.push(errorToPush);
+        if (!addAtStart) {
+            this.errorInfo.push(errorToPush);
+        } else {
+            this.errorInfo.unshift(errorToPush);
+        }
     }
 }
 module.exports = DivbloxGlobalBase;
