@@ -7,7 +7,7 @@ The divblox nodejs library
 
 then
 
-`cd node_modules/divblox.js/`
+`cd node_modules/divbloxjs/`
 
 then
 
