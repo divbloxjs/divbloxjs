@@ -1,5 +1,5 @@
 {
-  "name": "divblox.js",
+  "name": "divbloxjs",
   "version": "1.0.0",
   "description": "The divblox node.js backend",
   "main": "index.js",
