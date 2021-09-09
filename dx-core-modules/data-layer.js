@@ -1,16 +1,18 @@
 const dxUtils = require("dx-utils");
+const DivbloxObjectBase = require('object-base');
 
 /**
  * The DivbloxDataLayer is responsible for managing the interaction of logic of your app with the database, honouring
  * the provided data model
  */
-class DivbloxDataLayer {
+class DivbloxDataLayer extends DivbloxObjectBase {
     /**
      * Configures the various modules and entities that are available for database interaction
      * @param {*} databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
      * @param {*} dataModel An object that represents the various entities and their attributes in the data structure
      */
     constructor(databaseConnector = null, dataModel = {}) {
+        super();
         this.databaseConnector = databaseConnector;
         this.errorInfo = [];
         this.dataModel = dataModel;
