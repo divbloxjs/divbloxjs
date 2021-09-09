@@ -94,7 +94,6 @@ class DivbloxBase extends DivbloxObjectBase {
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
         if (!await this.dataLayer.validateDataModel()) {
             this.populateError(this.dataLayer.getError(), true);
-//            this.errorInfo = this.dataLayer.getError();
             console.log("Error validating data model: "+
                 JSON.stringify(this.getError(),null,2));
             await this.syncDatabase(false);
@@ -143,7 +142,6 @@ class DivbloxBase extends DivbloxObjectBase {
         const objId = await this.dataLayer.create(entityName,data);
         if (objId === -1) {
             this.populateError(this.dataLayer.getError(), true);
-//            this.errorInfo = this.dataLayer.getError();
         }
 
         return objId;
@@ -159,7 +157,6 @@ class DivbloxBase extends DivbloxObjectBase {
         const dataObj = await this.dataLayer.read(entityName,id);
         if (dataObj === null) {
             this.populateError(this.dataLayer.getError(), true);
-//            this.errorInfo = this.dataLayer.getError();
         }
 
         return dataObj;
@@ -174,7 +171,6 @@ class DivbloxBase extends DivbloxObjectBase {
     async update(entityName = '',data = {}) {
         if (!await this.dataLayer.update(entityName,data)) {
             this.populateError(this.dataLayer.getError(), true);
-//            this.errorInfo = this.dataLayer.getError();
             return false;
         }
 
@@ -190,7 +186,6 @@ class DivbloxBase extends DivbloxObjectBase {
     async delete(entityName = '',id = -1) {
         if (!await this.dataLayer.delete(entityName,id)) {
             this.populateError(this.dataLayer.getError(), true);
-//            this.errorInfo = this.dataLayer.getError();
             return false;
         }
         
