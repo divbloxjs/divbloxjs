@@ -1,4 +1,11 @@
+/**
+ * DivbloxGlobalBase is the lowest-level Divblox class that provides functionality that is reused in many Divblox
+ * implementation classes.
+ */
 class DivbloxGlobalBase {
+    /**
+     * A default constructor that should be overridden by child classes
+     */
     constructor() {
         this.errorInfo = [];
     }
