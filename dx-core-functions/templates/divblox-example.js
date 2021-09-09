@@ -1,5 +1,5 @@
-const DivbloxBase = require("divblox.js/divblox");
-const DivbloxDataLayerBase = require("divblox.js/dx-core-modules/data-layer");
+const DivbloxBase = require("divbloxjs/divblox");
+const DivbloxDataLayerBase = require("divbloxjs/dx-core-modules/data-layer");
 
 /**
  * This is an implementation of the DivbloxDataLayerBase class. We can use this class to override the core data layer
@@ -25,8 +25,8 @@ class Divblox extends DivbloxBase {
 // Let's create an instance of Divblox. This requires a config path, a data model path and an optional datalayer
 // implementation class
 const dx = new Divblox(
-    {"configPath":"./divblox_config/dxconfig.json",
-        "dataModelPath":"./divblox_config/data-model.json",
+    {"configPath":"./divblox-config/dxconfig.json",
+        "dataModelPath":"./divblox-config/data-model.json",
         "dataLayerImplementationClass":DivbloxDataLayer/*Can also be null if you want to use the default data layer*/});
 
 /**
