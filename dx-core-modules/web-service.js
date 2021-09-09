@@ -5,7 +5,7 @@ const dxUtils = require("dx-utils");
  * webserver-related functionality.
  */
 class DivbloxWebService {
-    constructor(dataModel = {}, apiEndPointRoot = '/dx-api-root', apiConfig = {}) {
+    constructor(dataModel = {}, apiConfig = {}, apiEndPointRoot = '/dx-api-root') {
         this.errorInfo = [];
         this.dataModel = dataModel;
         this.apiEndPointRoot = apiEndPointRoot;

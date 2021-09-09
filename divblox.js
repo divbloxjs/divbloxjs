@@ -91,7 +91,7 @@ class DivbloxBase extends DivbloxObjectBase {
         const dataModelDataStr = await fsAsync.readFile(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
 
-        this.dataLayer = new DivbloxDataLayer(this.databaseConnector,this.dataModelObj);
+        this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
         if (!await this.dataLayer.validateDataModel()) {
             this.populateError(this.dataLayer.getError(), true);
 //            this.errorInfo = this.dataLayer.getError();
@@ -99,6 +99,8 @@ class DivbloxBase extends DivbloxObjectBase {
                 JSON.stringify(this.getError(),null,2));
             await this.syncDatabase(false);
         }
+        this.webService = new DivbloxWebService(this.dataModelObj);
+        
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
     }
 
