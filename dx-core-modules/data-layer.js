@@ -1,5 +1,5 @@
 const dxUtils = require("dx-utils");
-const DivbloxObjectBase = require('object-base');
+const DivbloxObjectBase = require('./object-base');
 
 /**
  * The DivbloxDataLayer is responsible for managing the interaction of logic of your app with the database, honouring
