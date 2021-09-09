@@ -1,8 +1,10 @@
 const fs = require("fs");
 const fsAsync = require("fs").promises;
 const dxUtils = require("dx-utils");
+const DivbloxObjectBase = require('./dx-core-modules/divblox-object-base');
 const DivbloxDatabaseConnector = require("dx-db-connector");
 const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
+const DivbloxWebServiceBase = require('./dx-core-modules/web-service');
 
 /**
  * This class overrides the default DivbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
@@ -11,10 +13,16 @@ const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
 class DivbloxDataLayer extends DivbloxDataLayerBase {}
 
 /**
+ * This class overrides the default DivbloxWebServiceBase class to ensure that we can always just call DivbloxWebService,
+ * meaning, the developer can create their own version of DivbloxWebService if they want to modify how it should work
+ */
+class DivbloxWebService extends DivbloxWebServiceBase {}
+
+/**
  * DivbloxBase serves as the base Divblox class that provides the relevant backend nodejs functionality for a Divblox
  * application
  */
-class DivbloxBase {
+class DivbloxBase extends DivbloxObjectBase {
     /**
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
@@ -22,9 +30,11 @@ class DivbloxBase {
      * @param options.dataModelPath The path to the data-model.json file that contains the project's data model
      * @param options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
      * is useful when you want to override the default Divblox data layer behaviour
+     * @param options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
+     * is useful when you want to override the default Divblox Web Service behaviour
      */
     constructor(options = {}) {
-        this.errorInfo = [];
+        super();
 
         if ((typeof options["configPath"] === "undefined") || (options["configPath"] === null)) {
             throw new Error("No config path provided");
@@ -46,17 +56,13 @@ class DivbloxBase {
             (options["dataLayerImplementationClass"] !== null)) {
             DivbloxDataLayer = options["dataLayerImplementationClass"];
         }
+    
+        if ((typeof options["webServiceImplementationClass"] !== "undefined") &&
+            (options["webServiceImplementationClass"] !== null)) {
+            DivbloxWebService = options["webServiceImplementationClass"];
+        }
     }
-
-    /**
-     * Whenever Divblox encounters an error, the errorInfo array is populated with details about the error. This
-     * function simply returns that errorInfo array for debugging purposes
-     * @returns {[]}
-     */
-    getError() {
-        return this.errorInfo;
-    }
-
+    
     /**
      * Sets up the Divblox instance using the provided configuration and data model data.
      * @returns {Promise<void>}
@@ -87,9 +93,10 @@ class DivbloxBase {
 
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector,this.dataModelObj);
         if (!await this.dataLayer.validateDataModel()) {
-            this.errorInfo = this.dataLayer.getError();
+            this.populateError(this.dataLayer.getError(), true);
+//            this.errorInfo = this.dataLayer.getError();
             console.log("Error validating data model: "+
-                JSON.stringify(this.errorInfo,null,2));
+                JSON.stringify(this.getError(),null,2));
             await this.syncDatabase(false);
         }
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
@@ -110,9 +117,9 @@ class DivbloxBase {
         if (syncStr.toLowerCase() === "y") {
             if (!await this.dataLayer.syncDatabase()) {
                 if (handleErrorSilently) {
-                    console.error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
+                    console.error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
                 } else {
-                    throw new Error("Error synchronizing data model: "+JSON.stringify(this.errorInfo,null,2));
+                    throw new Error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
                 }
             }
             return;
@@ -133,7 +140,8 @@ class DivbloxBase {
     async create(entityName = '',data = {}) {
         const objId = await this.dataLayer.create(entityName,data);
         if (objId === -1) {
-            this.errorInfo = this.dataLayer.getError();
+            this.populateError(this.dataLayer.getError(), true);
+//            this.errorInfo = this.dataLayer.getError();
         }
 
         return objId;
@@ -148,7 +156,8 @@ class DivbloxBase {
     async read(entityName = '',id = -1) {
         const dataObj = await this.dataLayer.read(entityName,id);
         if (dataObj === null) {
-            this.errorInfo = this.dataLayer.getError();
+            this.populateError(this.dataLayer.getError(), true);
+//            this.errorInfo = this.dataLayer.getError();
         }
 
         return dataObj;
@@ -162,7 +171,8 @@ class DivbloxBase {
      */
     async update(entityName = '',data = {}) {
         if (!await this.dataLayer.update(entityName,data)) {
-            this.errorInfo = this.dataLayer.getError();
+            this.populateError(this.dataLayer.getError(), true);
+//            this.errorInfo = this.dataLayer.getError();
             return false;
         }
 
@@ -177,7 +187,8 @@ class DivbloxBase {
      */
     async delete(entityName = '',id = -1) {
         if (!await this.dataLayer.delete(entityName,id)) {
-            this.errorInfo = this.dataLayer.getError();
+            this.populateError(this.dataLayer.getError(), true);
+//            this.errorInfo = this.dataLayer.getError();
             return false;
         }
         

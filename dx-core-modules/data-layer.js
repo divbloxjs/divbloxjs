@@ -10,7 +10,7 @@ class DivbloxDataLayer {
      * @param {*} databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
      * @param {*} dataModel An object that represents the various entities and their attributes in the data structure
      */
-    constructor(databaseConnector = null,dataModel = {}) {
+    constructor(databaseConnector = null, dataModel = {}) {
         this.databaseConnector = databaseConnector;
         this.errorInfo = [];
         this.dataModel = dataModel;
