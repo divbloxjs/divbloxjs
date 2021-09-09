@@ -1,5 +1,5 @@
 const DivbloxBase = require("divblox.js/divblox");
-const DivbloxDataLayerBase = require("divblox.js/dx_core_modules/data-layer");
+const DivbloxDataLayerBase = require("divblox.js/dx-core-modules/data-layer");
 
 /**
  * This is an implementation of the DivbloxDataLayerBase class. We can use this class to override the core data layer

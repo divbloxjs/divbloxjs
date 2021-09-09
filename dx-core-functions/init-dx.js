@@ -4,7 +4,7 @@ const divbloxRoot = "../..";
 const divbloxConfigRoot = divbloxRoot+"/divblox_config";
 const dataModelFileName = divbloxConfigRoot+'/data-model.json';
 const dxConfigFileName = divbloxConfigRoot+'/dxconfig.json';
-const dxExampleScriptFileName = divbloxRoot+'/divblox_example.js';
+const dxExampleScriptFileName = divbloxRoot+'/divblox-example.js';
 
 /**
  * Creates the minimum configuration files needed for Divblox to be initiated
@@ -18,17 +18,17 @@ async function createDefaults() {
     }
     if (!fs.existsSync(dataModelFileName)) {
         console.log("Creating Divblox data model...");
-        const dxDataModelDefaultStr = await fsAsync.readFile('dx_core_functions/templates/data-model.json');
+        const dxDataModelDefaultStr = await fsAsync.readFile('dx-core-functions/templates/data-model.json');
         await fsAsync.writeFile(dataModelFileName, dxDataModelDefaultStr);
     }
     if (!fs.existsSync(dxConfigFileName)) {
         console.log("Creating Divblox default config file...");
-        const dxConfigDefaultStr = await fsAsync.readFile('dx_core_functions/templates/dxconfig.json');
+        const dxConfigDefaultStr = await fsAsync.readFile('dx-core-functions/templates/dxconfig.json');
         await fsAsync.writeFile(dxConfigFileName, dxConfigDefaultStr);
     }
     if (!fs.existsSync(dxExampleScriptFileName)) {
         console.log("Creating Divblox example script...");
-        const dxExampleScriptStr = await fsAsync.readFile('dx_core_functions/templates/divblox_example.js');
+        const dxExampleScriptStr = await fsAsync.readFile('dx-core-functions/templates/divblox-example.js');
         await fsAsync.writeFile(dxExampleScriptFileName, dxExampleScriptStr);
     }
     console.log("Done! You can now go back to the nodejs root with 'cd ../..'");

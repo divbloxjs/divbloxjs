@@ -4,7 +4,7 @@
   "description": "The divblox node.js backend",
   "main": "index.js",
   "scripts": {
-    "init_dx": "node dx_core_functions/init_dx.js",
+    "init-dx": "node dx-core-functions/init-dx.js",
     "dev": "NODE_ENV=development node divblox.js",
     "prod": "NODE_ENV=production node divblox.js"
   },

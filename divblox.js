@@ -2,7 +2,7 @@ const fs = require("fs");
 const fsAsync = require("fs").promises;
 const dxUtils = require("dx-utils");
 const DivbloxDatabaseConnector = require("dx-db-connector");
-const DivbloxDataLayerBase = require('./dx_core_modules/data-layer');
+const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
 
 /**
  * This class overrides the default DivbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
