@@ -1,6 +1,6 @@
 /**
  * This dx-init script allows us to setup some custom Divblox configuration and initializations that we will be able to
- * anywhere in our project. Rather than redefine these for every script where we want to use Divblox
+ * use anywhere in our project. Rather than redefine these for every script where we want to use Divblox
  */
 
 const DivbloxBase = require("divbloxjs/divblox");
