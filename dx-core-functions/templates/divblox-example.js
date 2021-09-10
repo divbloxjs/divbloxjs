@@ -1,39 +1,9 @@
-const DivbloxBase = require("divbloxjs/divblox");
-const DivbloxDataLayerBase = require("divbloxjs/dx-core-modules/data-layer");
-
+const dx = require('./divblox-config/dx-init');
 /**
- * This is an implementation of the DivbloxDataLayerBase class. We can use this class to override the core data layer
- * related functionality for Divblox. It is best practice to do this since the base classes can be updated via a
- * package manager.
- * We don't need to create this class if we don't want to and we are happy with the standard Divblox data layer.
- */
-class DivbloxDataLayer extends DivbloxDataLayerBase {
-    constructor(databaseConnector = null, dataModel = {}) {
-        super(databaseConnector, dataModel);
-        console.log("My own data layer");
-    }
-}
-
-/**
- * Again, we create an implementation of the DivbloxBase class here in order to modify any core functionality if
- * required. It is best practice to do this since the base classes can be updated via a package manager
- */
-class Divblox extends DivbloxBase {
-
-}
-
-// Let's create an instance of Divblox. This requires a config path, a data model path and an optional datalayer
-// implementation class
-const dx = new Divblox(
-    {"configPath":"./divblox-config/dxconfig.json",
-        "dataModelPath":"./divblox-config/data-model.json",
-        "dataLayerImplementationClass":DivbloxDataLayer/*Can also be null if you want to use the default data layer*/});
-
-/**
- * This function wraps some example functions to see how we can use Divblox
+ * This function wraps some example functions to see how we can use Divblox in a specific script
  * @return {Promise<void>}
  */
-async function startDx() {
+doExampleContent = async () =>{
     // Before we can do anything we need to call initDx()
     await dx.initDx();
 
@@ -69,4 +39,4 @@ async function startDx() {
     }
 
 }
-startDx();
+doExampleContent();

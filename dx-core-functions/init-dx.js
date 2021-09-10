@@ -5,6 +5,7 @@ const divbloxConfigRoot = divbloxRoot+"/divblox-config";
 const dataModelFileName = divbloxConfigRoot+'/data-model.json';
 const dxConfigFileName = divbloxConfigRoot+'/dxconfig.json';
 const dxExampleScriptFileName = divbloxRoot+'/divblox-example.js';
+const dxInitFileName = divbloxConfigRoot+'/dx-init.js';
 
 /**
  * Creates the minimum configuration files needed for Divblox to be initiated
@@ -25,6 +26,11 @@ async function createDefaults() {
         console.log("Creating Divblox default config file...");
         const dxConfigDefaultStr = await fsAsync.readFile('dx-core-functions/templates/dxconfig.json');
         await fsAsync.writeFile(dxConfigFileName, dxConfigDefaultStr);
+    }
+    if (!fs.existsSync(dxInitFileName)) {
+        console.log("Creating Divblox custom init file...");
+        const dxInitStr = await fsAsync.readFile('dx-core-functions/templates/dx-init.js');
+        await fsAsync.writeFile(dxInitFileName, dxInitStr);
     }
     if (!fs.existsSync(dxExampleScriptFileName)) {
         console.log("Creating Divblox example script...");
