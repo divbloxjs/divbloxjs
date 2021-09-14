@@ -68,13 +68,15 @@ class DivbloxBase extends DivbloxObjectBase {
      * @returns {Promise<void>}
      */
     async initDx() {
+        const configDataStr = await fsAsync.readFile(this.configPath, "utf-8");
+        this.configObj = JSON.parse(configDataStr);
+        process.env.NODE_ENV = this.configObj.environment;
+        
         if (typeof process.env.NODE_ENV === "undefined") {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
                 " try running your script with NODE_ENV=development node [your_script.js]\n");
         }
 
-        const configDataStr = await fsAsync.readFile(this.configPath, "utf-8");
-        this.configObj = JSON.parse(configDataStr);
         if (typeof this.configObj["environmentArray"] === "undefined") {
             throw new Error("No environments configured");
         }
