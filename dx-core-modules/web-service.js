@@ -24,6 +24,8 @@ class DivbloxWebService extends divbloxObjectBase {
      * Divblox Application Generator was used to create your app.
      * @param {string} config.staticRoot The root path to your "public" folder, should be "divblox-public" if the
      * Divblox Application Generator was used to create your app.
+     * @param {[{}]} config.additionalRoutes Additional routes to be defined for express. Each route is an object
+     * containing a "location" and "router" property
      */
     constructor(config = {}) {
         super();
@@ -45,6 +47,12 @@ class DivbloxWebService extends divbloxObjectBase {
 
         this.addRoute('/', path.join(path.resolve("./"),this.wwwRoot));
         this.addRoute('/api', path.join(path.resolve("./"),this.apiEndPointRoot));
+
+        if (typeof this.config["additionalRoutes"] !== "undefined") {
+            for (const route of this.config["additionalRoutes"]) {
+                this.addRoute(route.location, path.join(path.resolve("./"),route.router));
+            }
+        }
         
         // catch 404 and forward to error handler
         this.express.use(function(req, res, next) {
