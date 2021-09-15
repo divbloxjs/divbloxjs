@@ -22,6 +22,7 @@ class DivbloxGlobalBase {
     /**
      * Pushes a new error object/array/string into the error array
      * @param {{}|[]|string} errorToPush An object, array or string containing error information
+     * @param {boolean} addAtStart If true, adds the error to the top of the errorInfo array
      * @param {boolean} mustClean If true, the errorInfo array will first be emptied before adding the new error.
      */
     populateError(errorToPush = [], addAtStart = false, mustClean = false) {

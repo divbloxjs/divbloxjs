@@ -36,6 +36,8 @@ class DivbloxBase extends DivbloxObjectBase {
     constructor(options = {}) {
         super();
 
+        this.isInitFinished = false;
+
         if ((typeof options["configPath"] === "undefined") || (options["configPath"] === null)) {
             throw new Error("No config path provided");
         }
@@ -105,7 +107,8 @@ class DivbloxBase extends DivbloxObjectBase {
             await this.syncDatabase(false);
         }
         this.webService = new DivbloxWebService(this.dataModelObj);
-        
+
+        this.isInitFinished = true;
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
     }
 
@@ -145,6 +148,11 @@ class DivbloxBase extends DivbloxObjectBase {
      * @returns {Promise<number|*>}
      */
     async create(entityName = '',data = {}) {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            return -1;
+        }
+
         const objId = await this.dataLayer.create(entityName,data);
         if (objId === -1) {
             this.populateError(this.dataLayer.getError(), true);
@@ -160,6 +168,11 @@ class DivbloxBase extends DivbloxObjectBase {
      * @returns {Promise<*>}
      */
     async read(entityName = '',id = -1) {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            return null;
+        }
+
         const dataObj = await this.dataLayer.read(entityName,id);
         if (dataObj === null) {
             this.populateError(this.dataLayer.getError(), true);
@@ -175,6 +188,11 @@ class DivbloxBase extends DivbloxObjectBase {
      * @returns {Promise<number|*>}
      */
     async update(entityName = '',data = {}) {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            return false;
+        }
+
         if (!await this.dataLayer.update(entityName,data)) {
             this.populateError(this.dataLayer.getError(), true);
             return false;
@@ -190,6 +208,11 @@ class DivbloxBase extends DivbloxObjectBase {
      * @returns {Promise<boolean>}
      */
     async delete(entityName = '',id = -1) {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            return false;
+        }
+
         if (!await this.dataLayer.delete(entityName,id)) {
             this.populateError(this.dataLayer.getError(), true);
             return false;
