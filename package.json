@@ -2,11 +2,9 @@
   "name": "divbloxjs",
   "version": "1.0.0",
   "description": "The divblox node.js backend",
-  "main": "index.js",
+  "main": "divblox.js",
   "scripts": {
-    "init-dx": "node dx-core-functions/init-dx.js",
-    "dev": "NODE_ENV=development node divblox.js",
-    "prod": "NODE_ENV=production node divblox.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -23,9 +21,17 @@
   },
   "homepage": "https://github.com/divbloxjs/divbloxjs#readme",
   "dependencies": {
+    "cookie-parser": "^1.4.5",
+    "debug": "^4.3.2",
     "dx-db-connector": "github:divbloxjs/dx-db-connector",
     "dx-utils": "github:divbloxjs/dx-utils",
+    "express": "^4.17.1",
+    "http": "^0.0.1-security",
+    "http-errors": "^1.8.0",
+    "morgan": "^1.10.0",
     "mysql": "^2.18.1",
+    "path": "^0.12.7",
+    "pug": "^3.0.2",
     "util": "^0.12.3"
   }
 }

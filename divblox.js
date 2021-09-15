@@ -1,28 +1,28 @@
 const fs = require("fs");
 const fsAsync = require("fs").promises;
 const dxUtils = require("dx-utils");
-const DivbloxObjectBase = require('./dx-core-modules/object-base');
-const DivbloxDatabaseConnector = require("dx-db-connector");
-const DivbloxDataLayerBase = require('./dx-core-modules/data-layer');
-const DivbloxWebServiceBase = require('./dx-core-modules/web-service');
+const divbloxObjectBase = require('./dx-core-modules/object-base');
+const divbloxDatabaseConnector = require("dx-db-connector");
+const divbloxDataLayerBase = require('./dx-core-modules/data-layer');
+const divbloxWebServiceBase = require('./dx-core-modules/web-service');
 
 /**
- * This class overrides the default DivbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
+ * This class overrides the default divbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
  * meaning, the developer can create their own version of DivbloxDataLayer if they want to modify how it should work
  */
-class DivbloxDataLayer extends DivbloxDataLayerBase {}
+class DivbloxDataLayer extends divbloxDataLayerBase {}
 
 /**
- * This class overrides the default DivbloxWebServiceBase class to ensure that we can always just call DivbloxWebService,
+ * This class overrides the default divbloxWebServiceBase class to ensure that we can always just call DivbloxWebService,
  * meaning, the developer can create their own version of DivbloxWebService if they want to modify how it should work
  */
-class DivbloxWebService extends DivbloxWebServiceBase {}
+class DivbloxWebService extends divbloxWebServiceBase {}
 
 /**
  * DivbloxBase serves as the base Divblox class that provides the relevant backend nodejs functionality for a Divblox
  * application
  */
-class DivbloxBase extends DivbloxObjectBase {
+class DivbloxBase extends divbloxObjectBase {
     /**
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
@@ -93,7 +93,7 @@ class DivbloxBase extends DivbloxObjectBase {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
 
-        this.databaseConnector = new DivbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
+        this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
         await this.databaseConnector.init();
 
         const dataModelDataStr = await fsAsync.readFile(this.dataModelPath, "utf-8");
