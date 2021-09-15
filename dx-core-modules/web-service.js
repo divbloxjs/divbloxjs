@@ -13,25 +13,26 @@ const http = require('http');
  */
 class DivbloxWebService extends divbloxObjectBase {
     /**
-     *
-     * @param dataModel
-     * @param {*} apiConfig Our api configuration, described below in more detail
-     * @param {string} apiConfig.webServerPort The port to use when serving requests
-     * @param {string} apiConfig.apiEndPointRoot The default api endpoint root, should be "./divblox-routes/api" if the
+     * Sets up the divblox web service and starts an express web server
+     * @param {*} config Our web service configuration, described below in more detail
+     * @param {string} config.webServerPort The port to use when serving requests
+     * @param {string} config.apiEndPointRoot The default api endpoint root, should be "./divblox-routes/api" if the
      * Divblox Application Generator was used to create your app.
-     * @param {string} apiConfig.viewsRoot The root path to your "views" folder, should be "divblox-views" if the
+     * * @param {string} config.wwwRoot The default www root, should be "./divblox-routes/www/index" if the
      * Divblox Application Generator was used to create your app.
-     * @param {string} apiConfig.staticRoot The root path to your "public" folder, should be "public" if the
+     * @param {string} config.viewsRoot The root path to your "views" folder, should be "divblox-views" if the
+     * Divblox Application Generator was used to create your app.
+     * @param {string} config.staticRoot The root path to your "public" folder, should be "divblox-public" if the
      * Divblox Application Generator was used to create your app.
      */
-    constructor(dataModel = {}, apiConfig = {}) {
+    constructor(config = {}) {
         super();
-        this.dataModel = dataModel;
-        this.apiConfig = apiConfig;
-        this.apiEndPointRoot = typeof this.apiConfig["apiEndPointRoot"] !== "undefined" ? this.apiConfig.apiEndPointRoot : './divblox-routes/api';
-        this.viewsRoot = typeof this.apiConfig["viewsRoot"] !== "undefined" ? this.apiConfig.viewsRoot : 'divblox-views';
-        this.staticRoot = typeof this.apiConfig["staticRoot"] !== "undefined" ? this.apiConfig.staticRoot : 'public';
-        this.port = typeof this.apiConfig["webServerPort"] !== "undefined" ? this.apiConfig.webServerPort : 3000;
+        this.config = config;
+        this.apiEndPointRoot = typeof this.config["apiEndPointRoot"] !== "undefined" ? this.config.apiEndPointRoot : './divblox-routes/api';
+        this.wwwRoot = typeof this.config["wwwRoot"] !== "undefined" ? this.config.wwwRoot : './divblox-routes/www/index';
+        this.viewsRoot = typeof this.config["viewsRoot"] !== "undefined" ? this.config.viewsRoot : 'divblox-views';
+        this.staticRoot = typeof this.config["staticRoot"] !== "undefined" ? this.config.staticRoot : 'public';
+        this.port = typeof this.config["webServerPort"] !== "undefined" ? this.config.webServerPort : 3000;
 
         this.express = express();
         this.express.use(logger('dev'));
@@ -42,7 +43,8 @@ class DivbloxWebService extends divbloxObjectBase {
         this.express.set('views', path.join(__dirname, this.viewsRoot));
         this.express.set('view engine', 'pug');
 
-        this.addRoute('/', this.apiEndPointRoot);
+        this.addRoute('/', this.wwwRoot);
+        this.addRoute('/api', this.apiEndPointRoot);
         
         // catch 404 and forward to error handler
         this.express.use(function(req, res, next) {
@@ -96,7 +98,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 throw error;
         }
     }
-    
+
     onListening() {
         const addr = this.server.address();
         const bind = typeof addr === 'string'
