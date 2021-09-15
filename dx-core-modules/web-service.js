@@ -39,12 +39,12 @@ class DivbloxWebService extends divbloxObjectBase {
         this.express.use(express.json());
         this.express.use(express.urlencoded({ extended: false }));
         this.express.use(cookieParser());
-        this.express.use(express.static(path.join(__dirname, this.staticRoot)));
-        this.express.set('views', path.join(__dirname, this.viewsRoot));
+        this.express.use(express.static(path.join(path.resolve("./"), this.staticRoot)));
+        this.express.set('views', path.join(path.resolve("./"), this.viewsRoot));
         this.express.set('view engine', 'pug');
 
-        this.addRoute('/', this.wwwRoot);
-        this.addRoute('/api', this.apiEndPointRoot);
+        this.addRoute('/', path.join(path.resolve("./"),this.wwwRoot));
+        this.addRoute('/api', path.join(path.resolve("./"),this.apiEndPointRoot));
         
         // catch 404 and forward to error handler
         this.express.use(function(req, res, next) {
