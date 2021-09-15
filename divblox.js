@@ -92,6 +92,9 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServiceConfig"] === "undefined") {
+            throw new Error("No web service configured for the environment: "+process.env.NODE_ENV);
+        }
 
         this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
         await this.databaseConnector.init();
@@ -106,7 +109,7 @@ class DivbloxBase extends divbloxObjectBase {
                 JSON.stringify(this.getError(),null,2));
             await this.syncDatabase(false);
         }
-        this.webService = new DivbloxWebService(this.dataModelObj);
+        this.webService = new DivbloxWebService(this.configObj["environmentArray"][process.env.NODE_ENV]["webServiceConfig"]);
 
         this.isInitFinished = true;
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
