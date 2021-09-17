@@ -78,11 +78,20 @@ class DivbloxWebService extends divbloxObjectBase {
         this.server.on('listening', this.onListening.bind(this));
     }
 
+    /**
+     * Adds a route for express to use
+     * @param path The url path
+     * @param routerPath The path to the router script
+     */
     addRoute(path = '/', routerPath) {
         const router = require(routerPath);
         this.express.use(path, router);
     }
 
+    /**
+     * An error handler for our web server
+     * @param error The error that was passed
+     */
     onError(error) {
         if (error.syscall !== 'listen') {
             throw error;
@@ -107,6 +116,9 @@ class DivbloxWebService extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Called once express is setup and our web server is listening for requests
+     */
     onListening() {
         const addr = this.server.address();
         const bind = typeof addr === 'string'
