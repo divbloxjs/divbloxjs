@@ -97,7 +97,14 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["webServiceConfig"] === "undefined") {
             throw new Error("No web service configuration provided");
         }
+        this.isInitFinished = true;
+    }
 
+    async startDx() {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            throw new Error("Divblox initialization not finished");
+        }
         this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
         await this.databaseConnector.init();
 
@@ -114,10 +121,9 @@ class DivbloxBase extends divbloxObjectBase {
         const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
             3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
         const webServiceConfig = {"webServerPort": webServerPort,
-                                    ...this.configObj["webServiceConfig"]};
+            ...this.configObj["webServiceConfig"]};
         this.webService = new DivbloxWebService(webServiceConfig);
 
-        this.isInitFinished = true;
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
     }
 
