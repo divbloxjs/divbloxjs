@@ -76,7 +76,9 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
                 " try running your script with NODE_ENV=development node [your_script.js]\n");
         }
-        process.env.NODE_ENV = this.configObj.environment;
+        if (typeof process.env.NODE_ENV === "undefined") {
+            process.env.NODE_ENV = this.configObj.environment;
+        }
 
         if (typeof process.env.NODE_ENV === "undefined") {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
@@ -92,8 +94,8 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
-        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServiceConfig"] === "undefined") {
-            throw new Error("No web service configured for the environment: "+process.env.NODE_ENV);
+        if (typeof this.configObj["webServiceConfig"] === "undefined") {
+            throw new Error("No web service configuration provided");
         }
 
         this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
@@ -109,7 +111,11 @@ class DivbloxBase extends divbloxObjectBase {
                 JSON.stringify(this.getError(),null,2));
             await this.syncDatabase(false);
         }
-        this.webService = new DivbloxWebService(this.configObj["environmentArray"][process.env.NODE_ENV]["webServiceConfig"]);
+        const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
+            3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
+        const webServiceConfig = {"webServerPort": webServerPort,
+                                    ...this.configObj["webServiceConfig"]};
+        this.webService = new DivbloxWebService(webServiceConfig);
 
         this.isInitFinished = true;
         console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
