@@ -141,10 +141,6 @@ class DivbloxBase extends divbloxObjectBase {
      */
     async startDx() {
         await this.databaseConnector.init();
-        if (!this.databaseConnector.isInitComplete) {
-            this.populateError(this.databaseConnector.getError(), true);
-            console.log("Error during database init: "+JSON.stringify(this.databaseConnector.getError()));
-        }
 
         if (!await this.dataLayer.validateDataModel()) {
             this.populateError(this.dataLayer.getError(), true);
