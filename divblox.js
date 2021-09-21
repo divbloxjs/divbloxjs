@@ -94,6 +94,32 @@ class DivbloxBase extends divbloxObjectBase {
         const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
 
+        this.packages = {};
+        if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
+            if (typeof this.configObj["divbloxPackages"] !== "undefined") {
+                if ((typeof this.configObj["divbloxPackages"]["local"] !== "undefined") &&
+                    (this.configObj["divbloxPackages"]["local"].length > 0)) {
+                    for (const localPackage of this.configObj["divbloxPackages"]["local"]) {
+                        this.packages[localPackage] = {"packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
+                        const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
+                        const packageDataModelObj = JSON.parse(packageDataModelDataStr);
+                        const currentDataModel = this.dataModelObj;
+                        this.dataModelObj = {currentDataModel, ...packageDataModelObj};
+                    }
+                }
+                if ((typeof this.configObj["divbloxPackages"]["npm"] !== "undefined") &&
+                    (this.configObj["divbloxPackages"]["npm"].length > 0)) {
+                    for (const npmPackage of this.configObj["divbloxPackages"]["npm"]) {
+                        this.packages[npmPackage] = {"packageRoot": "node_modules/"+npmPackage};
+                        const packageDataModelDataStr = fs.readFileSync("node_modules/"+npmPackage+"/data-model.json", "utf-8");
+                        const packageDataModelObj = JSON.parse(packageDataModelDataStr);
+                        const currentDataModel = this.dataModelObj;
+                        this.dataModelObj = {currentDataModel, ...packageDataModelObj};
+                    }
+                }
+            }
+        }
+
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
         this.isInitFinished = true;
     }
@@ -105,6 +131,10 @@ class DivbloxBase extends divbloxObjectBase {
      */
     async startDx() {
         await this.databaseConnector.init();
+        if (!this.databaseConnector.isInitComplete) {
+            this.populateError(this.databaseConnector.getError(), true);
+            console.log("Error during database init: "+JSON.stringify(this.databaseConnector.getError()));
+        }
 
         if (!await this.dataLayer.validateDataModel()) {
             this.populateError(this.dataLayer.getError(), true);
