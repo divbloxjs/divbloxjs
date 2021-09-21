@@ -1,5 +1,5 @@
 const divbloxObjectBase = require('./object-base');
-
+//TODO: Add a /doc operation that displays the api documentation
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
  * for divbloxjs projects
@@ -13,6 +13,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result = {"success":false,"message":"none"};
         this.declaredOperations = [];
         this.addOperations(['echo']);
+        this.currentRequest = {};
     }
 
     /**
@@ -31,11 +32,29 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     addOperations(operations = []) {
         if (operations.length === 0) {return;}
-        this.declaredOperations.push(operations);
+        for (const operation of operations) {
+            this.declaredOperations.push(operation);
+        }
     }
 
     //#region Operations implemented.
-    
+
+    /**
+     * A wrapper function that executes the given operation
+     * @param {string} operation The operation to execute
+     * @param {*} request The received request object
+     * @return {Promise<*|{success: boolean, message: string}>}
+     */
+    async executeOperation(operation, request) {
+        this.currentRequest = request;
+        switch(operation) {
+            case 'echo': await this.echo();
+                break;
+            default : this.setResult(false, "Invalid operation provided");
+        }
+        return this.result;
+    }
+
     /**
      * A default operation that simply returns the current timestamp. Although this
      * operation does not specifically need to be async, it is good practice to ensure
@@ -43,8 +62,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @return {Promise<*|{success: boolean, message: string}>}
      */
     async echo() {
-        this.setResult(true, "Current timestamp: "+Date.now());
-        return this.result;
+        this.result["currentTimestamp"] = Date.now();
+        this.result["request"] = this.currentRequest;
+        this.setResult(true, "Current timestamp populated");
     }
     //#endregion
 }
