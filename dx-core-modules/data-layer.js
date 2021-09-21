@@ -14,20 +14,15 @@ class DivbloxDataLayer extends divbloxObjectBase {
     constructor(databaseConnector = null, dataModel = {}) {
         super();
         this.databaseConnector = databaseConnector;
-        this.dataModel = dataModel;
-        this.moduleArray = {};
+        this.dataModelNormalized = {};
         this.dataModelEntities = [];
-        this.entityArray = {};
 
-        for (const moduleObj of this.dataModel["modules"]) {
-            this.moduleArray[moduleObj["moduleName"]] = moduleObj["entities"];
-            for (const entityName of Object.keys(moduleObj["entities"])) {
-                this.entityArray[this.getSqlReadyName(entityName)] = moduleObj["moduleName"];
-                this.dataModelEntities.push(this.getSqlReadyName(entityName));
-            }
+        for (const entityName of Object.keys(dataModel)) {
+            this.dataModelNormalized[this.getSqlReadyName(entityName)] = dataModel[entityName];
+            this.dataModelEntities.push(this.getSqlReadyName(entityName));
         }
-        //TODO: Complete this array
-        this.requiredEntities = ["account"];
+
+        this.requiredEntities = ["auditLogEntry"];
     }
 
     /**
@@ -74,11 +69,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @returns {null|*}
      */
     getModuleNameFromEntityName(entityName = '') {
-        if (typeof this.entityArray[this.getSqlReadyName(entityName)] === "undefined") {
+        if (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined") {
             return null;
         }
 
-        return this.entityArray[this.getSqlReadyName(entityName)];
+        return this.dataModelNormalized[this.getSqlReadyName(entityName)]["module"];
     }
 
     /**

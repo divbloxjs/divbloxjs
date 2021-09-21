@@ -100,11 +100,13 @@ class DivbloxBase extends divbloxObjectBase {
                 if ((typeof this.configObj["divbloxPackages"]["local"] !== "undefined") &&
                     (this.configObj["divbloxPackages"]["local"].length > 0)) {
                     for (const localPackage of this.configObj["divbloxPackages"]["local"]) {
-                        this.packages[localPackage] = {"packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
+                        this.packages[localPackage] = {
+                            "packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
                         const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
                         const currentDataModel = this.dataModelObj;
-                        this.dataModelObj = {currentDataModel, ...packageDataModelObj};
+                        this.dataModelObj = {currentDataModel, ... packageDataModelObj};
+
                     }
                 }
                 if ((typeof this.configObj["divbloxPackages"]["npm"] !== "undefined") &&
@@ -114,7 +116,7 @@ class DivbloxBase extends divbloxObjectBase {
                         const packageDataModelDataStr = fs.readFileSync("node_modules/"+npmPackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
                         const currentDataModel = this.dataModelObj;
-                        this.dataModelObj = {currentDataModel, ...packageDataModelObj};
+                        this.dataModelObj = {currentDataModel, ... packageDataModelObj};
                     }
                 }
             }
