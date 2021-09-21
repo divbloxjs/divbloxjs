@@ -104,8 +104,12 @@ class DivbloxBase extends divbloxObjectBase {
                             "packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
                         const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
-                        const currentDataModel = this.dataModelObj;
-                        this.dataModelObj = {currentDataModel, ... packageDataModelObj};
+                        for (const entityName of Object.keys(packageDataModelObj)) {
+                            if (typeof this.dataModelObj[entityName] !== "undefined") {
+                                throw new Error("Tried to define entity '"+entityName+"' multiple times in the data model");
+                            }
+                            this.dataModelObj[entityName] = packageDataModelObj[entityName];
+                        }
 
                     }
                 }
@@ -115,8 +119,12 @@ class DivbloxBase extends divbloxObjectBase {
                         this.packages[npmPackage] = {"packageRoot": "node_modules/"+npmPackage};
                         const packageDataModelDataStr = fs.readFileSync("node_modules/"+npmPackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
-                        const currentDataModel = this.dataModelObj;
-                        this.dataModelObj = {currentDataModel, ... packageDataModelObj};
+                        for (const entityName of Object.keys(packageDataModelObj)) {
+                            if (typeof this.dataModelObj[entityName] !== "undefined") {
+                                throw new Error("Tried to define entity '"+entityName+"' multiple times in the data model");
+                            }
+                            this.dataModelObj[entityName] = packageDataModelObj[entityName];
+                        }
                     }
                 }
             }
