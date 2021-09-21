@@ -1,5 +1,4 @@
 const fs = require("fs");
-const fsAsync = require("fs").promises;
 const dxUtils = require("dx-utils");
 const divbloxObjectBase = require('./dx-core-modules/object-base');
 const divbloxDatabaseConnector = require("dx-db-connector");
@@ -26,12 +25,14 @@ class DivbloxBase extends divbloxObjectBase {
     /**
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
-     * @param options.configPath The path to the dxconfig.json file that defines the environment related variables
-     * @param options.dataModelPath The path to the data-model.json file that contains the project's data model
-     * @param options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
+     * @param {string} options.configPath The path to the dxconfig.json file that defines the environment related variables
+     * @param {string} options.dataModelPath The path to the data-model.json file that contains the project's data model
+     * @param {*} options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
      * is useful when you want to override the default Divblox data layer behaviour
-     * @param options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
+     * @param {*} options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
      * is useful when you want to override the default Divblox Web Service behaviour
+     * @param {boolean} options.skipInit If set to true this forces the constructor to not call this.initDx()
+     * automatically. Used when we want to call startDx() after init, meaning we have to await the initDx function
      */
     constructor(options = {}) {
         super();
@@ -58,31 +59,21 @@ class DivbloxBase extends divbloxObjectBase {
             (options["dataLayerImplementationClass"] !== null)) {
             DivbloxDataLayer = options["dataLayerImplementationClass"];
         }
-    
+
         if ((typeof options["webServiceImplementationClass"] !== "undefined") &&
             (options["webServiceImplementationClass"] !== null)) {
             DivbloxWebService = options["webServiceImplementationClass"];
         }
-    }
-    
-    /**
-     * Sets up the Divblox instance using the provided configuration and data model data.
-     * @returns {Promise<void>}
-     */
-    async initDx() {
-        const configDataStr = await fsAsync.readFile(this.configPath, "utf-8");
+
+        const configDataStr = fs.readFileSync(this.configPath, "utf-8");
         this.configObj = JSON.parse(configDataStr);
-        if (typeof this.configObj.environment === "undefined") {
+
+        if ((typeof process.env.NODE_ENV === "undefined") && (typeof this.configObj.environment === "undefined")) {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
                 " try running your script with NODE_ENV=development node [your_script.js]\n");
         }
         if (typeof process.env.NODE_ENV === "undefined") {
             process.env.NODE_ENV = this.configObj.environment;
-        }
-
-        if (typeof process.env.NODE_ENV === "undefined") {
-            throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
-                " try running your script with NODE_ENV=development node [your_script.js]\n");
         }
 
         if (typeof this.configObj["environmentArray"] === "undefined") {
@@ -97,21 +88,24 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["webServiceConfig"] === "undefined") {
             throw new Error("No web service configuration provided");
         }
-        this.isInitFinished = true;
-    }
 
-    async startDx() {
-        if (!this.isInitFinished) {
-            this.populateError("Divblox initialization not finished");
-            throw new Error("Divblox initialization not finished");
-        }
-        this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"])
-        await this.databaseConnector.init();
+        this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
 
-        const dataModelDataStr = await fsAsync.readFile(this.dataModelPath, "utf-8");
+        const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
 
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
+        this.isInitFinished = true;
+    }
+    
+    /**
+     * Starts the Divblox instance using the provided configuration and data model data. This validates the data model
+     * and also start the Divblox web service
+     * @returns {Promise<void>}
+     */
+    async startDx() {
+        await this.databaseConnector.init();
+
         if (!await this.dataLayer.validateDataModel()) {
             this.populateError(this.dataLayer.getError(), true);
             console.log("Error validating data model: "+
@@ -124,7 +118,7 @@ class DivbloxBase extends divbloxObjectBase {
             ...this.configObj["webServiceConfig"]};
         this.webService = new DivbloxWebService(webServiceConfig);
 
-        console.log("Divblox loaded with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
+        console.log("Divblox started with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
     }
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
