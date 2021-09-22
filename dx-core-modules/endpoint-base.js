@@ -49,10 +49,22 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
         switch(operation) {
+            case 'doc': await this.presentDocumentation();
+                break;
             case 'echo': await this.echo();
                 break;
             default : this.setResult(false, "Invalid operation provided");
         }
+    }
+
+    /**
+     * Returns the html for the specific endpoint's documentation
+     * @return {Promise<void>}
+     */
+    async presentDocumentation() {
+        //TODO: Implement this
+        this.result["doc"] = 'TO BE COMPLETED';
+        this.setResult(true, "Doc property populated");
     }
 
     /**
