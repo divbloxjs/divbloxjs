@@ -43,16 +43,16 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * A wrapper function that executes the given operation
      * @param {string} operation The operation to execute
      * @param {*} request The received request object
-     * @return {Promise<*|{success: boolean, message: string}>}
+     * @return {Promise<*>}
      */
     async executeOperation(operation, request) {
+        this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
         switch(operation) {
             case 'echo': await this.echo();
                 break;
             default : this.setResult(false, "Invalid operation provided");
         }
-        return this.result;
     }
 
     /**
