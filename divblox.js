@@ -150,7 +150,13 @@ class DivbloxBase extends divbloxObjectBase {
         }
         const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
             3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
-        const webServiceConfig = {"webServerPort": webServerPort,
+        const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
+            false : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
+        const webServerHttpsConfig = this.configObj["environmentArray"][process.env.NODE_ENV]["serverHttps"];
+        const webServiceConfig = {
+            "webServerPort": webServerPort,
+            "useHttps": webServerUseHttps,
+            "serverHttps": webServerHttpsConfig,
             ...this.configObj["webServiceConfig"]};
         this.webService = new DivbloxWebService(webServiceConfig);
 
