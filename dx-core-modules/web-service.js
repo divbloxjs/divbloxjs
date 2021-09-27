@@ -6,6 +6,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
 
 /**
  * The DivbloxWebService is used to expose your Divblox functionality to the web. It uses expressjs for all the
@@ -72,7 +74,15 @@ class DivbloxWebService extends divbloxObjectBase {
 
         this.express.set('port', this.port);
 
-        this.server = http.createServer(this.express);
+        if (this.config["useHttps"]) {
+            this.server = https.createServer({
+                key: fs.readFileSync(this.config["serverHttps"]["keyPath"]),
+                cert: fs.readFileSync(this.config["serverHttps"]["certPath"])
+            }, this.express)
+        } else {
+            this.server = http.createServer(this.express);
+        }
+        
         this.server.listen(this.port);
         this.server.on('error', this.onError.bind(this));
         this.server.on('listening', this.onListening.bind(this));
