@@ -54,7 +54,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     "allowHttp": true,
                     "httpsPort": 3001
                 };
-        console.log("Use https: "+this.useHttps+"; "+typeof this.config["useHttps"]);
+
         if (this.useHttps) {
             if (this.serverHttpsConfig.allowHttp) {
                 this.expressHttp = express();
@@ -81,13 +81,10 @@ class DivbloxWebService extends divbloxObjectBase {
                 key: fs.readFileSync(path.join(path.resolve("./"),this.config["serverHttps"]["keyPath"])),
                 cert: fs.readFileSync(path.join(path.resolve("./"),this.config["serverHttps"]["certPath"]))
             }, true);
-            console.log("Trying http too 1");
             if (this.serverHttpsConfig.allowHttp) {
-                console.log("Trying http too");
                 this.startServer({}, false);
             }
         } else {
-            console.log("Trying http too 2");
             this.startServer({}, false);
         }
     }
