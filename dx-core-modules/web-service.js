@@ -76,13 +76,13 @@ class DivbloxWebService extends divbloxObjectBase {
 
         if (this.config["useHttps"]) {
             this.server = https.createServer({
-                key: fs.readFileSync(this.config["serverHttps"]["keyPath"]),
-                cert: fs.readFileSync(this.config["serverHttps"]["certPath"])
+                key: fs.readFileSync(path.join(path.resolve("./"),this.config["serverHttps"]["keyPath"])),
+                cert: fs.readFileSync(path.join(path.resolve("./"),this.config["serverHttps"]["certPath"]))
             }, this.express)
         } else {
             this.server = http.createServer(this.express);
         }
-        
+
         this.server.listen(this.port);
         this.server.on('error', this.onError.bind(this));
         this.server.on('listening', this.onListening.bind(this));
