@@ -24,6 +24,7 @@
     "cookie-parser": "^1.4.5",
     "debug": "^4.3.2",
     "dx-db-connector": "github:divbloxjs/dx-db-connector",
+    "dx-db-sync": "github:divbloxjs/dx-db-sync",
     "dx-utils": "github:divbloxjs/dx-utils",
     "express": "^4.17.1",
     "http": "^0.0.1-security",
