@@ -218,6 +218,9 @@ class DivbloxBase extends divbloxObjectBase {
             } else {
                 this.dataModelState.lastDataModelSyncTimestamp = Date.now();
                 this.updateDataModelState(this.dataModelState);
+
+                // Let's just wait 2s for the console to make sense
+                await dxUtils.sleep(2000);
             }
             return;
         }
