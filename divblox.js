@@ -183,7 +183,8 @@ class DivbloxBase extends divbloxObjectBase {
             ...this.configObj["webServiceConfig"]};
         this.webService = new DivbloxWebService(webServiceConfig);
 
-        console.log("Divblox started with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
+        console.log("Divblox started with config:");
+        console.dir(this.configObj["environmentArray"][process.env.NODE_ENV]);
     }
 
     /**
