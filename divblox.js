@@ -147,6 +147,7 @@ class DivbloxBase extends divbloxObjectBase {
             console.log("Error validating data model: "+
                 JSON.stringify(this.getError(),null,2));
             if (this.dataLayer.isRequiredEntitiesMissing) {
+                console.log("You can run the application generator again to generate the default model.");
                 return;
             }
             await this.syncDatabase(false);
