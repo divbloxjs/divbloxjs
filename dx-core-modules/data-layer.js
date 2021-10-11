@@ -231,6 +231,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @return {Promise<void>}
      */
     async addAuditLogEntry(entry = {}) {
+        //TODO: This method must determine whether it can be called for the relevant entity or not
+        //TODO: We need to determine the user id somehow
+        //TODO: We need to determine the api key somehow
+        
         entry["entryTimeStamp"] = new Date();
         const entryKeys = Object.keys(entry);
         let sqlKeys = '';
