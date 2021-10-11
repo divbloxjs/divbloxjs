@@ -256,7 +256,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const objId = await this.dataLayer.create(entityName,data);
         if (objId === -1) {
-            this.populateError(this.dataLayer.getError(), true);
+            this.populateError(this.dataLayer.getError(), true, true);
         }
 
         return objId;
@@ -276,7 +276,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const dataObj = await this.dataLayer.read(entityName,id);
         if (dataObj === null) {
-            this.populateError(this.dataLayer.getError(), true);
+            this.populateError(this.dataLayer.getError(), true, true);
         }
 
         return dataObj;
@@ -295,7 +295,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!await this.dataLayer.update(entityName,data)) {
-            this.populateError(this.dataLayer.getError(), true);
+            this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
 
@@ -315,7 +315,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!await this.dataLayer.delete(entityName,id)) {
-            this.populateError(this.dataLayer.getError(), true);
+            this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
         
