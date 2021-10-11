@@ -11,13 +11,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * Configures the various modules and entities that are available for database interaction
      * @param {*} databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
      * @param {*} dataModel An object that represents the various entities and their attributes in the data structure
-     * @param {*} databaseConfig An object containing the database config for the current environment
      */
-    constructor(databaseConnector = null, dataModel = {}, databaseConfig = {}) {
+    constructor(databaseConnector = null, dataModel = {}) {
         super();
         this.databaseConnector = databaseConnector;
         this.dataModel = dataModel;
-        this.databaseConfig = databaseConfig;
         this.dataModelNormalized = {};
         this.dataModelEntities = [];
 
@@ -75,14 +73,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * Synchronises the database to be inline with the data model
-     * @returns {Promise<boolean>}
+     * @returns {Promise<boolean>} Return false if synchronization failed, true otherwise
      */
     async syncDatabase() {
-        const dbSync = new dxDbSync(this.dataModel, this.databaseConfig,"lowercase");
-        const syncResult = await dbSync.syncDatabase();
-        // Since syncDatabase will cause the current process to exit on failure, we can assume that when we get here
-        // all is well.
-        return true;
+        const dbSync = new dxDbSync(this.dataModel, null, this.databaseConnector,"lowercase");
+        return await dbSync.syncDatabase();
     }
 
     /**
