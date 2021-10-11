@@ -94,6 +94,20 @@ class DivbloxDataLayer extends divbloxObjectBase {
     }
 
     /**
+     * Determines whether or not an entity is audited by divbloxjs
+     * @param {string} entityName The name of the entity to determine for
+     * @return {boolean|*} True if audited, false if not
+     */
+    isEntityAudited(entityName = '') {
+        if ((typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined") ||
+            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"] === "undefined") ||
+            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["isAuditEnabled"] === "undefined")) {
+            return false;
+        }
+        return this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["isAuditEnabled"];
+    }
+
+    /**
      * Responsible for performing an insert query on the database for the relevant entity
      * @param {string} entityName The entity to create (Name of the row to perform an insert for)
      * @param {*} data An object who's properties determines the fields to set values for when inserting
@@ -129,6 +143,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             "modificationType":"create",
             "objectId":queryResult["insertId"],
             "entryDetail":JSON.stringify(data)});
+
         return queryResult["insertId"];
     }
 
@@ -194,6 +209,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlUpdateValues);
 
+        await this.addAuditLogEntry({
+            "objectName": entityName,
+            "modificationType": "update",
+            "objectId": data["id"],
+            "entryDetail":JSON.stringify(data)});
+
         return queryResult !== null;
     }
 
@@ -215,6 +236,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlValues);
 
+        await this.addAuditLogEntry({
+            "objectName": entityName,
+            "modificationType": "delete",
+            "objectId": id,
+            "entryDetail":"{}"});
+
         return queryResult !== null;
     }
 
@@ -227,8 +254,9 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @return {Promise<void>}
      */
     async addAuditLogEntry(entry = {}) {
-        //TODO: This method must determine whether it can be called for the relevant entity or not
-
+        if (!this.isEntityAudited(entry["objectName"])) {
+            return;
+        }
         entry["entryTimeStamp"] = new Date();
         entry["userIdentifier"] = ""; //TODO: We need to determine the user id somehow
         entry["apiKey"] = ""; //TODO: We need to determine the api key somehow
