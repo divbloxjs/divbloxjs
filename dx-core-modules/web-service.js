@@ -38,7 +38,6 @@ class DivbloxWebService extends divbloxObjectBase {
     constructor(config = {}) {
         super();
         this.config = config;
-        console.dir(this.config);
         this.apiEndPointRoot = typeof this.config["apiEndPointRoot"] !== "undefined" ? this.config.apiEndPointRoot : './divblox-routes/api';
         this.wwwRoot = typeof this.config["wwwRoot"] !== "undefined" ? this.config.wwwRoot : './divblox-routes/www/index';
         this.viewsRoot = typeof this.config["viewsRoot"] !== "undefined" ? this.config.viewsRoot : 'divblox-views';
