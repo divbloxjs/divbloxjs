@@ -127,9 +127,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
         await this.addAuditLogEntry({
             "objectName": entityName,
             "modificationType":"create",
-            "userIdentifier":"unknown",
             "objectId":queryResult["insertId"],
-            "apiKey":"none",
             "entryDetail":JSON.stringify(data)});
         return queryResult["insertId"];
     }
@@ -224,18 +222,17 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * Inserts a new auditLogEntry into the database
      * @param {string} entry.objectName The name of the entity that was affected
      * @param {string} entry.modificationType create|update|delete
-     * @param {string} entry.userIdentifier A unique identifier for the user that triggered the entry
      * @param {int} entry.objectId The database primary key id of the entity that was affected
      * @param {string} entry.entryDetail The details of the entry (What was changed)
-     * @param {string} entry.apiKey If the entry was triggered by an api call, this can be used to identify the caller
      * @return {Promise<void>}
      */
     async addAuditLogEntry(entry = {}) {
         //TODO: This method must determine whether it can be called for the relevant entity or not
-        //TODO: We need to determine the user id somehow
-        //TODO: We need to determine the api key somehow
-        
+
         entry["entryTimeStamp"] = new Date();
+        entry["userIdentifier"] = ""; //TODO: We need to determine the user id somehow
+        entry["apiKey"] = ""; //TODO: We need to determine the api key somehow
+
         const entryKeys = Object.keys(entry);
         let sqlKeys = '';
         let sqlPlaceholders = '';
