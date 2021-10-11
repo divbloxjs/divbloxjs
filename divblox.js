@@ -150,27 +150,33 @@ class DivbloxBase extends divbloxObjectBase {
     /**
      * Starts the Divblox instance using the provided configuration and data model data. This validates the data model
      * and also start the Divblox web service
+     * @param {boolean} mustSkipDatabaseSync If true, divbloxjs will not even check if it should synchronize the data
+     * model with the database. This is useful when running divbloxjs with a process manager like pm2 to ensure smooth
+     * restarts of the divblox process
      * @returns {Promise<void>}
      */
-    async startDx() {
-        await this.databaseConnector.init();
+    async startDx(mustSkipDatabaseSync = false) {
+        if (!mustSkipDatabaseSync) {
+            await this.databaseConnector.init();
 
-        if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
-            this.populateError(this.dataLayer.getError(), true);
-            console.log("Error validating data model: "+
-                JSON.stringify(this.getError(),null,2));
-            if (this.dataLayer.isRequiredEntitiesMissing) {
-                console.log("You can run the application generator again to generate the default model: npx github:divbloxjs/divbloxjs-application-generator");
-                return;
+            if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
+                this.populateError(this.dataLayer.getError(), true);
+                console.log("Error validating data model: "+
+                    JSON.stringify(this.getError(),null,2));
+                if (this.dataLayer.isRequiredEntitiesMissing) {
+                    console.log("You can run the application generator again to generate the default model: npx github:divbloxjs/divbloxjs-application-generator");
+                    return;
+                }
+                this.dataModelState.lastDataModelChangeTimestamp = Date.now();
+                this.dataModelState.currentDataModelHash = this.dataLayer.getDataModelHash();
+                this.updateDataModelState(this.dataModelState);
+
+                await this.syncDatabase(false);
+            } else if (this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp) {
+                await this.syncDatabase(false);
             }
-            this.dataModelState.lastDataModelChangeTimestamp = Date.now();
-            this.dataModelState.currentDataModelHash = this.dataLayer.getDataModelHash();
-            this.updateDataModelState(this.dataModelState);
-
-            await this.syncDatabase(false);
-        } else if (this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp) {
-            await this.syncDatabase(false);
         }
+
         const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
             3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
         const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
