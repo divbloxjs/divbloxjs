@@ -29,10 +29,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * Validates the data model against what Divblox expects should be present at a minimum and then calls the functions
+     * @param {*} dataModelState The data model state as received from the dxconfig.json file
      * that validates against what is actually in the database
      * @returns {Promise<boolean>}
      */
-    async validateDataModel() {
+    async validateDataModel(dataModelState) {
         for (const entityName of this.requiredEntities) {
             if (this.dataModelEntities.indexOf(this.getSqlReadyName(entityName)) === -1) {
                 this.populateError("Entity '"+entityName+"' not present");
@@ -45,7 +46,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             return false;
         }
 
-        return await this.validateDataModelAgainstDatabase();
+        return await this.validateDataModelAgainstDatabase(dataModelState);
     }
 
     /**

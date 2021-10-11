@@ -155,7 +155,7 @@ class DivbloxBase extends divbloxObjectBase {
     async startDx() {
         await this.databaseConnector.init();
 
-        if (!await this.dataLayer.validateDataModel()) {
+        if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
             this.populateError(this.dataLayer.getError(), true);
             console.log("Error validating data model: "+
                 JSON.stringify(this.getError(),null,2));
