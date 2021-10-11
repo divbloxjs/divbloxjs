@@ -23,6 +23,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
         }
 
         this.requiredEntities = ["auditLogEntry"];
+        this.isRequiredEntitiesMissing = false;
     }
 
     /**
@@ -33,12 +34,13 @@ class DivbloxDataLayer extends divbloxObjectBase {
     async validateDataModel() {
         for (const entityName of this.requiredEntities) {
             if (this.dataModelEntities.indexOf(this.getSqlReadyName(entityName)) === -1) {
-                this.populateError("Entity '"+entityName+"' not present")
+                this.populateError("Entity '"+entityName+"' not present");
+                this.isRequiredEntitiesMissing = true;
             }
         }
 
         if (this.getError().length > 0) {
-            this.populateError("Required entities are missing",true);
+            this.populateError("Required entities are missing from data model",true);
             return false;
         }
 

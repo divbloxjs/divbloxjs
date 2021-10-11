@@ -146,6 +146,9 @@ class DivbloxBase extends divbloxObjectBase {
             this.populateError(this.dataLayer.getError(), true);
             console.log("Error validating data model: "+
                 JSON.stringify(this.getError(),null,2));
+            if (this.dataLayer.isRequiredEntitiesMissing) {
+                return;
+            }
             await this.syncDatabase(false);
         }
         const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
