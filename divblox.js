@@ -151,8 +151,8 @@ class DivbloxBase extends divbloxObjectBase {
      * Starts the Divblox instance using the provided configuration and data model data. This validates the data model
      * and also start the Divblox web service
      * @param {boolean} mustSkipDatabaseSync If true, divbloxjs will not even check if it should synchronize the data
-     * model with the database. This is useful when running divbloxjs with a process manager like pm2 to ensure smooth
-     * restarts of the divblox process
+     * model with the database. This is useful when running divbloxjs with a process manager like pm2 to ensure
+     * uninterrupted restarts of the divbloxjs process
      * @returns {Promise<void>}
      */
     async startDx(mustSkipDatabaseSync = false) {
