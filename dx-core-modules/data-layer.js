@@ -124,6 +124,13 @@ class DivbloxDataLayer extends divbloxObjectBase {
             return -1;
         }
 
+        await this.addAuditLogEntry({
+            "objectName": entityName,
+            "modificationType":"create",
+            "userIdentifier":"unknown",
+            "objectId":queryResult["insertId"],
+            "apiKey":"none",
+            "entryDetail":JSON.stringify(data)});
         return queryResult["insertId"];
     }
 
@@ -211,6 +218,36 @@ class DivbloxDataLayer extends divbloxObjectBase {
             sqlValues);
 
         return queryResult !== null;
+    }
+
+    /**
+     * Inserts a new auditLogEntry into the database
+     * @param {string} entry.objectName The name of the entity that was affected
+     * @param {string} entry.modificationType create|update|delete
+     * @param {string} entry.userIdentifier A unique identifier for the user that triggered the entry
+     * @param {int} entry.objectId The database primary key id of the entity that was affected
+     * @param {string} entry.entryDetail The details of the entry (What was changed)
+     * @param {string} entry.apiKey If the entry was triggered by an api call, this can be used to identify the caller
+     * @return {Promise<void>}
+     */
+    async addAuditLogEntry(entry = {}) {
+        entry["entryTimeStamp"] = new Date();
+        const entryKeys = Object.keys(entry);
+        let sqlKeys = '';
+        let sqlPlaceholders = '';
+        let sqlValues = [];
+
+        for (const key of entryKeys) {
+            sqlKeys += ", `"+this.getSqlReadyName(key)+"`";
+            sqlPlaceholders += ", ?";
+            sqlValues.push(this.getSqlReadyValue(entry[key]));
+        }
+        const query = "INSERT INTO `"+this.getSqlReadyName('auditLogEntry')+"` " +
+            "(`id`"+sqlKeys+") VALUES (NULL"+sqlPlaceholders+");";
+
+        const queryResult = await this.executeQuery(query,
+            this.getModuleNameFromEntityName('auditLogEntry'),
+            sqlValues);
     }
 
     /**
