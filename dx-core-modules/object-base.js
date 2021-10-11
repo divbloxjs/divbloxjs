@@ -35,5 +35,12 @@ class DivbloxGlobalBase {
             this.errorInfo.unshift(errorToPush);
         }
     }
+
+    /**
+     * Resets the error info array
+     */
+    resetError() {
+        this.errorInfo = [];
+    }
 }
 module.exports = DivbloxGlobalBase;
