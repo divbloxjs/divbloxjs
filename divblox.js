@@ -192,7 +192,7 @@ class DivbloxBase extends divbloxObjectBase {
      */
     updateDataModelState(dataModelState) {
         this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
     }
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
