@@ -85,6 +85,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
+
         if (typeof this.configObj["webServiceConfig"] === "undefined") {
             throw new Error("No web service configuration provided");
         }
@@ -131,6 +132,18 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
+        const currentDataModelHash = this.dataLayer.getDataModelHash();
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] === "undefined") {
+            this.dataModelState = {
+                "currentDataModelHash": currentDataModelHash,
+                "lastDataModelChangeTimestamp": Date.now(),
+                "lastDataModelSyncTimestamp": 0
+            }
+            this.updateDataModelState(this.dataModelState);
+        } else {
+            this.dataModelState = this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"];
+        }
+
         this.isInitFinished = true;
     }
     
@@ -150,6 +163,12 @@ class DivbloxBase extends divbloxObjectBase {
                 console.log("You can run the application generator again to generate the default model: npx github:divbloxjs/divbloxjs-application-generator");
                 return;
             }
+            this.dataModelState.lastDataModelChangeTimestamp = Date.now();
+            this.dataModelState.currentDataModelHash = this.dataLayer.getDataModelHash();
+            this.updateDataModelState(this.dataModelState);
+
+            await this.syncDatabase(false);
+        } else if (this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp) {
             await this.syncDatabase(false);
         }
         const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
@@ -165,6 +184,15 @@ class DivbloxBase extends divbloxObjectBase {
         this.webService = new DivbloxWebService(webServiceConfig);
 
         console.log("Divblox started with config: "+JSON.stringify(this.configObj["environmentArray"][process.env.NODE_ENV]));
+    }
+
+    /**
+     * Updates the current data model state in the dxconfig.json file with the provided data
+     * @param dataModelState The new data model state to store
+     */
+    updateDataModelState(dataModelState) {
+        this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj));
     }
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
@@ -186,6 +214,9 @@ class DivbloxBase extends divbloxObjectBase {
                 } else {
                     throw new Error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
                 }
+            } else {
+                this.dataModelState.lastDataModelSyncTimestamp = Date.now();
+                this.updateDataModelState(this.dataModelState);
             }
             return;
         }

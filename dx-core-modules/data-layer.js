@@ -14,11 +14,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
     constructor(databaseConnector = null, dataModel = {}) {
         super();
         this.databaseConnector = databaseConnector;
+        this.dataModel = dataModel;
         this.dataModelNormalized = {};
         this.dataModelEntities = [];
 
-        for (const entityName of Object.keys(dataModel)) {
-            this.dataModelNormalized[this.getSqlReadyName(entityName)] = dataModel[entityName];
+        for (const entityName of Object.keys(this.dataModel)) {
+            this.dataModelNormalized[this.getSqlReadyName(entityName)] = this.dataModel[entityName];
             this.dataModelEntities.push(this.getSqlReadyName(entityName));
         }
 
@@ -49,11 +50,23 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * Validates the data model against what is in the database to determine whether or not a synchronisation is required
-     * @returns {Promise<boolean>}
+     * @param {*} dataModelState The data model state as received from the dxconfig.json file
+     * @returns {Promise<boolean>} Returns true if the current data model matches the one stored, false otherwise
      */
-    async validateDataModelAgainstDatabase() {
+    async validateDataModelAgainstDatabase(dataModelState) {
+        if (this.getDataModelHash() !== dataModelState.currentDataModelHash) {
+            this.populateError("Data model has changes")
+            return false;
+        }
         return true;
-        return false;//TODO: Implement this function. It should return false if sync failed
+    }
+
+    /**
+     * Returns a hash of the current data model that can be used to detect changes
+     * @returns {string} The md5 hashed data model
+     */
+    getDataModelHash() {
+        return require('crypto').createHash('md5').update(JSON.stringify(this.dataModel)).digest("hex");
     }
 
     /**
