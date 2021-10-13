@@ -122,6 +122,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
         let sqlValues = [];
 
         for (const key of dataKeys) {
+            if (this.getSqlReadyName(key) === "id") {
+                // We just check to make sure that we don't try to store an id if it was provided.
+                continue;
+            }
+
             sqlKeys += ", `"+this.getSqlReadyName(key)+"`";
             sqlPlaceholders += ", ?";
             sqlValues.push(this.getSqlReadyValue(data[key]));

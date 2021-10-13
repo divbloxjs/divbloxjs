@@ -294,7 +294,7 @@ class DivbloxBase extends divbloxObjectBase {
             return false;
         }
 
-        if (!await this.dataLayer.update(entityName,data)) {
+        if (!await this.dataLayer.update(entityName, data)) {
             this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
@@ -331,13 +331,23 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} entry.userIdentifier A unique identifier for the user that triggered the modification
      * @param {string} entry.apiKey A unique identifier for the user that triggered the modification if called via an
      * api that identifies with an api key
+     * @param {string} sessionId Optional. The id for the current session to retrieve user identification data
      * @return {Promise<boolean>}
      */
-    async addAuditLogEntry(entry = {}) {
+    async addAuditLogEntry(entry = {}, sessionId) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
+
+        if (typeof sessionId !== "undefined") {
+            const userIdentifier = await this.retrieveSessionData(sessionId, 'userIdentifier');
+            const apiKey = await this.retrieveSessionData(sessionId, 'apiKey');
+
+            entry["userIdentifier"] = userIdentifier;
+            entry["apiKey"] = apiKey;
+        }
+
 
         if (!await this.dataLayer.addAuditLogEntry(entry)) {
             this.populateError(this.dataLayer.getError());
@@ -352,9 +362,9 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Stores the value for the given key in the session that is identified by the given session Id
-     * @param sessionId The id of the session that will be used to store the data
-     * @param key The key for the data
-     * @param value The data to store
+     * @param {string|null}sessionId The id of the session that will be used to store the data
+     * @param {string} key The key for the data
+     * @param {*} value The data to store
      * @return {Promise<boolean>} True if store was successful
      */
     async storeSessionData(sessionId = '', key = '', value = null) {
@@ -364,12 +374,15 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Retrieves the value for the given key in the session that is identified by the given session Id
-     * @param sessionId The id of the session that will be used to retrieve the data
-     * @param key The key for the data
+     * @param {string|null} sessionId The id of the session that will be used to retrieve the data
+     * @param {string} key The key for the data
      * @return {Promise<string>}
      */
-    async retrieveSessionData(sessionId = '', key = '') {
+    async retrieveSessionData(sessionId = null, key = '') {
         // TODO: Implement this functionality
+        if (sessionId === null) {
+            return null;
+        }
         return '';
     }
     //#endregion
