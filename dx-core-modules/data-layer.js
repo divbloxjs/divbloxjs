@@ -138,12 +138,6 @@ class DivbloxDataLayer extends divbloxObjectBase {
             return -1;
         }
 
-        await this.addAuditLogEntry({
-            "objectName": entityName,
-            "modificationType":"create",
-            "objectId":queryResult["insertId"],
-            "entryDetail":JSON.stringify(data)});
-
         return queryResult["insertId"];
     }
 
@@ -209,12 +203,6 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlUpdateValues);
 
-        await this.addAuditLogEntry({
-            "objectName": entityName,
-            "modificationType": "update",
-            "objectId": data["id"],
-            "entryDetail":JSON.stringify(data)});
-
         return queryResult !== null;
     }
 
@@ -236,12 +224,6 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlValues);
 
-        await this.addAuditLogEntry({
-            "objectName": entityName,
-            "modificationType": "delete",
-            "objectId": id,
-            "entryDetail":"{}"});
-
         return queryResult !== null;
     }
 
@@ -251,15 +233,16 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entry.modificationType create|update|delete
      * @param {int} entry.objectId The database primary key id of the entity that was affected
      * @param {string} entry.entryDetail The details of the entry (What was changed)
-     * @return {Promise<void>}
+     * @param {string} entry.userIdentifier A unique identifier for the user that triggered the modification
+     * @param {string} entry.apiKey A unique identifier for the user that triggered the modification if called via an
+     * api that identifies with an api key
+     * @return {Promise<boolean>} True if audit log entry was successfully added, false if not.
      */
     async addAuditLogEntry(entry = {}) {
         if (!this.isEntityAudited(entry["objectName"])) {
             return;
         }
         entry["entryTimeStamp"] = new Date();
-        entry["userIdentifier"] = ""; //TODO: We need to determine the user id somehow
-        entry["apiKey"] = ""; //TODO: We need to determine the api key somehow
 
         const entryKeys = Object.keys(entry);
         let sqlKeys = '';
@@ -277,6 +260,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.executeQuery(query,
             this.getModuleNameFromEntityName('auditLogEntry'),
             sqlValues);
+
+        return typeof queryResult["error"] === "undefined";
     }
 
     /**
@@ -386,4 +371,5 @@ class DivbloxDataLayer extends divbloxObjectBase {
         return returnObject;
     }
 }
+
 module.exports = DivbloxDataLayer;

@@ -38,6 +38,7 @@ class DivbloxWebService extends divbloxObjectBase {
     constructor(config = {}) {
         super();
         this.config = config;
+        this.requestData = {};
         this.apiEndPointRoot = typeof this.config["apiEndPointRoot"] !== "undefined" ? this.config.apiEndPointRoot : './divblox-routes/api';
         this.wwwRoot = typeof this.config["wwwRoot"] !== "undefined" ? this.config.wwwRoot : './divblox-routes/www/index';
         this.viewsRoot = typeof this.config["viewsRoot"] !== "undefined" ? this.config.viewsRoot : 'divblox-views';
@@ -245,6 +246,19 @@ class DivbloxWebService extends divbloxObjectBase {
             ? 'pipe ' + addr
             : 'port ' + addr.port;
         console.log('Listening on ' + bind)
+    }
+
+    openRequest() {
+        const requestIdRaw = Date.now().toString()+Math.round(1000000*Math.random()).toString();
+        const requestId = require('crypto').createHash('md5').update(requestIdRaw).digest("hex");
+        this.requestData[requestId] = {"opened":Date.now()};
+        return requestId;
+    }
+
+    closeRequest(requestId) {
+        if (typeof this.requestData[requestId] !== "undefined") {
+            delete this.requestData[requestId];
+        }
     }
 }
 

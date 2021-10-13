@@ -321,6 +321,57 @@ class DivbloxBase extends divbloxObjectBase {
         
         return true;
     }
+
+    /**
+     * Inserts a new auditLogEntry into the database
+     * @param {string} entry.objectName The name of the entity that was affected
+     * @param {string} entry.modificationType create|update|delete
+     * @param {int} entry.objectId The database primary key id of the entity that was affected
+     * @param {string} entry.entryDetail The details of the entry (What was changed)
+     * @param {string} entry.userIdentifier A unique identifier for the user that triggered the modification
+     * @param {string} entry.apiKey A unique identifier for the user that triggered the modification if called via an
+     * api that identifies with an api key
+     * @return {Promise<boolean>}
+     */
+    async addAuditLogEntry(entry = {}) {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            return false;
+        }
+
+        if (!await this.dataLayer.addAuditLogEntry(entry)) {
+            this.populateError(this.dataLayer.getError());
+            return false;
+        }
+
+        return true;
+    }
+    //#endregion
+
+    //#region Session related functionality
+
+    /**
+     * Stores the value for the given key in the session that is identified by the given session Id
+     * @param sessionId The id of the session that will be used to store the data
+     * @param key The key for the data
+     * @param value The data to store
+     * @return {Promise<boolean>} True if store was successful
+     */
+    async storeSessionData(sessionId = '', key = '', value = null) {
+        // TODO: Implement this functionality
+        return true;
+    }
+
+    /**
+     * Retrieves the value for the given key in the session that is identified by the given session Id
+     * @param sessionId The id of the session that will be used to retrieve the data
+     * @param key The key for the data
+     * @return {Promise<string>}
+     */
+    async retrieveSessionData(sessionId = '', key = '') {
+        // TODO: Implement this functionality
+        return '';
+    }
     //#endregion
 }
 
