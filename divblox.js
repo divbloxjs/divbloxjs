@@ -28,7 +28,6 @@ class DivbloxBase extends divbloxObjectBase {
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
      * @param {string} options.configPath The path to the dxconfig.json file that defines the environment related variables
-     * @param {string} options.dataModelPath The path to the data-model.json file that contains the project's data model
      * @param {*} options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
      * is useful when you want to override the default Divblox data layer behaviour
      * @param {*} options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
@@ -49,13 +48,14 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("Invalid config path ("+this.configPath+") provided");
         }
 
-        if ((typeof options["dataModelPath"] === "undefined") || (options["dataModelPath"] === null)) {
+        //TODO: Remove when refactored
+        /*if ((typeof options["dataModelPath"] === "undefined") || (options["dataModelPath"] === null)) {
             throw new Error("No data model path provided");
         }
         this.dataModelPath = options["dataModelPath"];
         if (!fs.existsSync(this.dataModelPath)) {
             throw new Error("Invalid data model path provided");
-        }
+        }*/
 
         if ((typeof options["dataLayerImplementationClass"] !== "undefined") &&
             (options["dataLayerImplementationClass"] !== null)) {
@@ -94,6 +94,12 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
 
+        //TODO: Remove when refactored
+        /*
+        const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
+        this.dataModelObj = JSON.parse(dataModelDataStr);
+        */
+        this.dataModelPath = DIVBLOX_ROOT_DIR+'/dx-orm/data-model-base.json';
         const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
 
