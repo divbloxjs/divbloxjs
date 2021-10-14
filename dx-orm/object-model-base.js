@@ -73,11 +73,11 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
         if ((Object.keys(this.lastLoadedData).length === 0) || (this.lastLoadedData === null)) {
             // This means we are creating a new entry for this entity
             const objId =  await this.dxInstance.create(this.entityName, this.data);
-            this.data["id"] = objId;
 
             if (objId !== -1) {
                 this.lastLoadedData = JSON.parse(JSON.stringify(this.data));
                 await this.addAuditLogEntry(this.modificationTypes.create, this.data);
+                await this.load(objId);
             }
 
             return objId !== -1;
@@ -85,7 +85,8 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
 
         let dataToSave = {"id":this.data.id};
         for (const key of Object.keys(this.lastLoadedData)) {
-            if (typeof this.data[key] === "undefined") {
+            if ((typeof this.data[key] === "undefined") ||
+                (key === "lastUpdated")) {
                 continue;
             }
 
@@ -99,13 +100,15 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             return true;
         }
 
-        if ((typeof this.lastLoadedData["last_updated"] !== "undefined") &&
+        if ((typeof this.lastLoadedData["lastUpdated"] !== "undefined") &&
             (!mustIgnoreLockingConstraints)) {
+
             const isLockingConstraintActive =
                 await this.dxInstance.dataLayer.checkLockingConstraintActive(
                     this.entityName,
                     this.data.id,
-                    this.lastLoadedData["last_updated"])
+                    this.lastLoadedData["lastUpdated"]);
+
             if (isLockingConstraintActive) {
                 this.populateError("A locking constraint is active for "+this.entityName+" with id: "+this.data.id);
                 return false;
