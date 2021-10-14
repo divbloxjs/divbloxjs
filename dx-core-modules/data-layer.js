@@ -234,9 +234,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * Inserts a new auditLogEntry into the database
+     * @param entry The information regarding the entry
      * @param {string} entry.objectName The name of the entity that was affected
      * @param {string} entry.modificationType create|update|delete
-     * @param {int} entry.objectId The database primary key id of the entity that was affected
+     * @param {number} entry.objectId The database primary key id of the entity that was affected
      * @param {string} entry.entryDetail The details of the entry (What was changed)
      * @param {string} entry.userIdentifier A unique identifier for the user that triggered the modification
      * @param {string} entry.apiKey A unique identifier for the user that triggered the modification if called via an
