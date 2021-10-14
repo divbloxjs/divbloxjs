@@ -196,7 +196,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
 
         const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `"+fieldName+"` = ? LIMIT 1;";
+            "WHERE `"+this.getSqlReadyName(fieldName)+"` = ? LIMIT 1;";
         const sqlValues = [fieldValue];
 
         const queryResult = await this.executeQuery(query,
