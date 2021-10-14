@@ -177,6 +177,16 @@ class DivbloxBase extends divbloxObjectBase {
             } else if (this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp) {
                 await this.syncDatabase(false);
             }
+
+            if (!await this.checkOrmBaseClassesComplete()) {
+                console.log("Generating object models from data model...");
+                await this.generateOrmBaseClasses();
+            }
+            
+            // Let's just wait 2s for the console to make sense
+            await dxUtils.sleep(2000);
+            console.log("Finishing divbloxjs startup...");
+            await dxUtils.sleep(1000);
         }
 
         const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
@@ -227,16 +237,8 @@ class DivbloxBase extends divbloxObjectBase {
                     throw new Error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
                 }
             } else {
-                console.log("Generating object models from data model...");
-                await this.generateOrmBaseClasses();
-
                 this.dataModelState.lastDataModelSyncTimestamp = Date.now();
                 this.updateDataModelState(this.dataModelState);
-
-                // Let's just wait 2s for the console to make sense
-                await dxUtils.sleep(2000);
-                console.log("Finishing divbloxjs startup...");
-                await dxUtils.sleep(1000);
             }
             return;
         }
@@ -247,6 +249,17 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    async checkOrmBaseClassesComplete() {
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
+            return false;
+        }
+        for (const entityName of Object.keys(this.dataModelObj)) {
+            if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+".js")) {
+                return false;
+            }
+        }
+        return true;
+    }
     async generateOrmBaseClasses() {
         if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
             console.log("Creating /dx-orm/generated/ directory...");
