@@ -5,7 +5,7 @@
   "main": "divblox.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "echo \"Post install script\" && exit 1"
+    "postinstall": "node test.js"
   },
   "repository": {
     "type": "git",
