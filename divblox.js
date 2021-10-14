@@ -227,11 +227,11 @@ class DivbloxBase extends divbloxObjectBase {
                     throw new Error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
                 }
             } else {
-                this.dataModelState.lastDataModelSyncTimestamp = Date.now();
-                this.updateDataModelState(this.dataModelState);
-
                 console.log("Generating object models from data model...");
                 await this.generateOrmBaseClasses();
+
+                this.dataModelState.lastDataModelSyncTimestamp = Date.now();
+                this.updateDataModelState(this.dataModelState);
 
                 // Let's just wait 2s for the console to make sense
                 await dxUtils.sleep(2000);
