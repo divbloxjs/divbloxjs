@@ -99,7 +99,18 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             return true;
         }
 
-        const lastUpdated = await this.dxInstance.dataLayer
+        if ((typeof this.lastLoadedData["last_updated"] !== "undefined") &&
+            (!mustIgnoreLockingConstraints)) {
+            const isLockingConstraintActive =
+                await this.dxInstance.dataLayer.checkLockingConstraintActive(
+                    this.entityName,
+                    this.data.id,
+                    this.lastLoadedData["last_updated"])
+            if (isLockingConstraintActive) {
+                this.populateError("A locking constraint is active for "+this.entityName+" with id: "+this.data.id);
+                return false;
+            }
+        }
         const updateResult = await this.dxInstance.update(this.entityName, dataToSave);
 
         if (updateResult) {
