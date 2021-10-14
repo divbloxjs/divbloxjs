@@ -58,7 +58,11 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
             return true;
         }
+
+        this.populateError(this.dxInstance.getError());
+
         this.reset();
+
         return false
     }
 
