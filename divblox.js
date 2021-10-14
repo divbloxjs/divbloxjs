@@ -301,7 +301,7 @@ class DivbloxBase extends divbloxObjectBase {
             };
 
             let fileContentStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-model.tpl",'utf-8');
-            
+
             for (const token of Object.keys(tokensToReplace)) {
                 const search = '['+token+']';
                 let done = false;
