@@ -1,9 +1,11 @@
 const fs = require("fs");
+const path = require('path')
 const dxUtils = require("dx-utils");
 const divbloxObjectBase = require('./dx-core-modules/object-base');
 const divbloxDatabaseConnector = require("dx-db-connector");
 const divbloxDataLayerBase = require('./dx-core-modules/data-layer');
 const divbloxWebServiceBase = require('./dx-core-modules/web-service');
+const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', '');
 
 /**
  * This class overrides the default divbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
@@ -228,6 +230,9 @@ class DivbloxBase extends divbloxObjectBase {
                 this.dataModelState.lastDataModelSyncTimestamp = Date.now();
                 this.updateDataModelState(this.dataModelState);
 
+                console.log("Generating object models from data model...");
+                await this.generateOrmBaseClasses();
+
                 // Let's just wait 2s for the console to make sense
                 await dxUtils.sleep(2000);
                 console.log("Finishing divbloxjs startup...");
@@ -239,6 +244,38 @@ class DivbloxBase extends divbloxObjectBase {
             console.log("Synchronization cancelled");
         } else {
             throw new Error("Synchronization cancelled. Cannot continue.");
+        }
+    }
+
+    async generateOrmBaseClasses() {
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
+            console.log("Creating /dx-orm/generated/ directory...");
+            fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated");
+        }
+        for (const entityName of Object.keys(this.dataModelObj)) {
+            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
+            const entityNameCamelCase = entityName;
+            const entityData = "//TODO: Entity data to be completed";
+            const tokensToReplace = {
+                "EntityNamePascalCase": entityNamePascalCase,
+                "EntityNameCamelCase": entityNameCamelCase,
+                "EntityData": entityData
+            };
+            let fileContentStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-model.tpl",'utf-8');
+            for (const token of Object.keys(tokensToReplace)) {
+                const search = '['+token+']';
+                let done = false;
+                while (!done) {
+                    done = fileContentStr.indexOf(search) === -1;
+                    //TODO: This should be done with the replaceAll function
+                    fileContentStr = fileContentStr.replace(search, tokensToReplace[token]);
+                }
+
+            }
+
+            fs.writeFileSync(
+                DIVBLOX_ROOT_DIR+"/dx-orm/generated/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+".js",
+                fileContentStr);
         }
     }
 
