@@ -255,7 +255,31 @@ class DivbloxBase extends divbloxObjectBase {
         for (const entityName of Object.keys(this.dataModelObj)) {
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
             const entityNameCamelCase = entityName;
-            const entityData = "//TODO: Entity data to be completed";
+            let entityData = "";
+
+            const attributes = this.dataModelObj[entityName]["attributes"];
+            const relationships = this.dataModelObj[entityName]["relationships"];
+
+            for (const attributeName of Object.keys(attributes)) {
+                entityData += 'this.data["'+attributeName+'"] = ';
+                if (typeof attributes[attributeName]["default"] === "undefined") {
+                    entityData += 'null;\n'
+                    continue;
+                }
+                if ((attributes[attributeName]["default"] === null) || (attributes[attributeName]["default"] === "CURRENT_TIMESTAMP")) {
+                    entityData += 'null;\n'
+                    continue;
+                }
+                entityData += attributes[attributeName]["default"].toString()+'\n';
+            }
+
+            for (const relationshipName of Object.keys(relationships)) {
+                for (const relationshipUniqueName of relationships[relationshipName]) {
+                    const finalRelationshipName = relationshipName+"_"+relationshipUniqueName;
+                    entityData += 'this.data["'+finalRelationshipName+'"] = -1;\n';
+                }
+            }
+
             const tokensToReplace = {
                 "EntityNamePascalCase": entityNamePascalCase,
                 "EntityNameCamelCase": entityNameCamelCase,
@@ -270,7 +294,6 @@ class DivbloxBase extends divbloxObjectBase {
                     //TODO: This should be done with the replaceAll function
                     fileContentStr = fileContentStr.replace(search, tokensToReplace[token]);
                 }
-
             }
 
             fs.writeFileSync(
