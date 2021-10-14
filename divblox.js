@@ -419,23 +419,15 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} entry.modificationType create|update|delete
      * @param {number} entry.objectId The database primary key id of the entity that was affected
      * @param {string} entry.entryDetail The details of the entry (What was changed)
-     * @param {string} sessionId Optional. The id for the current session to retrieve user identification data
+     * @param {string} entry.globalIdentifier Optional. The uniqueIdentifier for a globalIdentifier that can be used to trace
+     * the user/process that triggered the modification
      * @return {Promise<boolean>}
      */
-    async addAuditLogEntry(entry = {}, sessionId) {
+    async addAuditLogEntry(entry = {}) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
-
-        if (typeof sessionId !== "undefined") {
-            const userIdentifier = await this.retrieveSessionData(sessionId, 'userIdentifier');
-            const apiKey = await this.retrieveSessionData(sessionId, 'apiKey');
-
-            entry["userIdentifier"] = userIdentifier;
-            entry["apiKey"] = apiKey;
-        }
-
 
         if (!await this.dataLayer.addAuditLogEntry(entry)) {
             this.populateError(this.dataLayer.getError());

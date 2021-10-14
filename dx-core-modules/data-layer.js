@@ -279,9 +279,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entry.modificationType create|update|delete
      * @param {number} entry.objectId The database primary key id of the entity that was affected
      * @param {string} entry.entryDetail The details of the entry (What was changed)
-     * @param {string} entry.userIdentifier A unique identifier for the user that triggered the modification
-     * @param {string} entry.apiKey A unique identifier for the user that triggered the modification if called via an
-     * api that identifies with an api key
+     * @param {string} entry.globalIdentifier A unique identifier for the user/process that triggered the modification
      * @return {Promise<boolean>} True if audit log entry was successfully added, false if not.
      */
     async addAuditLogEntry(entry = {}) {

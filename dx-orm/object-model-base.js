@@ -12,10 +12,10 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer
      * @param {string} entityName Optional. The name of the entity to deal with. This will only be used if this base class is
      * used to instantiate an object. Otherwise, child classes will set their own entity name in their constructors
-     * @param {string} sessionId Optional. The id of the current session. Used to determine current user information if
-     * it is required for audit purposes
+     * @param {string} globalIdentifier Optional. The uniqueIdentifier token for a globaleIdentifier object.
+     * Used to determine current user information if it is required for audit purposes
      */
-    constructor(dxInstance = null, entityName, sessionId) {
+    constructor(dxInstance = null, entityName, globalIdentifier) {
         super();
         this.dxInstance = dxInstance;
 
@@ -24,9 +24,9 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             this.entityName = entityName;
         }
 
-        this.sessionId = null;
-        if (typeof sessionId !== "undefined") {
-            this.sessionId = sessionId;
+        this.globalIdentifier = null;
+        if (typeof globalIdentifier !== "undefined") {
+            this.globalIdentifier = globalIdentifier;
         }
 
         this.modificationTypes = {
@@ -158,9 +158,10 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             "objectName": this.entityName,
             "modificationType": modificationType,
             "objectId": this.data.id,
-            "entryDetail":JSON.stringify(entryDetail)
+            "entryDetail":JSON.stringify(entryDetail),
+            "globalIdentifier": this.globalIdentifier
         };
-        const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry, this.sessionId);
+        const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry);
         if (!auditLogEntryResult) {
             this.populateError(this.dxInstance.getError());
         }

@@ -20,12 +20,6 @@
         "default": null,
         "allowNull": true
       },
-      "userIdentifier": {
-        "type": "varchar",
-        "lengthOrValues": 150,
-        "default": null,
-        "allowNull": true
-      },
       "objectId": {
         "type": "bigint",
         "lengthOrValues": null,
@@ -38,7 +32,7 @@
         "default": null,
         "allowNull": true
       },
-      "apiKey": {
+      "globalIdentifier": {
         "type": "varchar",
         "lengthOrValues": 50,
         "default": null,
