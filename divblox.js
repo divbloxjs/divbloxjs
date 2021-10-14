@@ -442,8 +442,8 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Creates a new global id in the database. This is used to identify any other types of entities where needed.
-     * @param linkedEntity Optional. The name of the entity linked to this identifier
-     * @param linkedEntityId Optional. The id of the entity linked to this identifier.
+     * @param {string} linkedEntity Optional. The name of the entity linked to this identifier
+     * @param {number} linkedEntityId Optional. The id of the entity linked to this identifier.
      * For example, if we have a 'user' entity which we want to identify using a globally unique token, we will pass
      * 'user' as the entity and the id of this user object.
      * @return {Promise<string|null>} If created successfully, it returns the globally unique id. Null, otherwise with
@@ -478,7 +478,7 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Returns the globalIdentifier object from the database for the given uniqueIdentifier token
-     * @param uniqueIdentifier The unique identifier token
+     * @param {string} uniqueIdentifier The unique identifier token
      * @return {Promise<null|*>} A globalIdentifier object if found, null otherwise with an error possibly populated
      */
     async getGlobalIdentifier(uniqueIdentifier) {
