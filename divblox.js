@@ -5,7 +5,7 @@ const divbloxObjectBase = require('./dx-core-modules/object-base');
 const divbloxDatabaseConnector = require("dx-db-connector");
 const divbloxDataLayerBase = require('./dx-core-modules/data-layer');
 const divbloxWebServiceBase = require('./dx-core-modules/web-service');
-const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', '');
+const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', 'divbloxjs');
 
 /**
  * This class overrides the default divbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
