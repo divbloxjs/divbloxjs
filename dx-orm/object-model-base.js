@@ -38,6 +38,9 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
         this.reset();
     }
 
+    /**
+     * Called by the constructor to initialize the data for this object. Also called after the delete function succeeds
+     */
     reset() {
         this.data = {"id":-1};
         this.lastLoadedData = {}
