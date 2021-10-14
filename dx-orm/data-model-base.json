@@ -90,7 +90,7 @@
     },
     "indexes": [
       {
-        "attribute": "identifier",
+        "attribute": "uniqueIdentifier",
         "indexName": "globalIdentifier_uniqueIdentifier",
         "indexChoice": "unique",
         "type": "BTREE"
