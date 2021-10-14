@@ -48,15 +48,6 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("Invalid config path ("+this.configPath+") provided");
         }
 
-        //TODO: Remove when refactored
-        /*if ((typeof options["dataModelPath"] === "undefined") || (options["dataModelPath"] === null)) {
-            throw new Error("No data model path provided");
-        }
-        this.dataModelPath = options["dataModelPath"];
-        if (!fs.existsSync(this.dataModelPath)) {
-            throw new Error("Invalid data model path provided");
-        }*/
-
         if ((typeof options["dataLayerImplementationClass"] !== "undefined") &&
             (options["dataLayerImplementationClass"] !== null)) {
             DivbloxDataLayer = options["dataLayerImplementationClass"];
@@ -94,11 +85,6 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
 
-        //TODO: Remove when refactored
-        /*
-        const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
-        this.dataModelObj = JSON.parse(dataModelDataStr);
-        */
         this.dataModelPath = DIVBLOX_ROOT_DIR+'/dx-orm/data-model-base.json';
         const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
