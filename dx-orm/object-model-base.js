@@ -65,12 +65,15 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
      */
     async save() {
-        if (this.lastLoadedData === {}) {
+        if ((Object.keys(this.lastLoadedData).length === 0) || (this.lastLoadedData === null)) {
             // This means we are creating a new entry for this entity
             const objId =  await this.dxInstance.create(this.entityName, this.data);
             this.data["id"] = objId;
 
-            await this.addAuditLogEntry(this.modificationTypes.create, this.data);
+            if (objId !== -1) {
+                this.lastLoadedData = JSON.parse(JSON.stringify(this.data));
+                await this.addAuditLogEntry(this.modificationTypes.create, this.data);
+            }
 
             return objId !== -1;
         }
@@ -85,7 +88,14 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
                 dataToSave[key] = this.data[key];
             }
         }
+
+        if (Object.keys(dataToSave).length === 1) {
+            // There is nothing to update. Let's not even try.
+            return true;
+        }
+
         const updateResult = await this.dxInstance.update(this.entityName, dataToSave);
+
         if (updateResult) {
             await this.addAuditLogEntry(this.modificationTypes.update, dataToSave);
         }
