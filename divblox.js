@@ -241,6 +241,10 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Checks whether the expected base object model classes exist
+     * @return {Promise<boolean>} True if all expected classes exists, false otherwise
+     */
     async checkOrmBaseClassesComplete() {
         if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
             return false;
@@ -252,6 +256,11 @@ class DivbloxBase extends divbloxObjectBase {
         }
         return true;
     }
+
+    /**
+     * Generates the base object model classes, based on the project's complete data model
+     * @return {Promise<void>}
+     */
     async generateOrmBaseClasses() {
         if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
             console.log("Creating /dx-orm/generated/ directory...");
@@ -440,26 +449,78 @@ class DivbloxBase extends divbloxObjectBase {
     //#region Session related functionality
 
     /**
-     * Stores the value for the given key in the session that is identified by the given session Id
-     * @param {string|null}sessionId The id of the session that will be used to store the data
+     * Creates a new global id in the database. This is used to identify any other types of entities where needed.
+     * @param linkedEntity Optional. The name of the entity linked to this identifier
+     * @param linkedEntityId Optional. The id of the entity linked to this identifier.
+     * For example, if we have a 'user' entity which we want to identify using a globally unique token, we will pass
+     * 'user' as the entity and the id of this user object.
+     * @return {Promise<string|null>} If created successfully, it returns the globally unique id. Null, otherwise with
+     * an error populated in the error array.
+     */
+    async createGlobalIdentifier(linkedEntity = '', linkedEntityId = -1) {
+        const uniqueIdentifierRaw = Date.now().toString()+Math.round(1000000*Math.random()).toString();
+        const uniqueIdentifier =
+            require('crypto')
+                .createHash('md5')
+                .update(uniqueIdentifierRaw)
+                .digest("hex");
+
+        const objectToSave = {
+                "uniqueIdentifier": uniqueIdentifier,
+                "linkedEntity": linkedEntity,
+                "linkedEntityId": linkedEntityId,
+                "sessionData": '{}'
+            };
+
+        const objId = await this.dataLayer.create('globalIdentifier', objectToSave);
+
+        if (objId !== -1) {
+            return uniqueIdentifier;
+        }
+
+        this.populateError("Could not create globalIdentifier");
+        this.populateError(this.dataLayer.getError());
+
+        return null;
+    }
+
+    /**
+     * Returns the globalIdentifier object from the database for the given uniqueIdentifier token
+     * @param uniqueIdentifier The unique identifier token
+     * @return {Promise<null|*>} A globalIdentifier object if found, null otherwise with an error possibly populated
+     */
+    async getGlobalIdentifier(uniqueIdentifier) {
+        const globalIdentifier = await this.dataLayer.readByField(
+            "globalIdentifier",
+            "uniqueIdentifier",
+            uniqueIdentifier);
+        if (globalIdentifier === null) {
+            this.populateError(this.dataLayer.getError());
+        }
+        return globalIdentifier;
+    }
+
+    /**
+     * Stores the value for the given key in the session that is identified by the given globalIdentifier
+     * @param {string|null} globalIdentifier The id of the session that will be used to store the data
      * @param {string} key The key for the data
      * @param {*} value The data to store
      * @return {Promise<boolean>} True if store was successful
      */
-    async storeSessionData(sessionId = '', key = '', value = null) {
+    async storeSessionData(globalIdentifier = '', key = '', value = null) {
         // TODO: Implement this functionality
         return true;
     }
 
     /**
-     * Retrieves the value for the given key in the session that is identified by the given session Id
-     * @param {string|null} sessionId The id of the session that will be used to retrieve the data
+     * Retrieves the value for the given key in the session that is identified by the given globalIdentifier
+     * @param {string|null} globalIdentifier The id of the session that will be used to retrieve the data
      * @param {string} key The key for the data
      * @return {Promise<string>}
      */
-    async retrieveSessionData(sessionId = null, key = '') {
+    async retrieveSessionData(globalIdentifier = null, key = '') {
         // TODO: Implement this functionality
-        if (sessionId === null) {
+        if (globalIdentifier === null) {
             return null;
         }
         return '';

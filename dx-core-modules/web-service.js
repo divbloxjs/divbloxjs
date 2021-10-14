@@ -247,19 +247,6 @@ class DivbloxWebService extends divbloxObjectBase {
             : 'port ' + addr.port;
         console.log('Listening on ' + bind)
     }
-
-    openRequest() {
-        const requestIdRaw = Date.now().toString()+Math.round(1000000*Math.random()).toString();
-        const requestId = require('crypto').createHash('md5').update(requestIdRaw).digest("hex");
-        this.requestData[requestId] = {"opened":Date.now()};
-        return requestId;
-    }
-
-    closeRequest(requestId) {
-        if (typeof this.requestData[requestId] !== "undefined") {
-            delete this.requestData[requestId];
-        }
-    }
 }
 
 module.exports = DivbloxWebService;

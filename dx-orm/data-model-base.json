@@ -59,5 +59,48 @@
       "enforceLockingConstraints": false,
       "isAuditEnabled": false
     }
+  },
+  "globalIdentifier": {
+    "module": "main",
+    "attributes": {
+      "uniqueIdentifier": {
+        "type": "varchar",
+        "lengthOrValues": 50,
+        "default": "",
+        "allowNull": false
+      },
+      "linkedEntity": {
+        "type": "varchar",
+        "lengthOrValues": 100,
+        "default": null,
+        "allowNull": true
+      },
+      "linkedEntityId": {
+        "type": "bigint",
+        "lengthOrValues": 20,
+        "default": null,
+        "allowNull": true
+      },
+      "sessionData": {
+        "type": "text",
+        "lengthOrValues": null,
+        "default": null,
+        "allowNull": true
+      }
+    },
+    "indexes": [
+      {
+        "attribute": "identifier",
+        "indexName": "globalIdentifier_uniqueIdentifier",
+        "indexChoice": "unique",
+        "type": "BTREE"
+      }
+    ],
+    "relationships": {
+    },
+    "options": {
+      "enforceLockingConstraints": false,
+      "isAuditEnabled": false
+    }
   }
 }

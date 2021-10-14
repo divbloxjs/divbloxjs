@@ -167,12 +167,37 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {number} id The primary key id of the relevant row
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async read(entityName = '',id = -1) {
+    async read(entityName = '', id = -1) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
 
         const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
             "WHERE `id` = ? LIMIT 1;";
         const sqlValues = [id];
+
+        const queryResult = await this.executeQuery(query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues);
+
+        if (queryResult === null) {
+            return null;
+        }
+
+        return this.transformSqlObjectToJs(queryResult[0]);
+    }
+
+    /**
+     * Loads the data for a specific entity from the database
+     * @param {string} entityName The entity type to load for (The table to perform a select query on)
+     * @param {string} fieldName The primary key id of the relevant row
+     * @param {string|number} fieldValue The primary key id of the relevant row
+     * @returns {Promise<null|*>} An object with the entity's data represented or NULL
+     */
+    async readByField(entityName = '', fieldName = 'id', fieldValue = -1) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
+
+        const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
+            "WHERE `"+fieldName+"` = ? LIMIT 1;";
+        const sqlValues = [fieldValue];
 
         const queryResult = await this.executeQuery(query,
             this.getModuleNameFromEntityName(entityName),
