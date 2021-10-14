@@ -108,6 +108,21 @@ class DivbloxDataLayer extends divbloxObjectBase {
     }
 
     /**
+     * Determines whether or not an entity enforces locking constraints when performing updates
+     * @param {string} entityName The name of the entity to determine for
+     * @return {boolean|*} True if locking constraint is enforced, false if not
+     */
+    isLockingConstraintEnforced(entityName = '') {
+        if ((typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined") ||
+            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"] === "undefined") ||
+            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["enforceLockingConstraints"] === "undefined")) {
+            return false;
+        }
+        return this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["enforceLockingConstraints"];
+    }
+
+
+    /**
      * Responsible for performing an insert query on the database for the relevant entity
      * @param {string} entityName The entity to create (Name of the row to perform an insert for)
      * @param {*} data An object who's properties determines the fields to set values for when inserting
@@ -268,6 +283,32 @@ class DivbloxDataLayer extends divbloxObjectBase {
             sqlValues);
 
         return typeof queryResult["error"] === "undefined";
+    }
+
+    /**
+     * Checks whether a locking constrain should be active for the given entity, id and last retrieved 'last_updated'
+     * @param {string} entityName The entity type to load for (The table to perform a select query on)
+     * @param {number} id The primary key id of the relevant row
+     * @param {string} currentLastUpdatedValue The previously retrieved value for "last_updated"
+     * @return {Promise<boolean>} True if a locking constraint should be in place, false otherwise
+     */
+    async checkLockingConstraintActive(entityName = '', id = -1, currentLastUpdatedValue) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
+
+        if (!this.isLockingConstraintEnforced(entityName)) {return false;}
+
+        const query = "SELECT `last_updated` FROM `"+this.getSqlReadyName(entityName)+"` " +
+            "WHERE `id` = ? LIMIT 1;";
+        const sqlValues = [id];
+
+        const queryResult = await this.executeQuery(query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues);
+
+        console.dir(queryResult);
+        // If these values do not match, it means the database has changed since we last loaded the row. Therefor,
+        // a locking constraint should be in place
+        return queryResult[0]['last_updated'] !== currentLastUpdatedValue;
     }
 
     /**

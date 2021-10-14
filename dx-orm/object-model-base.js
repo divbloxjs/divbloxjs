@@ -65,9 +65,11 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
     /**
      * Saves the current entity instance to the database. If the object does not yet exist in the database, an insert is
      * performed. Otherwise an update is performed, whereby only the changed fields are updated.
+     * @param {boolean} mustIgnoreLockingConstraints If set to true, we will not check whether a locking constraint is
+     * in place (If this entity has locking constraint functionality enabled) and simply perform the update
      * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
      */
-    async save() {
+    async save(mustIgnoreLockingConstraints = false) {
         if ((Object.keys(this.lastLoadedData).length === 0) || (this.lastLoadedData === null)) {
             // This means we are creating a new entry for this entity
             const objId =  await this.dxInstance.create(this.entityName, this.data);
@@ -97,6 +99,7 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             return true;
         }
 
+        const lastUpdated = await this.dxInstance.dataLayer
         const updateResult = await this.dxInstance.update(this.entityName, dataToSave);
 
         if (updateResult) {
