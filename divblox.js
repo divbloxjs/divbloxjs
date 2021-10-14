@@ -252,7 +252,10 @@ class DivbloxBase extends divbloxObjectBase {
             console.log("Creating /dx-orm/generated/ directory...");
             fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated");
         }
+
         for (const entityName of Object.keys(this.dataModelObj)) {
+            console.log("Generating base object model class for '"+entityName+"'...");
+
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
             const entityNameCamelCase = entityName;
             let entityData = "";
@@ -261,22 +264,33 @@ class DivbloxBase extends divbloxObjectBase {
             const relationships = this.dataModelObj[entityName]["relationships"];
 
             for (const attributeName of Object.keys(attributes)) {
+                if (entityData.length > 0) {
+                    entityData += '\n        ';
+                }
+
                 entityData += 'this.data["'+attributeName+'"] = ';
                 if (typeof attributes[attributeName]["default"] === "undefined") {
-                    entityData += 'null;\n'
+                    entityData += 'null;'
                     continue;
                 }
                 if ((attributes[attributeName]["default"] === null) || (attributes[attributeName]["default"] === "CURRENT_TIMESTAMP")) {
-                    entityData += 'null;\n'
+                    entityData += 'null;'
                     continue;
                 }
-                entityData += attributes[attributeName]["default"].toString()+'\n';
+                entityData += (isNaN(attributes[attributeName]["default"]) || (attributes[attributeName]["default"].length === 0)) ?
+                    "'"+attributes[attributeName]["default"]+"';" :
+                    attributes[attributeName]["default"].toString();
             }
 
             for (const relationshipName of Object.keys(relationships)) {
                 for (const relationshipUniqueName of relationships[relationshipName]) {
                     const finalRelationshipName = relationshipName+"_"+relationshipUniqueName;
-                    entityData += 'this.data["'+finalRelationshipName+'"] = -1;\n';
+
+                    if (entityData.length > 0) {
+                        entityData += '\n        ';
+                    }
+
+                    entityData += 'this.data["'+finalRelationshipName+'"] = null;';
                 }
             }
 
@@ -285,7 +299,9 @@ class DivbloxBase extends divbloxObjectBase {
                 "EntityNameCamelCase": entityNameCamelCase,
                 "EntityData": entityData
             };
+
             let fileContentStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-model.tpl",'utf-8');
+            
             for (const token of Object.keys(tokensToReplace)) {
                 const search = '['+token+']';
                 let done = false;
