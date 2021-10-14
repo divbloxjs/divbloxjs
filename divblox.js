@@ -182,7 +182,7 @@ class DivbloxBase extends divbloxObjectBase {
                 console.log("Generating object models from data model...");
                 await this.generateOrmBaseClasses();
             }
-            
+
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
             console.log("Finishing divbloxjs startup...");

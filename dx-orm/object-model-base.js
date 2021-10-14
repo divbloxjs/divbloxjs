@@ -108,7 +108,7 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
                 await this.dxInstance.dataLayer.checkLockingConstraintActive(
                     this.entityName,
                     this.data.id,
-                    this.lastLoadedData["lastUpdated"]);
+                    this.lastLoadedData["lastUpdated"].getTime());
 
             if (isLockingConstraintActive) {
                 this.populateError("A locking constraint is active for "+this.entityName+" with id: "+this.data.id);
