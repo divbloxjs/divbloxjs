@@ -305,10 +305,14 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlValues);
 
-        console.dir(queryResult);
+        if (queryResult.length === 0) {
+            return false;
+        }
+
         // If these values do not match, it means the database has changed since we last loaded the row. Therefor,
         // a locking constraint should be in place
-        return queryResult[0]['last_updated'] !== currentLastUpdatedValue;
+        const storedTimestamp = queryResult[0]['last_updated'].getTime();
+        return storedTimestamp !== currentLastUpdatedValue;
     }
 
     /**

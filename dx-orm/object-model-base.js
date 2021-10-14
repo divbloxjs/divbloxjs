@@ -75,9 +75,8 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             const objId =  await this.dxInstance.create(this.entityName, this.data);
 
             if (objId !== -1) {
-                this.lastLoadedData = JSON.parse(JSON.stringify(this.data));
-                await this.addAuditLogEntry(this.modificationTypes.create, this.data);
                 await this.load(objId);
+                await this.addAuditLogEntry(this.modificationTypes.create, this.data);
             }
 
             return objId !== -1;
