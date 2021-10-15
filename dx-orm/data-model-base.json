@@ -91,6 +91,40 @@
       }
     ],
     "relationships": {
+      "globalIdentifierGrouping": [
+        "primaryLink"
+      ]
+    },
+    "options": {
+      "enforceLockingConstraints": false,
+      "isAuditEnabled": false
+    }
+  },
+  "globalIdentifierGrouping": {
+    "module": "main",
+    "attributes": {
+      "name": {
+        "type": "varchar",
+        "lengthOrValues": 150,
+        "default": "",
+        "allowNull": false
+      },
+      "description": {
+        "type": "text",
+        "lengthOrValues": null,
+        "default": null,
+        "allowNull": true
+      },
+      "parentGroupingId": {
+        "type": "bigint",
+        "lengthOrValues": 20,
+        "default": null,
+        "allowNull": true
+      }
+    },
+    "indexes": [
+    ],
+    "relationships": {
     },
     "options": {
       "enforceLockingConstraints": false,
