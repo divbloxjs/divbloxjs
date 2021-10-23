@@ -5,6 +5,7 @@ const divbloxObjectBase = require('./dx-core-modules/object-base');
 const divbloxDatabaseConnector = require("dx-db-connector");
 const divbloxDataLayerBase = require('./dx-core-modules/data-layer');
 const divbloxWebServiceBase = require('./dx-core-modules/web-service');
+const divbloxJwtWrapperBase = require('./dx-core-modules/jwt-wrapper');
 const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', 'divbloxjs');
 
 /**
@@ -20,6 +21,12 @@ class DivbloxDataLayer extends divbloxDataLayerBase {}
 class DivbloxWebService extends divbloxWebServiceBase {}
 
 /**
+ * This class overrides the default divbloxJwtWrapperBase class to ensure that we can always just call DivbloxJwtWrapper,
+ * meaning, the developer can create their own version of DivbloxJwtWrapper if they want to modify how it should work
+ */
+class DivbloxJwtWrapper extends divbloxJwtWrapperBase {}
+
+/**
  * DivbloxBase serves as the base Divblox class that provides the relevant backend nodejs functionality for a Divblox
  * application
  */
@@ -32,6 +39,8 @@ class DivbloxBase extends divbloxObjectBase {
      * is useful when you want to override the default Divblox data layer behaviour
      * @param {*} options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
      * is useful when you want to override the default Divblox Web Service behaviour
+     * @param {*} options.jwtWrapperImplementationClass An optional class implementation for the Divblox JWT Wrapper. This
+     * is useful when you want to override the default Divblox JWT Wrapper behaviour
      * @param {boolean} options.skipInit If set to true this forces the constructor to not call this.initDx()
      * automatically. Used when we want to call startDx() after init, meaning we have to await the initDx function
      */
@@ -56,6 +65,11 @@ class DivbloxBase extends divbloxObjectBase {
         if ((typeof options["webServiceImplementationClass"] !== "undefined") &&
             (options["webServiceImplementationClass"] !== null)) {
             DivbloxWebService = options["webServiceImplementationClass"];
+        }
+
+        if ((typeof options["jwtWrapperImplementationClass"] !== "undefined") &&
+            (options["jwtWrapperImplementationClass"] !== null)) {
+            DivbloxJwtWrapper = options["jwtWrapperImplementationClass"];
         }
 
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
@@ -137,6 +151,12 @@ class DivbloxBase extends divbloxObjectBase {
         } else {
             this.dataModelState = this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"];
         }
+
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"] === "undefined") {
+            throw new Error("No jwtSecret configured for the environment: "+process.env.NODE_ENV);
+        }
+
+        this.jwtWrapper = new DivbloxJwtWrapper(this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"]);
 
         this.isInitFinished = true;
     }
