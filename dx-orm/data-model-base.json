@@ -84,7 +84,7 @@
       "isSuperUser": {
         "type": "boolean",
         "lengthOrValues": null,
-        "default": "false",
+        "default": 0,
         "allowNull": false
       },
       "sessionData": {
