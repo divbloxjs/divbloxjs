@@ -179,10 +179,12 @@ class DivbloxBase extends divbloxObjectBase {
                 this.populateError(this.dataLayer.getError(), true);
                 console.log("Error validating data model: "+
                     JSON.stringify(this.getError(),null,2));
+
                 if (this.dataLayer.isRequiredEntitiesMissing) {
                     console.log("You can run the application generator again to generate the default model: npx github:divbloxjs/divbloxjs-application-generator");
                     return;
                 }
+
                 this.dataModelState.lastDataModelChangeTimestamp = Date.now();
                 this.dataModelState.currentDataModelHash = this.dataLayer.getDataModelHash();
                 this.updateDataModelState(this.dataModelState);
@@ -195,6 +197,10 @@ class DivbloxBase extends divbloxObjectBase {
             if (!await this.checkOrmBaseClassesComplete()) {
                 console.log("Generating object models from data model...");
                 await this.generateOrmBaseClasses();
+            }
+
+            if (!await this.ensureGlobalSuperUserPresent()) {
+                return;
             }
 
             // Let's just wait 2s for the console to make sense
@@ -354,6 +360,47 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    async ensureGlobalSuperUserPresent() {
+        let superUserGroupId = -1;
+        const superUserGrouping = await this.dataLayer.readByField(
+            "globalIdentifierGrouping",
+            "name",
+            "Super User");
+        if (superUserGrouping === null) {
+            const createResult = await this.dataLayer.create(
+                "globalIdentifierGrouping",
+                {"name": "Super User",
+                        "description":"The highest level grouping that has access to EVERYTHING"});
+            if (createResult === -1) {
+                this.populateError("Could not create super user grouping.");
+                this.populateError(this.dataLayer.getError());
+                return false;
+            }
+            superUserGroupId = createResult;
+        } else {
+            superUserGroupId = superUserGrouping["id"];
+        }
+
+        let identifier = '';
+        const superUser = await this.dataLayer.readByField("globalIdentifier","isSuperUser",1);
+        if (superUser === null) {
+            identifier = await this.createGlobalIdentifier(
+                '',
+                -1,
+                [superUserGroupId],
+                true);
+        } else {
+            identifier = superUser["unique_identifier"];
+        }
+
+        const jwtToken = await this.jwtWrapper.issueJwt(identifier);
+        const jwtPath = this.configPath.replace("dxconfig.json","super-user.jwt");
+
+        fs.writeFileSync(
+            jwtPath,
+            jwtToken);
+    }
+
     /**
      * Attempts to insert a new row in the data base for the table matching the entityName
      * @param {string} entityName The name of the table to insert a row for
@@ -470,10 +517,14 @@ class DivbloxBase extends divbloxObjectBase {
      * 'user' as the entity and the id of this user object.
      * @param {[number]} globalIdentifierGroupings An array of globalIdentifierGrouping id's to which this
      * globalIdentifier will be linked.
+     * @param {boolean} isSuperUser A flag to indicate whether this is a super user
      * @return {Promise<string|null>} If created successfully, it returns the globally unique id. Null, otherwise with
      * an error populated in the error array.
      */
-    async createGlobalIdentifier(linkedEntity = '', linkedEntityId = -1, globalIdentifierGroupings = []) {
+    async createGlobalIdentifier(linkedEntity = '',
+                                 linkedEntityId = -1,
+                                 globalIdentifierGroupings = [],
+                                 isSuperUser = false) {
         const uniqueIdentifierRaw = Date.now().toString()+Math.round(1000000*Math.random()).toString();
         const uniqueIdentifier =
             require('crypto')
@@ -486,6 +537,7 @@ class DivbloxBase extends divbloxObjectBase {
             "linkedEntity": linkedEntity,
             "linkedEntityId": linkedEntityId,
             "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings),
+            "isSuperUser": isSuperUser,
             "sessionData": '{}'
         };
 

@@ -81,6 +81,12 @@
         "default": null,
         "allowNull": true
       },
+      "isSuperUser": {
+        "type": "boolean",
+        "lengthOrValues": null,
+        "default": "false",
+        "allowNull": false
+      },
       "sessionData": {
         "type": "text",
         "lengthOrValues": null,
