@@ -1,7 +1,8 @@
 const divbloxObjectBase = require('./object-base');
 const jwt = require('jsonwebtoken');
 /**
- * DivbloxJwtWrapperBase provides a base class that implements the bare essentials for JWT integration with divbloxjs
+ * DivbloxJwtWrapperBase provides a base class that implements the bare essentials for JWT integration with divbloxjs.
+ * This base class currently implements the jsonwebtoken library, but we can easily drop in another library when required
  */
 class DivbloxJwtWrapperBase extends divbloxObjectBase {
     /**
