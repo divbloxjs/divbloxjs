@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
  * This base class currently implements the jsonwebtoken library, but we can easily drop in another library if required
  */
 class DivbloxJwtWrapperBase extends divbloxObjectBase {
+
     /**
      * Instantiates the object and sets the given secret for future use
      * @param {string} jwtSecret The secret that is used to signing and verifying the JWT token
@@ -14,6 +15,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
         super();
         this.jwtSecret = jwtSecret;
         this.dxInstance = dxInstance;
+
         if (this.dxInstance === null) {
             throw new Error("No Divblox instance provided for jwt wrapper.");
         }
@@ -27,8 +29,6 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
      * time span: https://github.com/vercel/ms. If null is provided, the token will have no expiry.
      */
     async issueJwt(globalIdentifier, expiresIn = null) {
-        //TODO: Create a new jwt for the given identifier. The payload must contain the identifier, and a list of all
-        // it's globalIdentifierGroupings
         let payload = {
             "globalIdentifier": globalIdentifier,
             "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupings(globalIdentifier)};
@@ -40,17 +40,65 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
 
         return jwt.sign(payload, this.jwtSecret, options);
     }
+
+    /**
+     * Verifies the given token using the provided secret
+     * @param {string} token The token to verify
+     * @return {boolean} True if verification succeeds, false otherwise with an error added to the error arr
+     */
     verifyJwt(token) {
-        //TODO: return true or false for the given token. True if verified, false if not. If false, then populate error.
+        try {
+            const decoded = jwt.verify(token, this.jwtSecret);
+        } catch(err) {
+            // err
+            this.populateError(err);
+            return false;
+        }
+
+        return true;
     }
+
+    /**
+     * Returns the JWT payload after verifying the token
+     * @param {string} token The token to decode
+     * @return {{}|{payload: *, signature: *, header: *}|*}
+     */
     getJwtPayload(token) {
-        //TODO: First we verify, then we decode and return the payload
+        if (this.verifyJwt(token)) {
+            return jwt.decode(token);
+        }
+
+        return {};
     }
+
+    /**
+     * Returns the globalIdentifier stored in the payload, if it exists
+     * @param {string} token The token to decode
+     * @return {null|*} The unique id of the globalIdentifier, or null if not found
+     */
     getJwtGlobalIdentifier(token) {
-        //TODO: Returns the globalIdentifier stored in the payload using this.getJwtPayload()
+        const payload = this.getJwtPayload(token);
+
+        if (typeof payload["globalIdentifier"] !== "undefined") {
+            return payload["globalIdentifier"];
+        }
+
+        return null;
     }
+
+    /**
+     * Returns the globalIdentifierGroupings stored in the payload, if they exist
+     * @param {string} token The token to decode
+     * @return {*[]|*} An array of globalIdentifierGrouping id's, or an empty array
+     */
     getJwtGlobalIdentifierGroupings(token) {
-        //TODO: Returns the globalIdentifierGroupings [] stored in the payload using this.getJwtPayload()
+        const payload = this.getJwtPayload(token);
+
+        if (typeof payload["globalIdentifierGroupings"] !== "undefined") {
+            return payload["globalIdentifierGroupings"];
+        }
+
+        return [];
     }
 }
 
