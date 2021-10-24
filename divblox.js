@@ -381,24 +381,23 @@ class DivbloxBase extends divbloxObjectBase {
             superUserGroupId = superUserGrouping["id"];
         }
 
-        let identifier = '';
         const superUser = await this.dataLayer.readByField("globalIdentifier","isSuperUser",1);
         if (superUser === null) {
-            identifier = await this.createGlobalIdentifier(
+            // If the super user does not exist, let's create its identifier and JWT for debug purposes
+            const identifier = await this.createGlobalIdentifier(
                 '',
                 -1,
                 [superUserGroupId],
                 true);
-        } else {
-            identifier = superUser["unique_identifier"];
+
+            const jwtToken = await this.jwtWrapper.issueJwt(identifier);
+            const jwtPath = this.configPath.replace("dxconfig.json","super-user.jwt");
+
+            fs.writeFileSync(
+                jwtPath,
+                jwtToken);
+
         }
-
-        const jwtToken = await this.jwtWrapper.issueJwt(identifier);
-        const jwtPath = this.configPath.replace("dxconfig.json","super-user.jwt");
-
-        fs.writeFileSync(
-            jwtPath,
-            jwtToken);
     }
 
     /**
@@ -537,7 +536,7 @@ class DivbloxBase extends divbloxObjectBase {
             "linkedEntity": linkedEntity,
             "linkedEntityId": linkedEntityId,
             "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings),
-            "isSuperUser": isSuperUser,
+            "isSuperUser": isSuperUser ? 1 : 0,
             "sessionData": '{}'
         };
 
