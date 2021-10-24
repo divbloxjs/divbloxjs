@@ -360,6 +360,11 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Ensures that the required globalIdentifierGrouping "Super User" exists and that there is at least 1 Super user.
+     * Then, it creates a JWT and stores it in the divblox-config folder for debug purposes
+     * @return {Promise<boolean>}
+     */
     async ensureGlobalSuperUserPresent() {
         let superUserGroupId = -1;
         const superUserGrouping = await this.dataLayer.readByField(

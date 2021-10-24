@@ -29,9 +29,13 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
      * time span: https://github.com/vercel/ms. If null is provided, the token will have no expiry.
      */
     async issueJwt(globalIdentifier, expiresIn = null) {
+        const globalIdentifierObj = await this.dxInstance.getGlobalIdentifier(globalIdentifier);
+        const isSuperUser = globalIdentifierObj === null ? false : globalIdentifierObj["isSuperUser"];
+        
         let payload = {
             "globalIdentifier": globalIdentifier,
-            "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier)};
+            "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier),
+            "isSuperUser": isSuperUser};
 
         const options = expiresIn === null ?
             {"issuer": this.dxInstance.appName} :

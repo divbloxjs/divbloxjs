@@ -178,7 +178,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlValues);
 
-        if (queryResult === null) {
+        if ((queryResult === null) || (queryResult.length === 0)) {
             return null;
         }
 
@@ -203,7 +203,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             this.getModuleNameFromEntityName(entityName),
             sqlValues);
 
-        if (queryResult === null) {
+        if ((queryResult === null) || (queryResult.length === 0)) {
             return null;
         }
 
