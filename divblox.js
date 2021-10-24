@@ -468,10 +468,12 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {number} linkedEntityId Optional. The id of the entity linked to this identifier.
      * For example, if we have a 'user' entity which we want to identify using a globally unique token, we will pass
      * 'user' as the entity and the id of this user object.
+     * @param {[number]} globalIdentifierGroupings An array of globalIdentifierGrouping id's to which this
+     * globalIdentifier will be linked.
      * @return {Promise<string|null>} If created successfully, it returns the globally unique id. Null, otherwise with
      * an error populated in the error array.
      */
-    async createGlobalIdentifier(linkedEntity = '', linkedEntityId = -1) {
+    async createGlobalIdentifier(linkedEntity = '', linkedEntityId = -1, globalIdentifierGroupings = []) {
         const uniqueIdentifierRaw = Date.now().toString()+Math.round(1000000*Math.random()).toString();
         const uniqueIdentifier =
             require('crypto')
@@ -483,6 +485,7 @@ class DivbloxBase extends divbloxObjectBase {
             "uniqueIdentifier": uniqueIdentifier,
             "linkedEntity": linkedEntity,
             "linkedEntityId": linkedEntityId,
+            "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings),
             "sessionData": '{}'
         };
 
@@ -499,6 +502,29 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
+     * Updates the globalIdentifierGroupings for the given globalIdentifier
+     * @param {string} uniqueIdentifier The unique id that is used to retrieve the globalIdentifier
+     * @param {[number]} globalIdentifierGroupings The new array of globalIdentifierGrouping id's to which this
+     * globalIdentifier will be linked.
+     * @return {Promise<boolean>} True if successfully updated, false otherwise with a reason populated in the error arr
+     */
+    async updateGlobalIdentifierGroupings(uniqueIdentifier, globalIdentifierGroupings = []) {
+        const globalIdentifier = await this.getGlobalIdentifier(uniqueIdentifier);
+
+        if (globalIdentifier === null) {
+            this.populateError("Invalid globalIdentifier id provided");
+            return false;
+        }
+
+        const objectToSave = {
+            "id": globalIdentifier["id"],
+            "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings)
+        };
+
+        return await this.dataLayer.update('globalIdentifier', objectToSave);
+    }
+
+    /**
      * Returns the globalIdentifier object from the database for the given uniqueIdentifier token
      * @param {string} uniqueIdentifier The unique identifier token
      * @return {Promise<null|*>} A globalIdentifier object if found, null otherwise with an error possibly populated
@@ -508,12 +534,21 @@ class DivbloxBase extends divbloxObjectBase {
             "globalIdentifier",
             "uniqueIdentifier",
             uniqueIdentifier);
+
         if (globalIdentifier === null) {
             this.populateError(this.dataLayer.getError());
         }
+        
         return globalIdentifier;
     }
 
+    /**
+     * Returns an array containing the hierarchical list of globalIdentifierGroupings for the given
+     * globalIdentifier
+     * @param {string} uniqueIdentifier The unique identifier token
+     * @return {Promise<*[]>} An array containing the hierarchical list of globalIdentifierGroupings for the given
+     * globalIdentifier
+     */
     async getGlobalIdentifierGroupings(uniqueIdentifier) {
         let globalIdentifierGroupings = [];
         const globalIdentifier = await this.getGlobalIdentifier(uniqueIdentifier);
@@ -548,6 +583,11 @@ class DivbloxBase extends divbloxObjectBase {
         return globalIdentifierGroupings;
     }
 
+    /**
+     * Recursively builds up the list of globalIdentifierGrouping id's for the given parent id
+     * @param {number} parentId The id of the parent for which to get the child id's
+     * @return {Promise<*[]>} An array of child id's
+     */
     async getGlobalIdentifierGroupingChildrenRecursive(parentId = -1) {
         let returnArray = [];
 
