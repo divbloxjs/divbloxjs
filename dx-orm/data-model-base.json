@@ -126,6 +126,12 @@
       }
     },
     "indexes": [
+      {
+        "attribute": "name",
+        "indexName": "globalIdentifierGrouping_name",
+        "indexChoice": "unique",
+        "type": "BTREE"
+      }
     ],
     "relationships": {
     },
