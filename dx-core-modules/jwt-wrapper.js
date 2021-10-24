@@ -38,7 +38,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
             {"issuer": this.dxInstance.appName,
             "expiresIn": expiresIn};
 
-        const token = jwt.sign(payload, this.jwtSecret, options);
+        return jwt.sign(payload, this.jwtSecret, options);
     }
     verifyJwt(token) {
         //TODO: return true or false for the given token. True if verified, false if not. If false, then populate error.
