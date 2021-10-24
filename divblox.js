@@ -75,6 +75,8 @@ class DivbloxBase extends divbloxObjectBase {
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
         this.configObj = JSON.parse(configDataStr);
 
+        this.appName = (typeof this.configObj["appName"] !== "undefined")? this.configObj["appName"] : "Divblox";
+
         if ((typeof process.env.NODE_ENV === "undefined") && (typeof this.configObj.environment === "undefined")) {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
                 " try running your script with NODE_ENV=development node [your_script.js]\n");
@@ -156,7 +158,7 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("No jwtSecret configured for the environment: "+process.env.NODE_ENV);
         }
 
-        this.jwtWrapper = new DivbloxJwtWrapper(this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"]);
+        this.jwtWrapper = new DivbloxJwtWrapper(this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"], this);
 
         this.isInitFinished = true;
     }
@@ -510,6 +512,42 @@ class DivbloxBase extends divbloxObjectBase {
             this.populateError(this.dataLayer.getError());
         }
         return globalIdentifier;
+    }
+
+    async getGlobalIdentifierGroupings(uniqueIdentifier) {
+        let globalIdentifierGroupings = [];
+        const globalIdentifier = await this.getGlobalIdentifier(uniqueIdentifier);
+        if (globalIdentifier === null) {
+            return globalIdentifierGroupings;
+        }
+        if (globalIdentifier["globalIdentifierGroupings"].length > 0) {
+            globalIdentifierGroupings.push(JSON.parse(globalIdentifier["globalIdentifierGroupings"]));
+            let childrenArray = [];
+            for (const globalIdentifierGrouping of globalIdentifierGroupings) {
+                childrenArray.push(await this.getGlobalIdentifierGroupingChildrenRecursive(globalIdentifierGrouping["parentGroupingId"]))
+            }
+            globalIdentifierGroupings.push(childrenArray);
+        }
+        return globalIdentifierGroupings;
+    }
+
+    async getGlobalIdentifierGroupingChildrenRecursive(parentId = -1) {
+        let returnArray = [];
+
+        const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping")
+
+        const childGroupings = await this.dataLayer.executeQuery(
+            "SELECT id, parent_grouping_id FROM `globalIdentifierGrouping` WHERE `parent_grouping_id` = '"+parentId+"'",
+            moduleName);
+
+        if (childGroupings === null) {
+            return returnArray;
+        }
+        for (const childGrouping of childGroupings) {
+            returnArray.push(childGrouping["id"]);
+            returnArray.push(await this.getGlobalIdentifierGroupingChildrenRecursive(childGrouping["parent_grouping_id"]));
+        }
+        return returnArray;
     }
 
     /**
