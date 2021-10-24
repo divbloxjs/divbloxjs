@@ -31,7 +31,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
     async issueJwt(globalIdentifier, expiresIn = null) {
         let payload = {
             "globalIdentifier": globalIdentifier,
-            "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupings(globalIdentifier)};
+            "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier)};
 
         const options = expiresIn === null ?
             {"issuer": this.dxInstance.appName} :

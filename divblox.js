@@ -610,6 +610,41 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
+     * Returns an array containing the hierarchical list of globalIdentifierGroupings for the given
+     * globalIdentifier in readable format. This is to be used specifically with JWTs
+     * @param {string} uniqueIdentifier The unique identifier token
+     * @return {Promise<*[]>} An array containing the hierarchical list of readable globalIdentifierGroupings for the
+     * given globalIdentifier
+     */
+    async getGlobalIdentifierGroupingsReadable(uniqueIdentifier) {
+        let returnArray = [];
+        const globalIdentifierGroupings = await this.getGlobalIdentifierGroupings(uniqueIdentifier);
+
+        if (globalIdentifierGroupings.length === 0) {
+            return returnArray;
+        }
+
+        const globalIdentifierGroupingsStr = globalIdentifierGroupings.join(",");
+
+        const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping");
+
+        const globalIdentifierGroupingsReadable = await this.dataLayer.executeQuery(
+            "SELECT * FROM global_identifier_grouping WHERE id IN("+globalIdentifierGroupingsStr+")",
+            moduleName
+        );
+
+        if (globalIdentifierGroupingsReadable === null) {
+            return returnArray;
+        }
+
+        for (const globalIdentifierGroupingReadable of globalIdentifierGroupingsReadable) {
+            returnArray.push(globalIdentifierGroupingReadable["name"]);
+        }
+
+        return returnArray;
+    }
+
+    /**
      * Stores the value for the given key in the session that is identified by the given globalIdentifier
      * @param {string|null} globalIdentifier The id of the session that will be used to store the data
      * @param {string} key The key for the data
