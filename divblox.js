@@ -162,7 +162,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.isInitFinished = true;
     }
-    
+
     /**
      * Starts the Divblox instance using the provided configuration and data model data. This validates the data model
      * and also start the Divblox web service
@@ -430,7 +430,7 @@ class DivbloxBase extends divbloxObjectBase {
             this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
-        
+
         return true;
     }
 
@@ -480,11 +480,11 @@ class DivbloxBase extends divbloxObjectBase {
                 .digest("hex");
 
         const objectToSave = {
-                "uniqueIdentifier": uniqueIdentifier,
-                "linkedEntity": linkedEntity,
-                "linkedEntityId": linkedEntityId,
-                "sessionData": '{}'
-            };
+            "uniqueIdentifier": uniqueIdentifier,
+            "linkedEntity": linkedEntity,
+            "linkedEntityId": linkedEntityId,
+            "sessionData": '{}'
+        };
 
         const objId = await this.dataLayer.create('globalIdentifier', objectToSave);
 
@@ -517,17 +517,34 @@ class DivbloxBase extends divbloxObjectBase {
     async getGlobalIdentifierGroupings(uniqueIdentifier) {
         let globalIdentifierGroupings = [];
         const globalIdentifier = await this.getGlobalIdentifier(uniqueIdentifier);
+
         if (globalIdentifier === null) {
             return globalIdentifierGroupings;
         }
-        if (globalIdentifier["globalIdentifierGroupings"].length > 0) {
-            globalIdentifierGroupings.push(JSON.parse(globalIdentifier["globalIdentifierGroupings"]));
-            let childrenArray = [];
-            for (const globalIdentifierGrouping of globalIdentifierGroupings) {
-                childrenArray.push(await this.getGlobalIdentifierGroupingChildrenRecursive(globalIdentifierGrouping["parentGroupingId"]))
-            }
-            globalIdentifierGroupings.push(childrenArray);
+
+        if ((typeof globalIdentifier["globalIdentifierGroupings"] === "undefined") ||
+            (globalIdentifier["globalIdentifierGroupings"] === null)) {
+            return globalIdentifierGroupings;
         }
+
+        if (globalIdentifier["globalIdentifierGroupings"].length > 0) {
+
+            for (const groupingId of JSON.parse(globalIdentifier["globalIdentifierGroupings"])) {
+                globalIdentifierGroupings.push(groupingId);
+            }
+
+            let childrenArray = [];
+            for (const globalIdentifierGroupingId of globalIdentifierGroupings) {
+                for (const childId of await this.getGlobalIdentifierGroupingChildrenRecursive(globalIdentifierGroupingId)) {
+                    childrenArray.push(childId);
+                }
+            }
+
+            for (const childId of childrenArray) {
+                globalIdentifierGroupings.push(childId);
+            }
+        }
+
         return globalIdentifierGroupings;
     }
 
@@ -537,7 +554,7 @@ class DivbloxBase extends divbloxObjectBase {
         const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping")
 
         const childGroupings = await this.dataLayer.executeQuery(
-            "SELECT id, parent_grouping_id FROM `globalIdentifierGrouping` WHERE `parent_grouping_id` = '"+parentId+"'",
+            "SELECT id FROM `global_identifier_grouping` WHERE `parent_grouping_id` = '"+parentId+"'",
             moduleName);
 
         if (childGroupings === null) {
@@ -545,7 +562,9 @@ class DivbloxBase extends divbloxObjectBase {
         }
         for (const childGrouping of childGroupings) {
             returnArray.push(childGrouping["id"]);
-            returnArray.push(await this.getGlobalIdentifierGroupingChildrenRecursive(childGrouping["parent_grouping_id"]));
+            for (const childId of await this.getGlobalIdentifierGroupingChildrenRecursive(childGrouping["id"])) {
+                returnArray.push(childId);
+            }
         }
         return returnArray;
     }
