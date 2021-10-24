@@ -538,7 +538,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (globalIdentifier === null) {
             this.populateError(this.dataLayer.getError());
         }
-        
+
         return globalIdentifier;
     }
 
