@@ -87,7 +87,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
         if (!this.isAccessAllowed(operation, providedIdentifierGroupings)) {
             this.setResult(false, "Not authorized");
-            return;
+            // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
+            // on a true response to know whether they can proceed
+            return false;
         }
 
         switch(operation) {
@@ -97,6 +99,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 break;
             default : this.setResult(false, "Invalid operation provided");
         }
+
+        return true;
     }
 
     /**
