@@ -1,5 +1,6 @@
 const divbloxObjectBase = require('./object-base');
 //TODO: Add a /doc operation that displays the api documentation
+
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
  * for divbloxjs projects
@@ -12,8 +13,16 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         super();
         this.result = {"success":false,"message":"none"};
         this.declaredOperations = [];
-        this.addOperations(['echo']);
+        const echoOperation = {
+            "operationName": "echo",
+            "allowedAccess": ["anonymous"]
+        };
+        this.declareOperations([echoOperation]);
         this.currentRequest = {};
+        this.allowedAccess = {
+            "super user": [], //We can define any operations for this role here
+            "anonymous": ["echo"]
+        };
     }
 
     /**
@@ -28,13 +37,39 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Declares the operations provided as available to the api endpoint
-     * @param {[string]} operations The operations to declare
+     * @param {[{}]} operations The operations to declare. Each operation must have the following properties:
+     * - {string} operationName
+     * - {[]} allowedAccess: An array of globalIdentifierGroupings that have access to this operation
+     * TODO: Expand this to allow for swagger doc definition
      */
-    addOperations(operations = []) {
+    declareOperations(operations = []) {
         if (operations.length === 0) {return;}
         for (const operation of operations) {
-            this.declaredOperations.push(operation);
+            if ((typeof operation["operationName"] === "undefined") ||
+                (typeof operation["allowedAccess"] === "undefined")) {
+                continue;
+            }
+            this.declaredOperations[operation.operationName] = operation;
         }
+    }
+
+    /**
+     * Checks whether the provided groupings have access to the provided operation, as defined in the constructor
+     * @param {string} operationName The name of the operation to check
+     * @param {[]} globalIdentifierGroupings An array of groupings as received by the request
+     * @return {boolean} True if access is allowed, false otherwise
+     */
+    isAccessAllowed(operationName = '', globalIdentifierGroupings = []) {
+        if (typeof this.declaredOperations[operationName] === "undefined") {
+            return false;
+        }
+        const allowedAccess = this.declaredOperations[operationName].allowedAccess;
+        for (const allowedGrouping of globalIdentifierGroupings) {
+            if (allowedAccess.includes(allowedGrouping)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //#region Operations implemented.
@@ -48,6 +83,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     async executeOperation(operation, request) {
         this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
+        let providedIdentifierGroupings = ["anonymous"];
+
+        if (typeof request["headers"] !== "undefined") {
+            //TODO: Determine the jwt from the Authorization: Bearer <token> header
+        }
+
+        if (!this.isAccessAllowed(operation, providedIdentifierGroupings)) {
+            this.setResult(false, "Not authorized");
+            return;
+        }
+
         switch(operation) {
             case 'doc': await this.presentDocumentation();
                 break;
