@@ -19,10 +19,6 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         };
         this.declareOperations([echoOperation]);
         this.currentRequest = {};
-        this.allowedAccess = {
-            "super user": [], //We can define any operations for this role here
-            "anonymous": ["echo"]
-        };
     }
 
     /**
