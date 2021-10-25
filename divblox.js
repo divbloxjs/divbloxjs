@@ -200,6 +200,8 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             if (!await this.ensureGlobalSuperUserPresent()) {
+                console.dir(this.getError());
+                process.exit(1);
                 return;
             }
 
@@ -387,6 +389,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         const superUser = await this.dataLayer.readByField("globalIdentifier","isSuperUser",1);
+
         if (superUser === null) {
             // If the super user does not exist, let's create its identifier and JWT for debug purposes
             const identifier = await this.createGlobalIdentifier(
@@ -403,6 +406,8 @@ class DivbloxBase extends divbloxObjectBase {
                 jwtToken);
 
         }
+
+        return true;
     }
 
     /**
