@@ -62,6 +62,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         if (typeof this.declaredOperations[operationName] === "undefined") {
             return false;
         }
+
+        if (globalIdentifierGroupings.includes("super user")) {
+            return true;
+        }
+
         const allowedAccess = this.declaredOperations[operationName].allowedAccess;
         for (const allowedGrouping of globalIdentifierGroupings) {
             if (allowedAccess.includes(allowedGrouping)) {
@@ -101,6 +106,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
                 for (const grouping of this.currentGlobalIdentifierGroupings) {
                     providedIdentifierGroupings.push(grouping);
+                }
+                if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
+                    providedIdentifierGroupings.push("super user");
                 }
             }
         }
