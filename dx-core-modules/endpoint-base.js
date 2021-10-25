@@ -84,7 +84,15 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
         this.dxInstance = dxInstance;
+        
         let providedIdentifierGroupings = ["anonymous"];
+
+        if (this.dxInstance === null) {
+            // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
+            // on a true response to know whether they can proceed.
+            // Since we do not have an instance of dx, we cannot decode the provided JWT, meaning auth failed
+            return false;
+        }
 
         if (typeof request["headers"] !== "undefined") {
             if (typeof request["headers"]["authorization"] !== "undefined") {
