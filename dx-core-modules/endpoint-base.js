@@ -19,6 +19,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         };
         this.declareOperations([echoOperation]);
         this.currentRequest = {};
+        this.dxInstance = null;
+        this.currentGlobalIdentifier = -1;
+        this.currentGlobalIdentifierGroupings = [];
     }
 
     /**
@@ -74,15 +77,24 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * A wrapper function that executes the given operation
      * @param {string} operation The operation to execute
      * @param {*} request The received request object
+     * @param {DivbloxBase} dxInstance An instance of divbloxjs that gives us access to core dx functions
      * @return {Promise<*>}
      */
-    async executeOperation(operation, request) {
+    async executeOperation(operation, request, dxInstance = null) {
         this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
+        this.dxInstance = dxInstance;
         let providedIdentifierGroupings = ["anonymous"];
 
         if (typeof request["headers"] !== "undefined") {
-            //TODO: Determine the jwt from the Authorization: Bearer <token> header
+            if (typeof request["headers"]["authorization"] !== "undefined") {
+                const jwtToken = request["headers"]["authorization"].replace("Bearer ","");
+                this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
+                this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+                for (const grouping of this.currentGlobalIdentifierGroupings) {
+                    providedIdentifierGroupings.push(grouping);
+                }
+            }
         }
 
         if (!this.isAccessAllowed(operation, providedIdentifierGroupings)) {
