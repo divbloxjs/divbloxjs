@@ -1,5 +1,6 @@
 const divbloxObjectBase = require('./object-base');
 const jwt = require('jsonwebtoken');
+
 /**
  * DivbloxJwtWrapperBase provides a base class that implements the bare essentials for JWT integration with divbloxjs.
  * This base class currently implements the jsonwebtoken library, but we can easily drop in another library if required
@@ -31,7 +32,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
     async issueJwt(globalIdentifier, expiresIn = null) {
         const globalIdentifierObj = await this.dxInstance.getGlobalIdentifier(globalIdentifier);
         const isSuperUser = globalIdentifierObj === null ? false : globalIdentifierObj["isSuperUser"];
-        
+
         let payload = {
             "globalIdentifier": globalIdentifier,
             "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier),
