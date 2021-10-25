@@ -84,7 +84,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
         this.dxInstance = dxInstance;
-        
+
         let providedIdentifierGroupings = ["anonymous"];
 
         if (this.dxInstance === null) {
