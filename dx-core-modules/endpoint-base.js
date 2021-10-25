@@ -105,7 +105,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
                 this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
                 for (const grouping of this.currentGlobalIdentifierGroupings) {
-                    providedIdentifierGroupings.push(grouping);
+                    providedIdentifierGroupings.push(grouping.toLowerCase());
                 }
                 if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
                     providedIdentifierGroupings.push("super user");

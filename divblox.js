@@ -699,7 +699,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         for (const globalIdentifierGroupingReadable of globalIdentifierGroupingsReadable) {
-            returnArray.push(globalIdentifierGroupingReadable["name"]);
+            returnArray.push(globalIdentifierGroupingReadable["name"].toLowerCase());
         }
 
         return returnArray;
