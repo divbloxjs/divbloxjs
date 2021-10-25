@@ -92,6 +92,21 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
     }
 
     /**
+     * Simply checks for the isSuperUser
+     * @param {string} token The token to decode
+     * @return {boolean} True if isSuperUser is set to 1/true
+     */
+    isSuperUser(token) {
+        const payload = this.getJwtPayload(token);
+
+        if (typeof payload["isSuperUser"] !== "undefined") {
+            return payload["isSuperUser"] === true || payload["isSuperUser"] === 1;
+        }
+
+        return false;
+    }
+
+    /**
      * Returns the globalIdentifierGroupings stored in the payload, if they exist
      * @param {string} token The token to decode
      * @return {*[]|*} An array of globalIdentifierGrouping id's, or an empty array
