@@ -185,7 +185,7 @@ class DivbloxBase extends divbloxObjectBase {
                 this.populateError(error, true);
                 this.populateError("Your database might not be configured properly. You can update your " +
                     "database connection information in dxconfig.json", true);
-                console.dir(this.getError());
+                this.printConsoleError(JSON.stringify(this.getError()));
                 return;
             }
 
@@ -243,11 +243,20 @@ class DivbloxBase extends divbloxObjectBase {
         //Since startup was successful, let's clean potential errors
         this.resetError();
 
-        console.log("Divblox started with config:");
+        console.log("Divblox started!");
         if (this.disableWebServer) {
             console.log("Web server has been disabled");
         }
         console.dir(this.configObj["environmentArray"][process.env.NODE_ENV]);
+    }
+
+    //#region Helper functions
+
+    setupHelperVariables() {
+        this.commandLineHeadingFormatting = dxUtils.commandLineColors.bright;
+        this.commandLineSubHeadingFormatting = dxUtils.commandLineColors.dim;
+        this.commandLineWarningFormatting = dxUtils.commandLineColors.foregroundYellow;
+        this.commandLineErrorFormatting = dxUtils.commandLineColors.foregroundRed;
     }
 
     /**
@@ -258,6 +267,18 @@ class DivbloxBase extends divbloxObjectBase {
         this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
         fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
     }
+
+    printConsoleError(errorMessage = 'No error provided') {
+        let lineText = '';
+        for (let i=0;i<process.stdout.columns;i++) {
+            lineText += '-';
+        }
+
+        dxUtils.outputFormattedLog(lineText,this.commandLineErrorFormatting);
+        dxUtils.outputFormattedLog(errorMessage,this.commandLineErrorFormatting+this.commandLineHeadingFormatting);
+        dxUtils.outputFormattedLog(lineText,this.commandLineErrorFormatting);
+    }
+    //#endregion
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
     /**
