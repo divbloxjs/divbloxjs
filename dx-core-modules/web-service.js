@@ -38,7 +38,6 @@ class DivbloxWebService extends divbloxObjectBase {
     constructor(config = {}) {
         super();
         this.config = config;
-        this.requestData = {};
         this.apiEndPointRoot = typeof this.config["apiEndPointRoot"] !== "undefined" ? this.config.apiEndPointRoot : './divblox-routes/api';
         this.wwwRoot = typeof this.config["wwwRoot"] !== "undefined" ? this.config.wwwRoot : './divblox-routes/www/index';
         this.viewsRoot = typeof this.config["viewsRoot"] !== "undefined" ? this.config.viewsRoot : 'divblox-views';
@@ -54,7 +53,13 @@ class DivbloxWebService extends divbloxObjectBase {
                     "allowHttp": true,
                     "httpsPort": 3001
                 };
+        this.initExpress();
+    }
 
+    /**
+     * Sets up an instance of express to deal with web requests
+     */
+    initExpress() {
         if (this.useHttps) {
             if (this.serverHttpsConfig.allowHttp) {
                 this.expressHttp = express();

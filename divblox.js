@@ -41,13 +41,19 @@ class DivbloxBase extends divbloxObjectBase {
      * is useful when you want to override the default Divblox Web Service behaviour
      * @param {*} options.jwtWrapperImplementationClass An optional class implementation for the Divblox JWT Wrapper. This
      * is useful when you want to override the default Divblox JWT Wrapper behaviour
-     * @param {boolean} options.skipInit If set to true this forces the constructor to not call this.initDx()
-     * automatically. Used when we want to call startDx() after init, meaning we have to await the initDx function
+     * @param {boolean} options.disableWebServer If set to true this skips any setup of a webserver to allow for using
+     * divbloxjs simply as a console-driven tool. Note that if you instantiate with this all packages that provide web
+     * server based functionality will not be able to provide that specific functionality
      */
     constructor(options = {}) {
         super();
 
         this.isInitFinished = false;
+
+        this.disableWebServer = false
+        if (typeof options["disableWebServer"] !== "undefined") {
+            this.disableWebServer = options["disableWebServer"];
+        }
 
         if ((typeof options["configPath"] === "undefined") || (options["configPath"] === null)) {
             throw new Error("No config path provided");
@@ -219,17 +225,20 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
-        const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
-            3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
-        const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
-            false : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
-        const webServerHttpsConfig = this.configObj["environmentArray"][process.env.NODE_ENV]["serverHttps"];
-        const webServiceConfig = {
-            "webServerPort": webServerPort,
-            "useHttps": webServerUseHttps,
-            "serverHttps": webServerHttpsConfig,
-            ...this.configObj["webServiceConfig"]};
-        this.webService = new DivbloxWebService(webServiceConfig);
+        if (!this.disableWebServer) {
+            const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
+                3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
+            const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
+                false : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
+            const webServerHttpsConfig = this.configObj["environmentArray"][process.env.NODE_ENV]["serverHttps"];
+            const webServiceConfig = {
+                "webServerPort": webServerPort,
+                "useHttps": webServerUseHttps,
+                "serverHttps": webServerHttpsConfig,
+                ...this.configObj["webServiceConfig"]};
+            this.webService = new DivbloxWebService(webServiceConfig);
+        }
+
 
         //Since startup was successful, let's clean potential errors
         this.resetError();
