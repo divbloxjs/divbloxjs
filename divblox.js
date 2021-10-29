@@ -248,9 +248,8 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.printConsoleSuccessMessage("Divblox started!");
         if (this.disableWebServer) {
-            this.printConsoleInfoMessage("Web server has been disabled");
+            this.printConsoleWarning("Web server has been disabled");
         }
-        console.dir(this.configObj["environmentArray"][process.env.NODE_ENV]);
     }
 
     //#region Helper functions
