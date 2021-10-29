@@ -244,6 +244,9 @@ class DivbloxBase extends divbloxObjectBase {
         this.resetError();
 
         console.log("Divblox started with config:");
+        if (this.disableWebServer) {
+            console.log("Web server has been disabled");
+        }
         console.dir(this.configObj["environmentArray"][process.env.NODE_ENV]);
     }
 
