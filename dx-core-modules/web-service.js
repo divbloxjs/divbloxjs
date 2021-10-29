@@ -239,7 +239,7 @@ class DivbloxWebService extends divbloxObjectBase {
         const bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
-        console.log('Listening on ' + bind)
+        console.log('Web server listening on ' + bind)
     }
 
     /**
@@ -250,7 +250,7 @@ class DivbloxWebService extends divbloxObjectBase {
         const bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
-        console.log('Listening on ' + bind)
+        console.log('Web server listening on ' + bind)
     }
 }
 
