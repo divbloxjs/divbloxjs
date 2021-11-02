@@ -166,8 +166,6 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.jwtWrapper = new DivbloxJwtWrapper(this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"], this);
 
-        this.setupHelperVariables();
-
         this.isInitFinished = true;
     }
 
@@ -187,17 +185,17 @@ class DivbloxBase extends divbloxObjectBase {
                 this.populateError(error, true);
                 this.populateError("Your database might not be configured properly. You can update your " +
                     "database connection information in dxconfig.json", true);
-                this.printConsoleError(JSON.stringify(this.getError()));
+                dxUtils.printErrorMessage(JSON.stringify(this.getError()));
                 return;
             }
 
             if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
                 this.populateError(this.dataLayer.getError(), true);
-                this.printConsoleError("Error validating data model: "+
+                dxUtils.printErrorMessage("Error validating data model: "+
                     JSON.stringify(this.getError(),null,2));
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
-                    this.printConsoleError("You can run the application generator again to generate the " +
+                    dxUtils.printErrorMessage("You can run the application generator again to generate the " +
                         "default model: npx github:divbloxjs/divbloxjs-application-generator");
                     return;
                 }
@@ -212,19 +210,19 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             if (!await this.checkOrmBaseClassesComplete()) {
-                this.printConsoleInfoMessage("Generating object models from data model...");
+                dxUtils.printInfoMessage("Generating object models from data model...");
                 await this.generateOrmBaseClasses();
             }
 
             if (!await this.ensureGlobalSuperUserPresent()) {
-                this.printConsoleError(this.getError());
+                dxUtils.printErrorMessage(this.getError());
                 process.exit(1);
                 return;
             }
 
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
-            this.printConsoleInfoMessage("Finishing divbloxjs startup...");
+            dxUtils.printInfoMessage("Finishing divbloxjs startup...");
             await dxUtils.sleep(1000);
         }
 
@@ -246,25 +244,13 @@ class DivbloxBase extends divbloxObjectBase {
         //Since startup was successful, let's clean potential errors
         this.resetError();
 
-        this.printConsoleSuccessMessage("Divblox started!");
+        dxUtils.printSuccessMessage("Divblox started!");
         if (this.disableWebServer) {
-            this.printConsoleWarning("Web server has been disabled");
+            dxUtils.printWarningMessage("Web server has been disabled");
         }
     }
 
     //#region Helper functions
-
-    /**
-     * Initializes some helper variables for command line styling
-     */
-    setupHelperVariables() {
-        this.commandLineHeadingFormatting = dxUtils.commandLineColors.bright;
-        this.commandLineSubHeadingFormatting = dxUtils.commandLineColors.dim;
-        this.commandLineWarningFormatting = dxUtils.commandLineColors.foregroundYellow;
-        this.commandLineErrorFormatting = dxUtils.commandLineColors.foregroundRed;
-        this.commandLineSuccessFormatting = dxUtils.commandLineColors.foregroundGreen;
-        this.commandLineInfoFormatting = dxUtils.commandLineColors.foregroundCyan;
-    }
 
     /**
      * Updates the current data model state in the dxconfig.json file with the provided data
@@ -273,53 +259,6 @@ class DivbloxBase extends divbloxObjectBase {
     updateDataModelState(dataModelState) {
         this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
         fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
-    }
-
-    /**
-     * Prints an error to the console using the divbloxjs formatting
-     * @param {string} errorMessage The error message to print to the console
-     */
-    printConsoleError(errorMessage = 'Error') {
-        dxUtils.outputFormattedLog(errorMessage,this.commandLineErrorFormatting+this.commandLineHeadingFormatting);
-    }
-
-    /**
-     * Prints a warning to the console using the divbloxjs formatting
-     * @param {string} warningMessage The warning message to print to the console
-     */
-    printConsoleWarning(warningMessage = 'Warning') {
-        dxUtils.outputFormattedLog(warningMessage,this.commandLineWarningFormatting);
-    }
-
-    /**
-     * Prints a success message to the console using the divbloxjs formatting
-     * @param {string} successMessage The success message to print to the console
-     */
-    printConsoleSuccessMessage(successMessage = 'Success') {
-        dxUtils.outputFormattedLog(successMessage,this.commandLineSuccessFormatting);
-    }
-
-    /**
-     * Prints an info message to the console using the divbloxjs formatting
-     * @param {string} infoMessage The info message to print to the console
-     */
-    printConsoleInfoMessage(infoMessage = 'Info') {
-        dxUtils.outputFormattedLog(infoMessage,this.commandLineInfoFormatting);
-    }
-
-    /**
-     * Prints a heading to the console using the divbloxjs heading formatting
-     * @param {string} headingMessage The message to print to the console
-     */
-    printConsoleHeading(headingMessage = '') {
-        let lineText = '';
-        for (let i=0;i<process.stdout.columns;i++) {
-            lineText += '-';
-        }
-
-        dxUtils.outputFormattedLog(lineText,this.commandLineInfoFormatting+this.commandLineHeadingFormatting);
-        dxUtils.outputFormattedLog(headingMessage,this.commandLineInfoFormatting+this.commandLineHeadingFormatting);
-        dxUtils.outputFormattedLog(lineText,this.commandLineInfoFormatting+this.commandLineHeadingFormatting);
     }
     //#endregion
 
@@ -349,7 +288,7 @@ class DivbloxBase extends divbloxObjectBase {
             return;
         }
         if (handleErrorSilently) {
-            this.printConsoleWarning("Synchronization cancelled");
+            dxUtils.printWarningMessage("Synchronization cancelled");
         } else {
             throw new Error("Synchronization cancelled. Cannot continue.");
         }
@@ -377,12 +316,12 @@ class DivbloxBase extends divbloxObjectBase {
      */
     async generateOrmBaseClasses() {
         if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
-            this.printConsoleInfoMessage("Creating /dx-orm/generated/ directory...");
+            dxUtils.printInfoMessage("Creating /dx-orm/generated/ directory...");
             fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated");
         }
 
         for (const entityName of Object.keys(this.dataModelObj)) {
-            this.printConsoleInfoMessage("Generating base object model class for '"+entityName+"'...");
+            dxUtils.printInfoMessage("Generating base object model class for '"+entityName+"'...");
 
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
             const entityNameCamelCase = entityName;

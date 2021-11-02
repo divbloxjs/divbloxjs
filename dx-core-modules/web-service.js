@@ -219,11 +219,11 @@ class DivbloxWebService extends divbloxObjectBase {
         // handle specific listen errors with friendly messages
         switch (error.code) {
             case 'EACCES':
-                console.error(bind + ' requires elevated privileges');
+                dxUtils.printErrorMessage(bind + ' requires elevated privileges');
                 process.exit(1);
                 break;
             case 'EADDRINUSE':
-                console.error(bind + ' is already in use');
+                dxUtils.printErrorMessage(bind + ' is already in use');
                 process.exit(1);
                 break;
             default:
@@ -239,7 +239,7 @@ class DivbloxWebService extends divbloxObjectBase {
         const bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
-        console.log('Web server listening on ' + bind)
+        dxUtils.printSuccessMessage('Web server listening on ' + bind)
     }
 
     /**
@@ -250,7 +250,7 @@ class DivbloxWebService extends divbloxObjectBase {
         const bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
-        console.log('Web server listening on ' + bind)
+        dxUtils.printSuccessMessage('Web server listening on ' + bind)
     }
 }
 
