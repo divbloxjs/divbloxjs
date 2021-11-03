@@ -786,7 +786,7 @@ class DivbloxBase extends divbloxObjectBase {
                 "globalIdentifierGrouping",
                 {"name": name,
                     "description": description,
-                    "parentId": parentId});
+                    "parentGroupingId": parentId});
 
             if (createResult === -1) {
                 this.populateError("Could not create "+name+" grouping.");
@@ -869,7 +869,7 @@ class DivbloxBase extends divbloxObjectBase {
                 "children");
             return false;
         }
-        
+
         const removeResult = await this.dataLayer.delete("globalIdentifierGrouping",existingGrouping["id"]);
         if (!removeResult) {
             this.populateError("Could not remove "+name+" grouping.");
