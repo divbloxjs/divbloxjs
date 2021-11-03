@@ -395,12 +395,14 @@ class DivbloxBase extends divbloxObjectBase {
         const superUserGrouping = await this.dataLayer.readByField(
             "globalIdentifierGrouping",
             "name",
-            "Super User");
+            "super user");
+
         if (superUserGrouping === null) {
             const createResult = await this.dataLayer.create(
                 "globalIdentifierGrouping",
-                {"name": "Super User",
+                {"name": "super user",
                         "description":"The highest level grouping that has access to EVERYTHING"});
+
             if (createResult === -1) {
                 this.populateError("Could not create super user grouping.");
                 this.populateError(this.dataLayer.getError());
@@ -776,27 +778,29 @@ class DivbloxBase extends divbloxObjectBase {
             return false;
         }
 
+        const nameNormalized = name.toLowerCase();
+
         const existingGrouping = await this.dataLayer.readByField(
             "globalIdentifierGrouping",
             "name",
-            name);
+            nameNormalized);
 
         if (existingGrouping === null) {
             const createResult = await this.dataLayer.create(
                 "globalIdentifierGrouping",
-                {"name": name,
+                {"name": nameNormalized,
                     "description": description,
                     "parentGroupingId": parentId});
 
             if (createResult === -1) {
-                this.populateError("Could not create "+name+" grouping.");
+                this.populateError("Could not create "+nameNormalized+" grouping.");
                 this.populateError(this.dataLayer.getError());
                 return false;
             }
 
             return true;
         } else {
-            this.populateError("Could not create "+name+" grouping. It already exists!");
+            this.populateError("Could not create "+nameNormalized+" grouping. It already exists!");
 
             return false;
         }
@@ -821,21 +825,34 @@ class DivbloxBase extends divbloxObjectBase {
             this.populateError("Could not modify global identifier grouping. No modification provided");
             return false;
         }
+
+        const nameNormalized = name.toLowerCase();
+
         const existingGrouping = await this.dataLayer.readByField(
             "globalIdentifierGrouping",
             "name",
-            name);
+            nameNormalized);
 
         if (existingGrouping === null) {
             this.populateError("Could not modify global identifier grouping. Invalid name provided");
             return false;
         }
-        const modificationData = {"id": existingGrouping["id"], ...modifications};
+
+        let modificationsNormalized = {};
+        for (const key of Object.keys(modifications)) {
+            if (key === "name") {
+                modificationsNormalized[key] = modifications[key].toLowerCase();
+            } else {
+                modificationsNormalized[key] = modifications[key];
+            }
+        }
+
+        const modificationData = {"id": existingGrouping["id"], ...modificationsNormalized};
         const updateResult = this.dataLayer.update(
             "globalIdentifierGrouping",modificationData);
 
         if (!updateResult) {
-            this.populateError("Could not modify "+name+" grouping.");
+            this.populateError("Could not modify "+nameNormalized+" grouping.");
             this.populateError(this.dataLayer.getError());
             return false;
         }
@@ -853,10 +870,13 @@ class DivbloxBase extends divbloxObjectBase {
             this.populateError("Could not remove global identifier grouping. No name provided");
             return false;
         }
+
+        const nameNormalized = name.toLowerCase();
+
         const existingGrouping = await this.dataLayer.readByField(
             "globalIdentifierGrouping",
             "name",
-            name);
+            nameNormalized);
 
         if (existingGrouping === null) {
             this.populateError("Could not remove global identifier grouping. Invalid name provided");
@@ -872,7 +892,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const removeResult = await this.dataLayer.delete("globalIdentifierGrouping",existingGrouping["id"]);
         if (!removeResult) {
-            this.populateError("Could not remove "+name+" grouping.");
+            this.populateError("Could not remove "+nameNormalized+" grouping.");
             this.populateError(this.dataLayer.getError());
             return false;
         }
