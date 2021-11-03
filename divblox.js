@@ -740,9 +740,9 @@ class DivbloxBase extends divbloxObjectBase {
                 const createParentId = await dxUtils.getCommandLineInput("Optional: Provide a parent grouping id for the " +
                     "grouping (Leave blank to skip): ");
                 const createResult = await this.createGlobalIdentifierGrouping(
-                    name,
-                    description,
-                    parentId === "" ? -1 : parseInt(parentId));
+                    createName,
+                    createDescription,
+                    createParentId === "" ? -1 : parseInt(createParentId));
                 if (!createResult) {
                     dxUtils.printErrorMessage("Error creating grouping:\n"+
                         JSON.stringify(
