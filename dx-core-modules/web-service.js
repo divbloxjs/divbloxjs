@@ -76,8 +76,8 @@ class DivbloxWebService extends divbloxObjectBase {
         }
 
         this.addRoute('/', path.join(path.resolve("./"),this.wwwRoot));
+
         this.setupApiRouters();
-        // this.addRoute('/api', path.join(path.resolve("./"),this.apiEndPointRoot));
 
         if (typeof this.config["additionalRoutes"] !== "undefined") {
             for (const route of this.config["additionalRoutes"]) {
@@ -98,8 +98,13 @@ class DivbloxWebService extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Handles the setup of the routers for the api endpoints. Iterates over all provided packages and installs routing
+     * for each endpoint and operation
+     */
     setupApiRouters() {
         const router = express.Router();
+
         router.all('/', async (req, res, next) => {
             //TODO: This must be updated to look nicer
             res.render('dx-core-index', { title: 'Divblox API Root' });
@@ -113,6 +118,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
                 res.send(packageEndpoint.result);
             });
+
             router.all('/'+packageName+'/doc', async (req, res, next) => {
                 await packageEndpoint.executeOperation('doc', {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
                 console.dir(packageEndpoint.result);
@@ -143,7 +149,6 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
         expressInstance.use(express.static(path.join(path.resolve("./"), this.staticRoot)));
-        expressInstance.set('views', );
         expressInstance.set('views',
             [path.join(path.resolve("./"), this.viewsRoot),
                 DIVBLOX_ROOT_DIR+'/dx-core-views']);
