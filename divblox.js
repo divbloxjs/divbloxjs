@@ -730,6 +730,18 @@ class DivbloxBase extends divbloxObjectBase {
         return returnArray;
     }
 
+    async manageGlobalIdentifierGroupings(operation = 'show') {
+        switch (operation) {
+            case 'show':
+            default:
+                dxUtils.printHeadingMessage("Available Global Identifier Groupings");
+                dxUtils.printSuccessMessage(
+                    JSON.stringify(
+                        await this.getGlobalIdentifierGroupingsHierarchy(),
+                        null,
+                        2));
+        }
+    }
     /**
      * Returns a list of all available globalIdentifierGroupings with their children
      * @return {Promise<{}>}
@@ -885,7 +897,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const children = await this.getGlobalIdentifierGroupingChildrenRecursive(existingGrouping["id"]);
         if (children.length > 0) {
-            this.populateError("Could not remove global identifier grouping. It has children. First remove" +
+            this.populateError("Could not remove global identifier grouping. It has children. First remove " +
                 "children");
             return false;
         }
