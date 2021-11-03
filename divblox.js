@@ -734,10 +734,10 @@ class DivbloxBase extends divbloxObjectBase {
         switch (operation) {
             case 'create':
                 dxUtils.printHeadingMessage("Create Global Identifier Grouping");
-                const name = dxUtils.getCommandLineInput("Please provide a name for the grouping");
-                const description = dxUtils.getCommandLineInput("Optional: Provide a description for the grouping " +
+                const createName = await dxUtils.getCommandLineInput("Please provide a name for the grouping");
+                const createDescription = await dxUtils.getCommandLineInput("Optional: Provide a description for the grouping " +
                     "(Leave blank to skip)");
-                const parentId = dxUtils.getCommandLineInput("Optional: Provide a parent grouping id for the " +
+                const createParentId = await dxUtils.getCommandLineInput("Optional: Provide a parent grouping id for the " +
                     "grouping (Leave blank to skip)");
                 const createResult = await this.createGlobalIdentifierGrouping(
                     name,
@@ -751,6 +751,39 @@ class DivbloxBase extends divbloxObjectBase {
                             2))
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully created!");
+                }
+                break;
+            case 'modify':
+                dxUtils.printHeadingMessage("Modify Global Identifier Grouping");
+                const modifyName = await dxUtils.getCommandLineInput("Please provide the name of the grouping" +
+                    "to modify");
+                const modifiedName = await dxUtils.getCommandLineInput("Please provide the new name of the grouping" +
+                    "to modify");
+                const modifiedDescription = await dxUtils.getCommandLineInput("Optional: Provide a new description for the grouping " +
+                    "(Leave blank to skip)");
+                const modifiedParentId = await dxUtils.getCommandLineInput("Optional: Provide a new parent grouping id for the " +
+                    "grouping (Leave blank to skip)");
+
+                let modifications = {};
+                if (modifiedName.length > 0) {
+                    modifications["name"] = modifiedName;
+                }
+                if (modifiedDescription.length > 0) {
+                    modifications["description"] = modifiedDescription;
+                }
+                if (modifiedParentId.length > 0) {
+                    modifications["parentId"] = modifiedParentId;
+                }
+                
+                const modifyResult = await this.modifyGlobalIdentifierGrouping(modifyName, modifications);
+                if (!modifyResult) {
+                    dxUtils.printErrorMessage("Error modifying grouping:\n"+
+                        JSON.stringify(
+                            this.getError(),
+                            null,
+                            2))
+                } else {
+                    dxUtils.printSuccessMessage("Global Identifier Grouping successfully modified!");
                 }
                 break;
             case 'show':
