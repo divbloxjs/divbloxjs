@@ -762,7 +762,7 @@ class DivbloxBase extends divbloxObjectBase {
                 const modifiedDescription = await dxUtils.getCommandLineInput("Optional: Provide a new " +
                     "description for the grouping (Leave blank to skip): ");
                 const modifiedParentId = await dxUtils.getCommandLineInput("Optional: Provide a new parent " +
-                    "grouping id for the grouping (Leave blank to skip): ");
+                    "grouping id for the grouping (Leave blank to skip or provide -1 to remove): ");
 
                 let modifications = {};
                 if (modifiedName.length > 0) {
@@ -784,6 +784,22 @@ class DivbloxBase extends divbloxObjectBase {
                             2))
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully modified!");
+                }
+                break;
+            case 'remove':
+                dxUtils.printHeadingMessage("Remove Global Identifier Grouping");
+                const removeName = await dxUtils.getCommandLineInput("Please provide a name for the grouping" +
+                    "that should be removed: ");
+
+                const removeResult = await this.removeGlobalIdentifierGrouping(name);
+                if (!removeResult) {
+                    dxUtils.printErrorMessage("Error removing grouping:\n"+
+                        JSON.stringify(
+                            this.getError(),
+                            null,
+                            2))
+                } else {
+                    dxUtils.printSuccessMessage("Global Identifier Grouping successfully removed!");
                 }
                 break;
             case 'show':
