@@ -237,7 +237,7 @@ class DivbloxBase extends divbloxObjectBase {
                 "useHttps": webServerUseHttps,
                 "serverHttps": webServerHttpsConfig,
                 ...this.configObj["webServiceConfig"]};
-            this.webService = new DivbloxWebService(webServiceConfig);
+            this.webService = new DivbloxWebService(webServiceConfig, this);
         }
 
 
