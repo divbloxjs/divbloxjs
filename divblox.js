@@ -732,6 +732,27 @@ class DivbloxBase extends divbloxObjectBase {
 
     async manageGlobalIdentifierGroupings(operation = 'show') {
         switch (operation) {
+            case 'create':
+                dxUtils.printHeadingMessage("Create Global Identifier Grouping");
+                const name = dxUtils.getCommandLineInput("Please provide a name for the grouping");
+                const description = dxUtils.getCommandLineInput("Optional: Provide a description for the grouping " +
+                    "(Leave blank to skip)");
+                const parentId = dxUtils.getCommandLineInput("Optional: Provide a parent grouping id for the " +
+                    "grouping (Leave blank to skip)");
+                const createResult = await this.createGlobalIdentifierGrouping(
+                    name,
+                    description,
+                    parentId === "" ? -1 : parseInt(parentId));
+                if (!createResult) {
+                    dxUtils.printErrorMessage("Error creating grouping:\n"+
+                        JSON.stringify(
+                            this.getError(),
+                            null,
+                            2))
+                } else {
+                    dxUtils.printSuccessMessage("Global Identifier Grouping successfully created!");
+                }
+                break;
             case 'show':
             default:
                 dxUtils.printHeadingMessage("Available Global Identifier Groupings");
