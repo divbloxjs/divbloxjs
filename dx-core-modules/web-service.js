@@ -145,7 +145,7 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.set('views', );
         expressInstance.set('views',
             [path.join(path.resolve("./"), this.viewsRoot),
-                __dirname + '/dx-core-views']);
+                '/dx-core-views']);
         expressInstance.set('view engine', 'pug');
     }
 
