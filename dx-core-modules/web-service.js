@@ -8,6 +8,7 @@ const logger = require('morgan');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
+const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', 'divbloxjs');
 
 /**
  * The DivbloxWebService is used to expose your Divblox functionality to the web. It uses expressjs for all the
@@ -145,7 +146,7 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.set('views', );
         expressInstance.set('views',
             [path.join(path.resolve("./"), this.viewsRoot),
-                '/dx-core-views']);
+                DIVBLOX_ROOT_DIR+'/dx-core-views']);
         expressInstance.set('view engine', 'pug');
     }
 
