@@ -539,7 +539,7 @@ class DivbloxBase extends divbloxObjectBase {
     }
     //#endregion
 
-    //#region Session related functionality
+    //#region Session/Authentication related functionality
 
     /**
      * Creates a new global id in the database. This is used to identify any other types of entities where needed.
@@ -726,6 +726,158 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         return returnArray;
+    }
+
+    /**
+     * Returns a list of all available globalIdentifierGroupings with their children
+     * @return {Promise<{}>}
+     */
+    async getGlobalIdentifierGroupingsHierarchy() {
+        const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping");
+
+        const allGroupings = await this.dataLayer.executeQuery(
+            "SELECT * FROM global_identifier_grouping",
+            moduleName
+        );
+
+        let nameIdMapping = {};
+        for (const grouping of allGroupings) {
+            nameIdMapping[grouping["id"]] = grouping["name"].toLowerCase();
+        }
+
+        let hierarchy = {}
+        for (const grouping of allGroupings) {
+            const index = grouping["name"].toLowerCase();
+            hierarchy[index] = {
+                "id": grouping["id"],
+                "children": []
+            };
+
+            const children = await this.getGlobalIdentifierGroupingChildrenRecursive(grouping["id"]);
+            for (const child of children) {
+                hierarchy[index].children.push(nameIdMapping[child]);
+            }
+        }
+
+        return hierarchy;
+    }
+
+    /**
+     * Creates a new globalIdentifierGrouping in the database with the given name, description and parentId
+     * @param {string} name The unique name of the globalIdentifierGrouping
+     * @param {string} description Optional. A description for this grouping
+     * @param {number} parentId Optional. The primary key id of the parent grouping
+     * @return {Promise<boolean>} Returns true if the grouping was successfully created, false otherwise with an error
+     * populated in the error array
+     */
+    async createGlobalIdentifierGrouping(name, description = '', parentId = -1) {
+        if (typeof name === "undefined") {
+            this.populateError("Could not create global identifier grouping. No name provided");
+            return false;
+        }
+
+        const existingGrouping = await this.dataLayer.readByField(
+            "globalIdentifierGrouping",
+            "name",
+            name);
+
+        if (existingGrouping === null) {
+            const createResult = await this.dataLayer.create(
+                "globalIdentifierGrouping",
+                {"name": name,
+                    "description": description,
+                    "parentId": parentId});
+
+            if (createResult === -1) {
+                this.populateError("Could not create "+name+" grouping.");
+                this.populateError(this.dataLayer.getError());
+                return false;
+            }
+
+            return true;
+        } else {
+            this.populateError("Could not create "+name+" grouping. It already exists!");
+
+            return false;
+        }
+    }
+
+    /**
+     * Updates the relevant globalIdentifierGrouping with the modifications provided
+     * @param {string} name The unique name of the global identifier grouping to be updated
+     * @param {{}} modifications The modifications to apply
+     * @param {string} modifications.name Optional. The new name
+     * @param {string} modifications.description Optional. The new description
+     * @param {number} modifications.parentId Optional. The new parentId
+     * @return {Promise<boolean>} True if the modification was successful, false otherwise with an error populated
+     */
+    async modifyGlobalIdentifierGrouping(name, modifications) {
+        if (typeof name === "undefined") {
+            this.populateError("Could not modify global identifier grouping. No name provided");
+            return false;
+        }
+
+        if (typeof modifications === "undefined") {
+            this.populateError("Could not modify global identifier grouping. No modification provided");
+            return false;
+        }
+        const existingGrouping = await this.dataLayer.readByField(
+            "globalIdentifierGrouping",
+            "name",
+            name);
+
+        if (existingGrouping === null) {
+            this.populateError("Could not modify global identifier grouping. Invalid name provided");
+            return false;
+        }
+        const modificationData = {"id": existingGrouping["id"], ...modifications};
+        const updateResult = this.dataLayer.update(
+            "globalIdentifierGrouping",modificationData);
+
+        if (!updateResult) {
+            this.populateError("Could not modify "+name+" grouping.");
+            this.populateError(this.dataLayer.getError());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Removes the given globalIdentifierGrouping from the database
+     * @param {string} name The unique name of the grouping
+     * @return {Promise<boolean>} True if removed, false otherwise with an error populated
+     */
+    async removeGlobalIdentifierGrouping(name) {
+        if (typeof name === "undefined") {
+            this.populateError("Could not remove global identifier grouping. No name provided");
+            return false;
+        }
+        const existingGrouping = await this.dataLayer.readByField(
+            "globalIdentifierGrouping",
+            "name",
+            name);
+
+        if (existingGrouping === null) {
+            this.populateError("Could not remove global identifier grouping. Invalid name provided");
+            return false;
+        }
+
+        const children = await this.getGlobalIdentifierGroupingChildrenRecursive(existingGrouping["id"]);
+        if (children.length > 0) {
+            this.populateError("Could not remove global identifier grouping. It has children. First remove" +
+                "children");
+            return false;
+        }
+        
+        const removeResult = await this.dataLayer.delete("globalIdentifierGrouping",existingGrouping["id"]);
+        if (!removeResult) {
+            this.populateError("Could not remove "+name+" grouping.");
+            this.populateError(this.dataLayer.getError());
+            return false;
+        }
+
+        return true;
     }
 
     /**
