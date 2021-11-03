@@ -34,10 +34,12 @@ class DivbloxWebService extends divbloxObjectBase {
      * Divblox Application Generator was used to create your app.
      * @param {[{}]} config.additionalRoutes Additional routes to be defined for express. Each route is an object
      * containing a "location" and "router" property
+     * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the app configuration
      */
-    constructor(config = {}) {
+    constructor(config = {}, dxInstance = null) {
         super();
         this.config = config;
+        this.dxInstance = dxInstance;
         this.apiEndPointRoot = typeof this.config["apiEndPointRoot"] !== "undefined" ? this.config.apiEndPointRoot : './divblox-routes/api';
         this.wwwRoot = typeof this.config["wwwRoot"] !== "undefined" ? this.config.wwwRoot : './divblox-routes/www/index';
         this.viewsRoot = typeof this.config["viewsRoot"] !== "undefined" ? this.config.viewsRoot : 'divblox-views';
@@ -73,7 +75,8 @@ class DivbloxWebService extends divbloxObjectBase {
         }
 
         this.addRoute('/', path.join(path.resolve("./"),this.wwwRoot));
-        this.addRoute('/api', path.join(path.resolve("./"),this.apiEndPointRoot));
+        this.setupApiRouters();
+        // this.addRoute('/api', path.join(path.resolve("./"),this.apiEndPointRoot));
 
         if (typeof this.config["additionalRoutes"] !== "undefined") {
             for (const route of this.config["additionalRoutes"]) {
@@ -94,6 +97,39 @@ class DivbloxWebService extends divbloxObjectBase {
         }
     }
 
+    setupApiRouters() {
+        const router = express.Router();
+        router.all('/', async (req, res, next) => {
+            //TODO: This must be updated to look nicer
+            res.render('dx-core-index', { title: 'Divblox API Root' });
+        });
+
+        for (const packageName of Object.keys(this.dxInstance.packages)) {
+            const packageObj = this.dxInstance.packages[packageName];
+            const packageEndpoint = require('../'+packageObj.packageRoot+"/endpoint");
+
+            router.all('/'+packageName, async (req, res, next) => {
+                await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
+                res.send(packageEndpoint.result);
+            });
+            router.all('/'+packageName+'/doc', async (req, res, next) => {
+                await packageEndpoint.executeOperation('doc', {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
+                console.dir(packageEndpoint.result);
+                //TODO: Implement this
+                res.render('dx-core-index', { title: 'API Documentation - TO BE COMPLETED' });
+            });
+
+            for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
+                router.all('/'+packageName+'/'+operation, async (req, res, next) => {
+                    await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
+                    res.send(packageEndpoint.result);
+                });
+            }
+        }
+
+        this.addRoute('/api',undefined, router);
+    }
+
     /**
      * A simple wrapper function that sets up a few things for express
      * @param expressInstance
@@ -106,7 +142,10 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
         expressInstance.use(express.static(path.join(path.resolve("./"), this.staticRoot)));
-        expressInstance.set('views', path.join(path.resolve("./"), this.viewsRoot));
+        expressInstance.set('views', );
+        expressInstance.set('views',
+            [path.join(path.resolve("./"), this.viewsRoot),
+                __dirname + '/dx-core-views']);
         expressInstance.set('view engine', 'pug');
     }
 
@@ -163,12 +202,20 @@ class DivbloxWebService extends divbloxObjectBase {
     }
 
     /**
-     * Adds a route for express to use
-     * @param path The url path
-     * @param routerPath The path to the router script
+     * Adds a route for express to use. Either the routerPath or the router MUST be provided.
+     * If a path is provided, it will take precedence over the provided router
+     * @param {string} path The url path
+     * @param {string} routerPath Optional. The path to the router script
+     * @param {Router} router Optional. The router script to use
      */
-    addRoute(path = '/', routerPath) {
-        const router = require(routerPath);
+    addRoute(path = '/', routerPath, router) {
+        if (typeof routerPath !== "undefined") {
+            router = require(routerPath);
+        }
+        if (typeof router === "undefined") {
+            this.populateError("Invalid router or router path provided for addRoute")
+            return;
+        }
         if (this.useHttps) {
             this.expressHttps.use(path, router);
             if (this.serverHttpsConfig.allowHttp) {
