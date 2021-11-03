@@ -772,7 +772,7 @@ class DivbloxBase extends divbloxObjectBase {
                     modifications["description"] = modifiedDescription;
                 }
                 if (modifiedParentId.length > 0) {
-                    modifications["parentId"] = modifiedParentId;
+                    modifications["parentGroupingId"] = modifiedParentId;
                 }
 
                 const modifyResult = await this.modifyGlobalIdentifierGrouping(modifyName, modifications);
@@ -834,11 +834,11 @@ class DivbloxBase extends divbloxObjectBase {
      * Creates a new globalIdentifierGrouping in the database with the given name, description and parentId
      * @param {string} name The unique name of the globalIdentifierGrouping
      * @param {string} description Optional. A description for this grouping
-     * @param {number} parentId Optional. The primary key id of the parent grouping
+     * @param {number} parentGroupingId Optional. The primary key id of the parent grouping
      * @return {Promise<boolean>} Returns true if the grouping was successfully created, false otherwise with an error
      * populated in the error array
      */
-    async createGlobalIdentifierGrouping(name, description = '', parentId = -1) {
+    async createGlobalIdentifierGrouping(name, description = '', parentGroupingId = -1) {
         if (typeof name === "undefined") {
             this.populateError("Could not create global identifier grouping. No name provided");
             return false;
@@ -856,7 +856,7 @@ class DivbloxBase extends divbloxObjectBase {
                 "globalIdentifierGrouping",
                 {"name": nameNormalized,
                     "description": description,
-                    "parentGroupingId": parentId});
+                    "parentGroupingId": parentGroupingId});
 
             if (createResult === -1) {
                 this.populateError("Could not create "+nameNormalized+" grouping.");
@@ -878,7 +878,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {{}} modifications The modifications to apply
      * @param {string} modifications.name Optional. The new name
      * @param {string} modifications.description Optional. The new description
-     * @param {number} modifications.parentId Optional. The new parentId
+     * @param {number} modifications.parentGroupingId Optional. The new parentId
      * @return {Promise<boolean>} True if the modification was successful, false otherwise with an error populated
      */
     async modifyGlobalIdentifierGrouping(name, modifications) {
