@@ -191,7 +191,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
                 this.populateError(this.dataLayer.getError(), true);
-                dxUtils.printErrorMessage("Error validating data model: "+
+                dxUtils.printWarningMessage("Error validating data model: "+
                     JSON.stringify(this.getError(),null,2));
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
@@ -730,6 +730,11 @@ class DivbloxBase extends divbloxObjectBase {
         return returnArray;
     }
 
+    /**
+     * A wrapper function that can be used from the command line to manage Global Identifier Groupings
+     * @param {string} operation show|create|modify|remove
+     * @return {Promise<void>}
+     */
     async manageGlobalIdentifierGroupings(operation = 'show') {
         switch (operation) {
             case 'create':
