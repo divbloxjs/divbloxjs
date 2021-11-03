@@ -791,7 +791,7 @@ class DivbloxBase extends divbloxObjectBase {
                 const removeName = await dxUtils.getCommandLineInput("Please provide a name for the grouping" +
                     "that should be removed: ");
 
-                const removeResult = await this.removeGlobalIdentifierGrouping(name);
+                const removeResult = await this.removeGlobalIdentifierGrouping(removeName);
                 if (!removeResult) {
                     dxUtils.printErrorMessage("Error removing grouping:\n"+
                         JSON.stringify(
