@@ -8,7 +8,7 @@ const logger = require('morgan');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
-const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', 'divbloxjs');
+const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', '');
 
 /**
  * The DivbloxWebService is used to expose your Divblox functionality to the web. It uses expressjs for all the
