@@ -774,7 +774,7 @@ class DivbloxBase extends divbloxObjectBase {
                 if (modifiedParentId.length > 0) {
                     modifications["parentId"] = modifiedParentId;
                 }
-                
+
                 const modifyResult = await this.modifyGlobalIdentifierGrouping(modifyName, modifications);
                 if (!modifyResult) {
                     dxUtils.printErrorMessage("Error modifying grouping:\n"+
