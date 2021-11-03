@@ -762,7 +762,7 @@ class DivbloxBase extends divbloxObjectBase {
                 const modifiedDescription = await dxUtils.getCommandLineInput("Optional: Provide a new " +
                     "description for the grouping (Leave blank to skip): ");
                 const modifiedParentId = await dxUtils.getCommandLineInput("Optional: Provide a new parent " +
-                    "grouping id for the grouping (Leave blank to skip)");
+                    "grouping id for the grouping (Leave blank to skip): ");
 
                 let modifications = {};
                 if (modifiedName.length > 0) {
@@ -914,7 +914,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         const modificationData = {"id": existingGrouping["id"], ...modificationsNormalized};
-        const updateResult = this.dataLayer.update(
+        const updateResult = await this.dataLayer.update(
             "globalIdentifierGrouping",modificationData);
 
         if (!updateResult) {
