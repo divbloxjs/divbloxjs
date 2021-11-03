@@ -106,7 +106,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
-            const packageEndpoint = require('../'+packageObj.packageRoot+"/endpoint");
+            const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot+"/endpoint"));
 
             router.all('/'+packageName, async (req, res, next) => {
                 await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
