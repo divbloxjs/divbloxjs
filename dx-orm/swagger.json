@@ -1,77 +1,77 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
-      "version": "1.0.0",
-      "title": "Cattle Keeper",
-      "description": "The smart way to keep cattle"
+    "version": "1.0.0",
+    "title": "Divblox api",
+    "description": "Divblox api"
   },
   "servers": [
-      {
-          "url": "/api/",
-          "description": "The server api root"
-      }
+    {
+      "url": "/api/",
+      "description": "The server api root"
+    }
   ],
   "tags": [
     {
-        "name": "EndpointOne",
-        "description": "An example of grouping endpoint one operations"
+      "name": "EndpointOne",
+      "description": "An example of grouping endpoint one operations"
     },
     {
-        "name": "EndpointTwo",
-        "description": "An example of grouping endpoint two operations"
+      "name": "EndpointTwo",
+      "description": "An example of grouping endpoint two operations"
     }
   ],
   "consumes": [
-      "application/json"
+    "application/json"
   ],
   "produces": [
-      "application/json"
+    "application/json"
   ],
   "paths": {
     "/endpointOne/operationOne": {
       "post": {
         "tags": [
-            "EndpointOne"
+          "EndpointOne"
         ],
         "summary": "Executes the operationOne operation in the endpoint one grouping",
-        "requestBody": {
-            "description": "Anything that describes the request body",
-            "required": true,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/components/schemas/ExampleEntity"
-                    }
-                }
-            }
-        },
-        "produces": [
-            "application/json"
+        "parameters": [
+          {
+            "$ref": "#/components/jwt"
+          }
         ],
-        "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "result": {
-                      "$ref": "#/components/result"
-                    },
-                    "schema": {
-                      "$ref": "#/components/schemas/ExampleEntity"
-                    }
-                  }
-                }
-            },
-            "400": {
-                "description": "Failed. Bad post data.",
-                "content" : {
-                  "application/json" : {
-                    "result": {
-                      "$ref": "#/components/result"
-                    }
-                  }
-                }
+        "requestBody": {
+          "description": "Anything that describes the request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExampleEntity"
+              }
             }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content" : {
+              "application/json" : {
+                "schema": {
+                  "$ref": "#/components/message",
+                  "$ref": "#/components/schemas/ExampleEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Failed. Bad post data.",
+            "content" : {
+              "application/json" : {
+                "result": {
+                  "$ref": "#/components/result"
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -83,38 +83,33 @@
       "required": true,
       "description": "JSON Web Token",
       "schema": {
-          "$ref": "#/components/auth"
+        "$ref": "#/components/auth"
       }
     },
     "auth": {
       "properties": {
-          "Bearer": {
-              "type": "string"
-          }
+        "Bearer": {
+          "type": "string"
+        }
       }
     },
-    "result": {
-      "success": {
-        "type": "boolean"
-      },
-      "message": {
-        "type": "string"
-      }
+    "message": {
+      "type": "string"
     },
     "schemas": {
       "ExampleEntity": {
-          "type": "object",
-          "properties": {
-              "id": {
-                  "type": "integer"
-              },
-              "attributeOne": {
-                  "type": "string"
-              },
-              "attributeTwo": {
-                  "type": "string"
-              }
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "attributeOne": {
+            "type": "string"
+          },
+          "attributeTwo": {
+            "type": "string"
           }
+        }
       }
     }
   }
