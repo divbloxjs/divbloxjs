@@ -153,8 +153,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
         for (const packageName of Object.keys(instantiatedPackages)) {
             const packageEndpoint = instantiatedPackages[packageName];
-
-            if (packageEndpoint.declaredOperations.length === 0) {
+            if (Object.keys(packageEndpoint.declaredOperations).length === 0) {
                 continue;
             }
 
@@ -167,14 +166,18 @@ class DivbloxWebService extends divbloxObjectBase {
             });
 
             for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
+                const operationDefinition = packageEndpoint.declaredOperations[operation];
+
                 const path = "/"+endpointName+"/"+operation;
-                paths[path][operation.requestType.toLowerCase()] = {
-                    "tags": endpointName,
-                    "summary": operation.operationDescription,
+                paths[path] = {};
+
+                paths[path][operationDefinition.requestType.toLowerCase()] = {
+                    "tags": [endpointName],
+                    "summary": operationDefinition.operationDescription,
                     "requestBody": {
                         "content": {
                             "application/json": {
-                                "schema": operation.requestSchema
+                                "schema": operationDefinition.requestSchema
                             }
                         }
                     },
@@ -204,7 +207,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 }
             }
         }
-
+        console.dir(paths);
 
 
         let dataModelSchema = require(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js");
