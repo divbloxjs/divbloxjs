@@ -1,5 +1,4 @@
 const divbloxObjectBase = require('./object-base');
-//TODO: Add a /doc operation that displays the api documentation
 
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
@@ -15,15 +14,73 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.endpointDescription = "";
         this.result = {"success":false,"message":"none"};
         this.declaredOperations = [];
-        const echoOperation = {
-            "operationName": "echo",
-            "allowedAccess": ["anonymous"]
-        };
+        const echoOperation = this.getOperationDefinition(
+            {
+                "operationName": "echo",
+                "allowedAccess": ["anonymous"]
+            }
+        );
+
         this.declareOperations([echoOperation]);
         this.currentRequest = {};
         this.dxInstance = null;
         this.currentGlobalIdentifier = -1;
         this.currentGlobalIdentifierGroupings = [];
+    }
+
+    /**
+     * Returns an operation definition that contains the information need to form a swagger documentation
+     * @param {string} definition.operationName Required. The name of the operation
+     * @param {[]} definition.allowedAccess Required. An array of Global Identifier Groupings that are allowed
+     * to access this operation
+     * @param {string} definition.operationDescription Optional. A description of what the operation does
+     * @param {string} definition.requestType Optional. Either GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE. Will
+     * default to POST if not supplied
+     * @param {*} definition.parameters Optional. Follows the openapi spec for the parameter object: https://swagger.io/specification/
+     * @param {*} definition.requestSchema Optional. A schema for what should be sent via the request body
+     * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response
+     * @return {
+     * {allowedAccess: ([string]|*),
+     * responseSchema: {},
+     * requestSchema: {},
+     * operationDescription: (string|*),
+     * requestType: string,
+     * operationName: (string|*),
+     * requiresAuthentication: boolean,
+     * parameters: null}}
+     */
+    getOperationDefinition(definition) {
+        const requiredProperties = [
+            "operationName",
+            "allowedAccess",
+        ];
+        for (const requiredProperty of requiredProperties) {
+            if (typeof definition[requiredProperty] === "undefined") {
+                throw new Error(requiredProperty+" is a required property for DivbloxApiOperation");
+            }
+        }
+        let operationDefinition = {
+            "operationName": definition.operationName,
+            "operationDescription": definition.operationName,
+            "allowedAccess": definition.allowedAccess,
+            "requestType": "POST",
+            "requiresAuthentication": true,
+            "parameters": null,
+            "requestSchema": {},
+            "responseSchema": {}
+        }
+
+        for (const property of Object.keys(operationDefinition)) {
+            if (typeof definition[property] !== "undefined") {
+                operationDefinition[property] = definition[property];
+            }
+        }
+
+        if (definition.allowedAccess.includes("anonymous")) {
+            operationDefinition.requiresAuthentication = false;
+        }
+
+        return operationDefinition;
     }
 
     /**
@@ -38,10 +95,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Declares the operations provided as available to the api endpoint
-     * @param {[{}]} operations The operations to declare. Each operation must have the following properties:
-     * - {string} operationName
-     * - {[]} allowedAccess: An array of globalIdentifierGroupings that have access to this operation
-     * TODO: Expand this to allow for swagger doc definition
+     * @param {[{operationDefinition}]} operations An array of operation definitions as provided by getOperationDefinition()
      */
     declareOperations(operations = []) {
         if (operations.length === 0) {return;}

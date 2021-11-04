@@ -148,18 +148,64 @@ class DivbloxWebService extends divbloxObjectBase {
     }
 
     getSwaggerConfig(instantiatedPackages) {
-        //TODO: For now this is mock data, but this swaggerDocument will be built up in the loops above
-        //return require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
         let tags = [];
+        let paths = {};
+
         for (const packageName of Object.keys(instantiatedPackages)) {
-            const packageObj = instantiatedPackages[packageName];
+            const packageEndpoint = instantiatedPackages[packageName];
+
+            if (packageEndpoint.declaredOperations.length === 0) {
+                continue;
+            }
+
+            const endpointName = packageEndpoint.endpointName === null ? packageName : packageEndpoint.endpointName;
+            const endpointDescription = packageEndpoint.endpointDescription === null ? packageName : packageEndpoint.endpointDescription;
+
             tags.push({
-                "name": packageObj.endpointName === null ? packageName : packageObj.endpointName,
-                "description": packageObj.endpointDescription === null ? packageName : packageObj.endpointDescription,
+                "name": endpointName,
+                "description": endpointDescription,
             });
+
+            for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
+                const path = "/"+endpointName+"/"+operation;
+                paths[path][operation.requestType.toLowerCase()] = {
+                    "tags": endpointName,
+                    "summary": operation.operationDescription,
+                    "requestBody": {
+                        "content": {
+                            "application/json": {
+                                "schema": operation.requestSchema
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+
+                        },
+                        "400": {
+                            "description": "Bad request",
+                            "content" : {
+                                "application/json" : {}
+                            }
+                        },
+                        "401": {
+                            "description": "Unauthorized",
+                            "content" : {
+                                "application/json" : {}
+                            }
+                        },
+                        "408": {
+                            "description": "Request timed out",
+                            "content" : {
+                                "application/json" : {}
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        let paths = {};
+
 
         let dataModelSchema = require(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js");
 
