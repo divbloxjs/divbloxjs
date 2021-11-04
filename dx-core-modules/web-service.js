@@ -170,7 +170,7 @@ class DivbloxWebService extends divbloxObjectBase {
             schemas[entity] = {
                 "type": "object",
                 "properties": {
-                    properties
+                    ...properties
                 }
             };
         }

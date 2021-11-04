@@ -418,7 +418,7 @@ class DivbloxBase extends divbloxObjectBase {
                     }
 
                     entityData += 'this.data["'+finalRelationshipName+'"] = null;';
-                    entitySchemaData[relationshipName] = "int";
+                    entitySchemaData[relationshipName] = "integer";
                 }
             }
 
