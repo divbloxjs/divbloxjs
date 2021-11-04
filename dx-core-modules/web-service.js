@@ -10,7 +10,6 @@ const https = require('https');
 const fs = require('fs');
 const swaggerUi = require('swagger-ui-express');
 const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', '');
-const swaggerDocument = require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
 
 /**
  * The DivbloxWebService is used to expose your Divblox functionality to the web. It uses expressjs for all the
@@ -137,6 +136,17 @@ class DivbloxWebService extends divbloxObjectBase {
         }
 
         this.addRoute('/api',undefined, router);
+        //TODO: For now this is mock data, but this swaggerDocument will be built up in the loops above
+        const swaggerDocument = require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
+        
+        if (this.useHttps) {
+            this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+            if (this.serverHttpsConfig.allowHttp) {
+                this.expressHttp.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+            }
+        } else {
+            this.expressHttp.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+        }
     }
 
     /**
@@ -155,7 +165,6 @@ class DivbloxWebService extends divbloxObjectBase {
             [path.join(path.resolve("./"), this.viewsRoot),
                 DIVBLOX_ROOT_DIR+'/dx-core-views']);
         expressInstance.set('view engine', 'pug');
-        expressInstance.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     }
 
     /**
