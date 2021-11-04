@@ -111,8 +111,10 @@ class DivbloxWebService extends divbloxObjectBase {
             res.render('dx-core-index', { title: 'Divblox API Root' });
         });
 
+        let instantiatedPackages = {};
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
+            instantiatedPackages[packageName] = packageObj;
             const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot+"/endpoint"));
 
             router.all('/'+packageName, async (req, res, next) => {
@@ -136,8 +138,8 @@ class DivbloxWebService extends divbloxObjectBase {
         }
 
         this.addRoute('/api',undefined, router);
-        //TODO: For now this is mock data, but this swaggerDocument will be built up in the loops above
-        const swaggerDocument = require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
+
+        const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
 
         if (this.useHttps) {
             this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -147,6 +149,43 @@ class DivbloxWebService extends divbloxObjectBase {
         } else {
             this.expressHttp.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
         }
+    }
+
+    getSwaggerConfig(instantiatedPackages) {
+        //TODO: For now this is mock data, but this swaggerDocument will be built up in the loops above
+        //return require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
+        let tags = [];
+        for (const packageName of Object.keys(instantiatedPackages)) {
+            tags.push({
+                "name": packageName,
+                "description": "tbc"
+            });
+        }
+
+        let paths = {};
+
+        let schemas = {};
+
+        const tokensToReplace = {
+            "Title": this.dxInstance.configObj.appName,
+            "Description": this.dxInstance.configObj.appName + " API documentation",
+            "Tags": JSON.stringify(tags,null,2),
+            "Paths": JSON.stringify(paths,null,2),
+            "Schemas": JSON.stringify(schemas,null,2)
+        };
+        let swaggerTemplate = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/swagger.json.tpl",'utf-8');
+
+        for (const token of Object.keys(tokensToReplace)) {
+            const search = '['+token+']';
+
+            let done = false;
+            while (!done) {
+                done = swaggerTemplate.indexOf(search) === -1;
+                //TODO: This should be done with the replaceAll function
+                swaggerTemplate = swaggerTemplate.replace(search, tokensToReplace[token]);
+            }
+        }
+        return swaggerTemplate;
     }
 
     /**

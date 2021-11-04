@@ -57,11 +57,9 @@
             }
           },
           "400": {
-            "description": "Failed. Bad post data.",
+            "description": "[Operation message here]",
             "content" : {
-              "application/json" : {
-                "$ref": "#/components/message"
-              }
+              "application/json" : {}
             }
           }
         }
