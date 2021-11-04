@@ -171,19 +171,20 @@ class DivbloxWebService extends divbloxObjectBase {
                 const path = "/"+endpointName+"/"+operation;
                 paths[path] = {};
 
+                const requestBodyContent = Object.keys(operationDefinition.requestSchema).length > 0 ?
+                    {"schema": operationDefinition.requestSchema} : {};
+
                 paths[path][operationDefinition.requestType.toLowerCase()] = {
                     "tags": [endpointName],
                     "summary": operationDefinition.operationDescription,
                     "requestBody": {
                         "content": {
-                            "application/json": {
-                                "schema": operationDefinition.requestSchema
-                            }
+                            "application/json": requestBodyContent
                         }
                     },
                     "responses": {
                         "200": {
-
+                            "description": "OK"
                         },
                         "400": {
                             "description": "Bad request",
