@@ -35,6 +35,11 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             "delete":"delete"
         }
 
+        this.entitySchema = {
+            "id":
+                {"type": "int"}
+            };
+
         this.reset();
     }
 
@@ -44,6 +49,14 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
     reset() {
         this.data = {"id":-1};
         this.lastLoadedData = {}
+    }
+
+    /**
+     * Returns a schema for the current entity
+     * @return {*|{}}
+     */
+    getEntitySchema() {
+        return this.entitySchema;
     }
 
     /**

@@ -423,6 +423,7 @@ class DivbloxBase extends divbloxObjectBase {
             const tokensToReplace = {
                 "EntityNamePascalCase": entityNamePascalCase,
                 "EntityNameCamelCase": entityNameCamelCase,
+                "EntityNameLowerCaseSplitted": dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-"),
                 "EntityData": entityData,
                 "EntitySchemaData": JSON.stringify(entitySchemaData,null,2)
             };
