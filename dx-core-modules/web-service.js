@@ -161,7 +161,19 @@ class DivbloxWebService extends divbloxObjectBase {
 
         let paths = {};
 
+        let dataModelSchema = require(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js");
+
         let schemas = {};
+
+        for (const entity of Object.keys(dataModelSchema)) {
+            const properties = dataModelSchema[entity];
+            schemas[entity] = {
+                "type": "object",
+                "properties": {
+                    properties
+                }
+            };
+        }
 
         const tokensToReplace = {
             "Title": this.dxInstance.configObj.appName,
