@@ -65,7 +65,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "allowedAccess": definition.allowedAccess,
             "requestType": "POST",
             "requiresAuthentication": true,
-            "parameters": null,
+            "parameters": [],
             "requestSchema": {},
             "responseSchema": {}
         }
