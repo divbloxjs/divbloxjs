@@ -333,6 +333,8 @@ class DivbloxBase extends divbloxObjectBase {
             fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas");
         }
 
+        const schemaComplete = {};
+
         for (const entityName of Object.keys(this.dataModelObj)) {
             dxUtils.printInfoMessage("Generating base object model class for '"+entityName+"'...");
 
@@ -420,6 +422,8 @@ class DivbloxBase extends divbloxObjectBase {
                 }
             }
 
+            schemaComplete[entityName] = entitySchemaData;
+
             const tokensToReplace = {
                 "EntityNamePascalCase": entityNamePascalCase,
                 "EntityNameCamelCase": entityNameCamelCase,
@@ -457,6 +461,22 @@ class DivbloxBase extends divbloxObjectBase {
                 DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+"-schema.js",
                 fileContentObjectSchemaStr);
         }
+
+        let fileContentDataModelSchemaStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/data-model-schema.tpl",'utf-8');
+
+        const search = '[SchemaData]';
+        const replace =  JSON.stringify(schemaComplete,null,2);
+
+        let done = false;
+        while (!done) {
+            done = fileContentDataModelSchemaStr.indexOf(search) === -1;
+            //TODO: This should be done with the replaceAll function
+            fileContentDataModelSchemaStr = fileContentDataModelSchemaStr.replace(search, replace);
+        }
+
+        fs.writeFileSync(
+            DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js",
+            fileContentDataModelSchemaStr);
     }
 
     /**
