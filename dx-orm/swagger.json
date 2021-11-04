@@ -7,42 +7,18 @@
   },
   "servers": [
       {
-          "url": "/",
-          "description": "Local Dev, or from Heroku"
-      },
-      {
           "url": "/api/",
-          "description": "With docker-compose and nginx proxy"
+          "description": "The server api root"
       }
   ],
   "tags": [
     {
-        "name": "User",
-        "description": "Manage the users on Cattle Keeper"
+        "name": "EndpointOne",
+        "description": "An example of grouping endpoint one operations"
     },
     {
-      "name": "Country",
-      "description": "Manage the countries on Cattle Keeper"
-    },
-    {
-      "name": "Company",
-      "description": "Manage the companies on Cattle Keeper"
-    },
-    {
-      "name": "Farm",
-      "description": "Manage the farms on Cattle Keeper"
-    },
-    {
-      "name": "Pasture",
-      "description": "Manage the pastures on Cattle Keeper"
-    },
-    {
-      "name": "Herd",
-      "description": "Manage the herds on Cattle Keeper"
-    },
-    {
-      "name": "Cow",
-      "description": "Manage the cattle on Cattle Keeper"
+        "name": "EndpointTwo",
+        "description": "An example of grouping endpoint two operations"
     }
   ],
   "consumes": [
@@ -52,126 +28,19 @@
       "application/json"
   ],
   "paths": {
-    "/user/{id}": {
-        "get": {
-          "tags": [
-              "User"
-          ],
-          "summary": "Retrieve a user by id",
-          "parameters": [
-            {
-                "in": "path",
-                "name": "id",
-                "required": true,
-                "description": "User id get retrieve",
-                "schema": {
-                    "$ref": "#/components/id"
-                }
-            },
-            {
-              "$ref": "#/components/jwt"
-            }
-          ],
-          "responses": {
-              "200": {
-                  "description": "OK",
-                  "content" : {
-                    "application/json" : {
-                      "schema": {
-                        "$ref": "#/components/schemas/User"
-                      }
-                    }
-                  }
-              },
-              "401": {
-                "description": "Not Authoried",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/message"
-                    }
-                  }
-                }
-            }
-          }
-        },
-        "put": {
-          "summary": "Update user with given id",
-          "tags": [
-              "User"
-          ],
-          "requestBody": {
-              "description": "User Object",
-              "required": true,
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/User"
-                  }
-                }
-              }
-          },
-          "parameters": [
-            {
-              "in": "path",
-              "name": "id",
-              "required": true,
-              "description": "User with new values of properties",
-              "schema": {
-                  "$ref": "#/components/id"
-              }
-            },
-            {
-              "$ref": "#/components/jwt"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "OK",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/schemas/User"
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Failed. Bad post data.",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/message"
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "Failed. Cat not found.",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/message"
-                  }
-                }
-              }
-            }
-          }
-        }
-    },
-    "/user": {
+    "/endpointOne/operationOne": {
       "post": {
         "tags": [
-            "User"
+            "EndpointOne"
         ],
-        "summary": "Create a new user in system",
+        "summary": "Executes the operationOne operation in the endpoint one grouping",
         "requestBody": {
-            "description": "User Object",
+            "description": "Anything that describes the request body",
             "required": true,
             "content": {
                 "application/json": {
                     "schema": {
-                        "$ref": "#/components/schemas/User"
+                        "$ref": "#/components/schemas/ExampleEntity"
                     }
                 }
             }
@@ -184,8 +53,11 @@
                 "description": "OK",
                 "content" : {
                   "application/json" : {
+                    "result": {
+                      "$ref": "#/components/result"
+                    },
                     "schema": {
-                      "$ref": "#/components/schemas/User"
+                      "$ref": "#/components/schemas/ExampleEntity"
                     }
                   }
                 }
@@ -194,461 +66,8 @@
                 "description": "Failed. Bad post data.",
                 "content" : {
                   "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/message"
-                    }
-                  }
-                }
-            }
-        }
-      }
-    },
-    "/user/login": {
-      "post": {
-        "tags": [
-            "User"
-        ],
-        "summary": "Log in a new user in system",
-        "requestBody": {
-            "description": "User email and password",
-            "required": true,
-            "content": {
-                "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "email": {
-                          "type": "string"
-                        },
-                        "password": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                }
-            }
-        },
-        "produces": [
-            "application/json"
-        ],
-        "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "accessToken" : {
-                          "type": "string"
-                        },
-                        "user" : {
-                          "$ref": "#/components/schemas/User"
-                        },
-                        "expiresIn" : {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
-            },
-            "400": {
-                "description": "Failed. Bad post data.",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/message"
-                    }
-                  }
-                }
-            }
-        }
-      }
-    },
-    "/user/company/{id}": {
-      "post": {
-        "tags": [
-            "User",
-            "Company"
-        ],
-        "summary": "Get all users at a company",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "description": "Company id",
-            "schema": {
-                "$ref": "#/components/id"
-            }
-          },
-          {
-            "$ref": "#/components/jwt"
-          }
-        ],
-        "produces": [
-            "application/json"
-        ],
-        "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/User"
-                      }
-                    }
-                  }
-                }
-            },
-            "400": {
-                "description": "Failed. Bad post data.",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/message"
-                    }
-                  }
-                }
-            }
-        }
-      }
-    },
-    "/company/{id}": {
-        "get": {
-          "tags": [
-              "Company"
-          ],
-          "summary": "Retrieve a company by id",
-          "parameters": [
-            {
-                "in": "path",
-                "name": "id",
-                "required": true,
-                "description": "Company id get retrieve",
-                "schema": {
-                    "$ref": "#/components/id"
-                }
-            },
-            {
-              "$ref": "#/components/jwt"
-            }
-          ],
-          "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/schemas/Company"
-                    }
-                  }
-                }
-            },
-            "401": {
-              "description": "Not Authorised",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/message"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "put": {
-          "summary": "Update comapny with given id",
-          "tags": [
-              "Company"
-          ],
-          "requestBody": {
-              "description": "Company Object",
-              "required": true,
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                }
-              }
-          },
-          "parameters": [
-            {
-              "in": "path",
-              "name": "id",
-              "required": true,
-              "description": "Company with new values of properties",
-              "schema": {
-                  "$ref": "#/components/id"
-              }
-            },
-            {
-              "$ref": "#/components/jwt"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "OK",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Failed. Bad post data.",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/message"
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "Failed. Cat not found.",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/message"
-                  }
-                }
-              }
-            }
-          }
-        }
-    },
-    "/company": {
-      "post": {
-        "tags": [
-            "Company"
-        ],
-        "summary": "Create a new company in system",
-        "requestBody": {
-            "description": "User Object",
-            "required": true,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/components/schemas/Company"
-                    }
-                }
-            }
-        },
-        "produces": [
-            "application/json"
-        ],
-        "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/schemas/Company"
-                    }
-                  }
-                }
-            },
-            "400": {
-                "description": "Failed. Bad post data."
-            }
-        }
-     }
-    },
-    "/farm/{id}": {
-      "get": {
-        "tags": [
-            "Farm"
-        ],
-        "summary": "Retrieve a farm by id",
-        "parameters": [
-          {
-              "in": "path",
-              "name": "id",
-              "required": true,
-              "description": "Farm id get retrieve",
-              "schema": {
-                  "$ref": "#/components/id"
-              }
-          },
-          {
-            "$ref": "#/components/jwt"
-          }
-        ],
-        "responses": {
-          "200": {
-              "description": "OK",
-              "content" : {
-                "application/json" : {
-                  "schema": {
-                    "$ref": "#/components/schemas/Farm"
-                  }
-                }
-              }
-          },
-          "401": {
-            "description": "Not Authorised",
-            "content" : {
-              "application/json" : {
-                "schema": {
-                  "$ref": "#/components/message"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Update farm with given id",
-        "tags": [
-            "Farm"
-        ],
-        "requestBody": {
-            "description": "Farm Object",
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Farm"
-                }
-              }
-            }
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "description": "Farm with new values of properties",
-            "schema": {
-                "$ref": "#/components/id"
-            }
-          },
-          {
-            "$ref": "#/components/jwt"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content" : {
-              "application/json" : {
-                "schema": {
-                  "$ref": "#/components/schemas/Farm"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Failed. Bad post data.",
-            "content" : {
-              "application/json" : {
-                "schema": {
-                  "$ref": "#/components/message"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Failed. Cat not found.",
-            "content" : {
-              "application/json" : {
-                "schema": {
-                  "$ref": "#/components/message"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/farm": {
-      "post": {
-        "tags": [
-            "Farm"
-        ],
-        "summary": "Create a new farm in system",
-        "requestBody": {
-            "description": "Farm Object",
-            "required": true,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/components/schemas/Farm"
-                    }
-                }
-            }
-        },
-        "produces": [
-            "application/json"
-        ],
-        "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/schemas/Farm"
-                    }
-                  }
-                }
-            },
-            "400": {
-                "description": "Failed. Bad post data."
-            }
-        }
-    }
-    },
-    "/farm/company/{id}": {
-      "post": {
-        "tags": [
-            "Farm",
-            "Company"
-        ],
-        "summary": "Gett all farms at a company",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "description": "Farm id",
-            "schema": {
-                "$ref": "#/components/id"
-            }
-          },
-          {
-            "$ref": "#/components/jwt"
-          }
-        ],
-        "produces": [
-            "application/json"
-        ],
-        "responses": {
-            "200": {
-                "description": "OK",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Farm"
-                      }
-                    }
-                  }
-                }
-            },
-            "400": {
-                "description": "Failed. Bad post data.",
-                "content" : {
-                  "application/json" : {
-                    "schema": {
-                      "$ref": "#/components/message"
+                    "result": {
+                      "$ref": "#/components/result"
                     }
                   }
                 }
@@ -667,16 +86,6 @@
           "$ref": "#/components/auth"
       }
     },
-    "message" : {
-      "properties": {
-        "msg": {
-            "type": "string"
-        }
-      }
-    },
-    "id": {
-      "type": "string"
-    },
     "auth": {
       "properties": {
           "Bearer": {
@@ -684,69 +93,28 @@
           }
       }
     },
+    "result": {
+      "success": {
+        "type": "boolean"
+      },
+      "message": {
+        "type": "string"
+      }
+    },
     "schemas": {
-      "Company": {
+      "ExampleEntity": {
           "type": "object",
           "properties": {
-              "_id": {
+              "id": {
+                  "type": "integer"
+              },
+              "attributeOne": {
                   "type": "string"
               },
-              "country_id": {
-                  "type": "string"
-              },
-              "name": {
-                  "type": "string"
-              },
-              "description": {
+              "attributeTwo": {
                   "type": "string"
               }
           }
-      },
-      "User": {
-        "type": "object",
-        "properties": {
-            "_id": {
-              "type": "string"
-            },
-            "company_id": {
-              "type": "string"
-            },
-            "country_id": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            },
-            "surname": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string"
-            },
-            "password": {
-              "type": "string"
-            }
-        }
-      },
-      "Farm": {
-        "type": "object",
-        "properties": {
-          "_id": {
-            "type": "string"
-          },
-          "company_id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string"
-          }
-        }
       }
     }
   }

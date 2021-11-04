@@ -341,7 +341,7 @@ class DivbloxBase extends divbloxObjectBase {
             let entityData = "";
             let entitySchemaData = {
                 "id": {
-                    "type": "int"
+                    "type": "integer"
                 }
             };
 
@@ -365,20 +365,20 @@ class DivbloxBase extends divbloxObjectBase {
                 "json": "string",
                 "date": "string",
                 "datetime": "string",
-                "timestamp": "int",
-                "year": "int",
-                "tinyint": "int",
-                "smallint": "int",
-                "mediumint": "int",
-                "int": "int",
-                "bigint": "int",
+                "timestamp": "integer",
+                "year": "integer",
+                "tinyint": "integer",
+                "smallint": "integer",
+                "mediumint": "integer",
+                "int": "integer",
+                "bigint": "integer",
                 "decimal": "double",
                 "float": "float",
                 "double": "double",
                 "real": "double",
-                "bit": "int",
+                "bit": "integer",
                 "boolean": "boolean",
-                "serial": "int",
+                "serial": "integer",
             }
 
             for (const attributeName of Object.keys(attributes)) {
