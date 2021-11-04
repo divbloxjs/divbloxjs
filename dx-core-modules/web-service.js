@@ -207,8 +207,6 @@ class DivbloxWebService extends divbloxObjectBase {
                 }
             }
         }
-        console.dir(paths);
-
 
         let dataModelSchema = require(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js");
 
