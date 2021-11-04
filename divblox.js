@@ -302,8 +302,16 @@ class DivbloxBase extends divbloxObjectBase {
         if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
             return false;
         }
+
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas")){
+            return false;
+        }
+
         for (const entityName of Object.keys(this.dataModelObj)) {
             if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+".js")) {
+                return false;
+            }
+            if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+"-schema.js")) {
                 return false;
             }
         }
@@ -320,15 +328,54 @@ class DivbloxBase extends divbloxObjectBase {
             fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated");
         }
 
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas")){
+            dxUtils.printInfoMessage("Creating /dx-orm/generated/schemas directory...");
+            fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas");
+        }
+
         for (const entityName of Object.keys(this.dataModelObj)) {
             dxUtils.printInfoMessage("Generating base object model class for '"+entityName+"'...");
 
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
             const entityNameCamelCase = entityName;
             let entityData = "";
+            let entitySchemaData = {};
 
             const attributes = this.dataModelObj[entityName]["attributes"];
             const relationships = this.dataModelObj[entityName]["relationships"];
+
+            const attributeTypeMapping = {
+                "char": "string",
+                "varchar": "string",
+                "tinytext": "string",
+                "text": "string",
+                "mediumtext": "string",
+                "longtext": "string",
+                "binary": "string",
+                "varbinary": "string",
+                "tinyblob": "string",
+                "mediumblob": "string",
+                "blob": "string",
+                "longblob": "string",
+                "enum": "string",
+                "json": "string",
+                "date": "string",
+                "datetime": "string",
+                "timestamp": "int",
+                "year": "int",
+                "tinyint": "int",
+                "smallint": "int",
+                "mediumint": "int",
+                "int": "int",
+                "bigint": "int",
+                "decimal": "double",
+                "float": "float",
+                "double": "double",
+                "real": "double",
+                "bit": "int",
+                "boolean": "boolean",
+                "serial": "int",
+            }
 
             for (const attributeName of Object.keys(attributes)) {
                 if (entityData.length > 0) {
@@ -336,6 +383,11 @@ class DivbloxBase extends divbloxObjectBase {
                 }
 
                 entityData += 'this.data["'+attributeName+'"] = ';
+                const entityType = (typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined") ?
+                    "string" : attributeTypeMapping[attributes[attributeName]["type"]];
+
+                entitySchemaData[attributeName] = entityType;
+
                 if (typeof attributes[attributeName]["default"] === "undefined") {
                     entityData += 'null;'
                     continue;
@@ -358,30 +410,45 @@ class DivbloxBase extends divbloxObjectBase {
                     }
 
                     entityData += 'this.data["'+finalRelationshipName+'"] = null;';
+                    entitySchemaData[relationshipName] = "int";
                 }
             }
 
             const tokensToReplace = {
                 "EntityNamePascalCase": entityNamePascalCase,
                 "EntityNameCamelCase": entityNameCamelCase,
-                "EntityData": entityData
+                "EntityData": entityData,
+                "EntitySchemaData": JSON.stringify(entitySchemaData,null,2)
             };
 
-            let fileContentStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-model.tpl",'utf-8');
+            let fileContentObjectModelStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-model.tpl",'utf-8');
+            let fileContentObjectSchemaStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-schema.tpl",'utf-8');
 
             for (const token of Object.keys(tokensToReplace)) {
                 const search = '['+token+']';
+
                 let done = false;
                 while (!done) {
-                    done = fileContentStr.indexOf(search) === -1;
+                    done = fileContentObjectModelStr.indexOf(search) === -1;
                     //TODO: This should be done with the replaceAll function
-                    fileContentStr = fileContentStr.replace(search, tokensToReplace[token]);
+                    fileContentObjectModelStr = fileContentObjectModelStr.replace(search, tokensToReplace[token]);
+                }
+
+                done = false;
+                while (!done) {
+                    done = fileContentObjectSchemaStr.indexOf(search) === -1;
+                    //TODO: This should be done with the replaceAll function
+                    fileContentObjectSchemaStr = fileContentObjectSchemaStr.replace(search, tokensToReplace[token]);
                 }
             }
 
             fs.writeFileSync(
                 DIVBLOX_ROOT_DIR+"/dx-orm/generated/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+".js",
-                fileContentStr);
+                fileContentObjectModelStr);
+
+            fs.writeFileSync(
+                DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+"-schema.js",
+                fileContentObjectSchemaStr);
         }
     }
 

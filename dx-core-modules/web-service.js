@@ -138,7 +138,7 @@ class DivbloxWebService extends divbloxObjectBase {
         this.addRoute('/api',undefined, router);
         //TODO: For now this is mock data, but this swaggerDocument will be built up in the loops above
         const swaggerDocument = require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
-        
+
         if (this.useHttps) {
             this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
             if (this.serverHttpsConfig.allowHttp) {
