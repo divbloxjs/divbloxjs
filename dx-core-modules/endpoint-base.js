@@ -11,6 +11,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     constructor() {
         super();
+        this.endpointName = null;
+        this.endpointDescription = "";
         this.result = {"success":false,"message":"none"};
         this.declaredOperations = [];
         const echoOperation = {

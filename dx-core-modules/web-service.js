@@ -156,9 +156,10 @@ class DivbloxWebService extends divbloxObjectBase {
         //return require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
         let tags = [];
         for (const packageName of Object.keys(instantiatedPackages)) {
+            const packageObj = instantiatedPackages[packageName];
             tags.push({
-                "name": packageName,
-                "description": "tbc"
+                "name": packageObj.endpointName === null ? packageName : packageObj.endpointName,
+                "description": packageObj.endpointDescription === null ? packageName : packageObj.endpointDescription,
             });
         }
 
