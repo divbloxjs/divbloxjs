@@ -8,7 +8,9 @@ const logger = require('morgan');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
+const swaggerUi = require('swagger-ui-express');
 const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', '');
+const swaggerDocument = require(DIVBLOX_ROOT_DIR+'/dx-orm/swagger.json');
 
 /**
  * The DivbloxWebService is used to expose your Divblox functionality to the web. It uses expressjs for all the
@@ -153,6 +155,7 @@ class DivbloxWebService extends divbloxObjectBase {
             [path.join(path.resolve("./"), this.viewsRoot),
                 DIVBLOX_ROOT_DIR+'/dx-core-views']);
         expressInstance.set('view engine', 'pug');
+        expressInstance.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     }
 
     /**
