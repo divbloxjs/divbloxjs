@@ -1,4 +1,6 @@
 /**
  * The schema for the entity [EntityNameCamelCase]
  */
-export default [EntityNameCamelCase] = [EntitySchemaData];
+const [EntityNameCamelCase] = [EntitySchemaData];
+
+module.exports = [EntityNameCamelCase];
