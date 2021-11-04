@@ -114,23 +114,19 @@ class DivbloxWebService extends divbloxObjectBase {
         let instantiatedPackages = {};
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
-            instantiatedPackages[packageName] = packageObj;
             const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot+"/endpoint"));
 
-            router.all('/'+packageName, async (req, res, next) => {
+            instantiatedPackages[packageName] = packageEndpoint;
+
+            const endpointName = packageEndpoint.endpointName === null ? packageName : packageEndpoint.endpointName
+
+            router.all('/'+endpointName, async (req, res, next) => {
                 await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
                 res.send(packageEndpoint.result);
             });
 
-            router.all('/'+packageName+'/doc', async (req, res, next) => {
-                await packageEndpoint.executeOperation('doc', {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
-                console.dir(packageEndpoint.result);
-                //TODO: Implement this
-                res.render('dx-core-index', { title: 'API Documentation - TO BE COMPLETED' });
-            });
-
             for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
-                router.all('/'+packageName+'/'+operation, async (req, res, next) => {
+                router.all('/'+endpointName+'/'+operation, async (req, res, next) => {
                     await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
                     res.send(packageEndpoint.result);
                 });

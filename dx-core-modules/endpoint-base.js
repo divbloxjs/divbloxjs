@@ -123,8 +123,6 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
 
         switch(operation) {
-            case 'doc': await this.presentDocumentation();
-                break;
             case 'echo': await this.echo();
                 break;
             default : this.setResult(false, "Invalid operation provided");
