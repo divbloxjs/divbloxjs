@@ -339,7 +339,11 @@ class DivbloxBase extends divbloxObjectBase {
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
             const entityNameCamelCase = entityName;
             let entityData = "";
-            let entitySchemaData = {};
+            let entitySchemaData = {
+                "id": {
+                    "type": "int"
+                }
+            };
 
             const attributes = this.dataModelObj[entityName]["attributes"];
             const relationships = this.dataModelObj[entityName]["relationships"];
@@ -383,10 +387,12 @@ class DivbloxBase extends divbloxObjectBase {
                 }
 
                 entityData += 'this.data["'+attributeName+'"] = ';
-                const entityType = (typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined") ?
+                const entityAttributeType = (typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined") ?
                     "string" : attributeTypeMapping[attributes[attributeName]["type"]];
 
-                entitySchemaData[attributeName] = entityType;
+                entitySchemaData[attributeName] = {
+                    "type": entityAttributeType
+                };
 
                 if (typeof attributes[attributeName]["default"] === "undefined") {
                     entityData += 'null;'
