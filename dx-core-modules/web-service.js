@@ -169,9 +169,9 @@ class DivbloxWebService extends divbloxObjectBase {
         const tokensToReplace = {
             "Title": this.dxInstance.configObj.appName,
             "Description": this.dxInstance.configObj.appName + " API documentation",
-            "Tags": JSON.stringify(tags,null,2),
-            "Paths": JSON.stringify(paths,null,2),
-            "Schemas": JSON.stringify(schemas,null,2)
+            "Tags": JSON.stringify(tags),
+            "Paths": JSON.stringify(paths),
+            "Schemas": JSON.stringify(schemas)
         };
         let swaggerTemplate = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/swagger.json.tpl",'utf-8');
 
@@ -185,7 +185,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 swaggerTemplate = swaggerTemplate.replace(search, tokensToReplace[token]);
             }
         }
-        return swaggerTemplate;
+        return JSON.parse(swaggerTemplate);
     }
 
     /**
