@@ -181,7 +181,15 @@ class DivbloxWebService extends divbloxObjectBase {
             for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
                 const operationDefinition = packageEndpoint.declaredOperations[operation];
 
-                const path = "/"+endpointName+"/"+operation;
+                let pathParameters = "";
+                for (const param of operationDefinition.parameters) {
+                    if (param.in === "path") {
+                        pathParameters += "/{"+param.name+"}";
+                    }
+                }
+                
+                const path = "/"+endpointName+"/"+operation+pathParameters;
+
                 paths[path] = {};
 
                 const requestBodyContent = Object.keys(operationDefinition.requestSchema).length > 0 ?
