@@ -35,7 +35,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * to access this operation
      * @param {string} definition.operationDescription Optional. A description of what the operation does
      * @param {string} definition.requestType Optional. Either GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE. Will
-     * default to POST if not supplied
+     * default to GET if not supplied
      * @param {*} definition.parameters Optional. Follows the openapi spec for the parameter object: https://swagger.io/specification/
      * @param {*} definition.requestSchema Optional. A schema for what should be sent via the request body
      * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response
@@ -83,6 +83,25 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         return operationDefinition;
     }
 
+    /**
+     *
+     * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
+     * the type of the property, e.g {"firstName":"string","age":"integer"}
+     * @param {string} type The schema type. Defaults to "object"
+     * @return {{type: string, properties: {}}}
+     */
+    getSchema(properties, type = "object") {
+        let schema = {
+            "type": type,
+            "properties": {}
+        };
+        for (const key of Object.keys(properties)) {
+            schema.properties[key] = {
+                "type": properties[key]
+            };
+        }
+        return schema;
+    }
     /**
      * Sets the current result with a message
      * @param {boolean} isSuccess
