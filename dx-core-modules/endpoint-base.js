@@ -67,7 +67,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "requiresAuthentication": true,
             "parameters": [],
             "requestSchema": {},
-            "responseSchema": this.getSchema({"success":"boolean","message":"string"})
+            "responseSchema": this.getSchema({"message":"string"})
         }
 
         for (const property of Object.keys(operationDefinition)) {

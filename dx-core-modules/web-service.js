@@ -122,6 +122,9 @@ class DivbloxWebService extends divbloxObjectBase {
 
             router.all('/'+endpointName, async (req, res, next) => {
                 await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
+
+                delete packageEndpoint["success"];
+
                 res.send(packageEndpoint.result);
             });
 
@@ -135,6 +138,9 @@ class DivbloxWebService extends divbloxObjectBase {
                             res.status(401);
                         }
                     }
+
+                    delete packageEndpoint["success"];
+
                     res.send(packageEndpoint.result);
                 });
             }
@@ -206,9 +212,6 @@ class DivbloxWebService extends divbloxObjectBase {
                                 "application/json" : {
                                     "schema": {
                                         "properties": {
-                                            "success": {
-                                                "type": "boolean"
-                                            },
                                             "message": {
                                                 "type": "string"
                                             }
@@ -223,9 +226,6 @@ class DivbloxWebService extends divbloxObjectBase {
                                 "application/json" : {
                                     "schema": {
                                         "properties": {
-                                            "success": {
-                                                "type": "boolean"
-                                            },
                                             "message": {
                                                 "type": "string"
                                             }
@@ -240,9 +240,6 @@ class DivbloxWebService extends divbloxObjectBase {
                                 "application/json" : {
                                     "schema": {
                                         "properties": {
-                                            "success": {
-                                                "type": "boolean"
-                                            },
                                             "message": {
                                                 "type": "string"
                                             }
