@@ -18,7 +18,7 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer"
-      },
+      }
     },
     "jwt": {
       "in": "header",
