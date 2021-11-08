@@ -193,6 +193,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 paths[path][operationDefinition.requestType.toLowerCase()] = {
                     "tags": [endpointName],
                     "summary": operationDefinition.operationDescription,
+                    "parameters": operationDefinition.parameters,
                     "requestBody": {
                         "description": "The following should be provided in the request body",
                         "content": {
