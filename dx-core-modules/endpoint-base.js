@@ -63,7 +63,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "operationName": definition.operationName,
             "operationDescription": definition.operationName,
             "allowedAccess": definition.allowedAccess,
-            "requestType": "POST",
+            "requestType": "GET",
             "requiresAuthentication": true,
             "parameters": [],
             "requestSchema": {},
