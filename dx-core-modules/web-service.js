@@ -123,7 +123,7 @@ class DivbloxWebService extends divbloxObjectBase {
             router.all('/'+endpointName, async (req, res, next) => {
                 await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
 
-                delete packageEndpoint["success"];
+                delete packageEndpoint.result["success"];
 
                 res.send(packageEndpoint.result);
             });
@@ -139,7 +139,7 @@ class DivbloxWebService extends divbloxObjectBase {
                         }
                     }
 
-                    delete packageEndpoint["success"];
+                    delete packageEndpoint.result["success"];
 
                     res.send(packageEndpoint.result);
                 });
