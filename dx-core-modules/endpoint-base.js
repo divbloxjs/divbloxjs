@@ -37,8 +37,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {string} definition.requestType Optional. Either GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE. Will
      * default to GET if not supplied
      * @param {*} definition.parameters Optional. Follows the openapi spec for the parameter object: https://swagger.io/specification/
-     * @param {*} definition.requestSchema Optional. A schema for what should be sent via the request body
-     * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response
+     * @param {*} definition.requestSchema Optional. A schema for what should be sent via the request body.
+     * Use this.getSchema() to provide a properly formatted schema
+     * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response.
+     * Use this.getSchema() to provide a properly formatted schema
      * @return {
      * {allowedAccess: ([string]|*),
      * responseSchema: {},
@@ -65,7 +67,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "allowedAccess": definition.allowedAccess,
             "requestType": "GET",
             "requiresAuthentication": true,
-            "parameters": [],
+            "parameters": [], //TODO: Deal with this properly like with schemas
             "requestSchema": {},
             "responseSchema": this.getSchema({"message":"string"})
         }
@@ -114,6 +116,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
         return schema;
     }
+
     /**
      * Sets the current result with a message
      * @param {boolean} isSuccess
