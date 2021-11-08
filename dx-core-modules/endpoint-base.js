@@ -47,7 +47,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * requestType: string,
      * operationName: (string|*),
      * requiresAuthentication: boolean,
-     * parameters: null}}
+     * parameters: []}}
      */
     getOperationDefinition(definition) {
         const requiredProperties = [
@@ -99,7 +99,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * Formats the properties provided into a schema that is acceptable for openapi 3
      * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
      * the type of the property, e.g {"firstName":"string","age":"integer"}
-     * @return {{type: string, properties: {}}}
+     * @return {{properties: {}}}
      */
     getSchema(properties) {
         let schema = {
