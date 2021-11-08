@@ -74,6 +74,18 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             if (typeof definition[property] !== "undefined") {
                 operationDefinition[property] = definition[property];
             }
+            if (property === "responseSchema") {
+                const resultSchema = this.getSchema({"success":"boolean","message":"string"});
+                if (operationDefinition[property] === {}) {
+                    operationDefinition[property] = resultSchema;
+                } else {
+                    if (typeof operationDefinition[property]["properties"] !== "undefined") {
+                        for (const property of Object.keys(resultSchema)) {
+                            operationDefinition[property]["properties"][property] = resultSchema[property];
+                        }
+                    }
+                }
+            }
         }
 
         if (definition.allowedAccess.includes("anonymous")) {

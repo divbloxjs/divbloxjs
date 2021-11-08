@@ -130,7 +130,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
                     if (packageEndpoint.result["success"] !== true) {
                         res.status(400);
-                        
+
                         if (packageEndpoint.result["message"] === "Not authorized") {
                             res.status(401);
                         }
@@ -181,6 +181,9 @@ class DivbloxWebService extends divbloxObjectBase {
                 const requestBodyContent = Object.keys(operationDefinition.requestSchema).length > 0 ?
                     {"schema": operationDefinition.requestSchema} : {};
 
+                const responseBodyContent = Object.keys(operationDefinition.responseSchema).length > 0 ?
+                    {"schema": operationDefinition.responseSchema} : {};
+
                 paths[path][operationDefinition.requestType.toLowerCase()] = {
                     "tags": [endpointName],
                     "summary": operationDefinition.operationDescription,
@@ -192,7 +195,10 @@ class DivbloxWebService extends divbloxObjectBase {
                     },
                     "responses": {
                         "200": {
-                            "description": "OK"
+                            "description": "OK",
+                            "content" : {
+                                "application/json" : responseBodyContent
+                            }
                         },
                         "400": {
                             "description": "Bad request",
