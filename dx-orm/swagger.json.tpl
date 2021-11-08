@@ -14,6 +14,12 @@
   "tags": [Tags],
   "paths": [Paths],
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": http,
+        "scheme": bearer
+      },
+    },
     "jwt": {
       "in": "header",
       "name": "Authorization",

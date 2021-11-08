@@ -255,12 +255,12 @@ class DivbloxWebService extends divbloxObjectBase {
                     if (typeof paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] === "undefined") {
                         paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] = [
                             {
-                                "$ref": "#/components/jwt"
+                                "$ref": "#/components/securitySchemes"
                             }
                         ];
                     } else {
                         paths[path][operationDefinition.requestType.toLowerCase()]["parameters"].push({
-                            "$ref": "#/components/jwt"
+                            "$ref": "#/components/securitySchemes"
                         });
                     }
                 }
