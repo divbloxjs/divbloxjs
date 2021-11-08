@@ -149,7 +149,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 for (const param of operationDefinition.parameters) {
                     if (param.in === "path") {
                         router.all('/'+endpointName+'/'+operation+"/:"+param.name, async (req, res, next) => {
-                            await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req[param.name]}, this.dxInstance);
+                            await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]}, this.dxInstance);
                             if (packageEndpoint.result["success"] !== true) {
                                 res.status(400);
 
