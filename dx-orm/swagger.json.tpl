@@ -20,22 +20,6 @@
         "scheme": "bearer"
       }
     },
-    "jwt": {
-      "in": "header",
-      "name": "Authorization",
-      "required": true,
-      "description": "JSON Web Token",
-      "schema": {
-        "$ref": "#/components/auth"
-      }
-    },
-    "auth": {
-      "properties": {
-        "Bearer": {
-          "type": "string"
-        }
-      }
-    },
     "message" : {
       "properties": {
         "msg": {

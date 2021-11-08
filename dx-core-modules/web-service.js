@@ -187,7 +187,7 @@ class DivbloxWebService extends divbloxObjectBase {
                         pathParameters += "/{"+param.name+"}";
                     }
                 }
-                
+
                 const path = "/"+endpointName+"/"+operation+pathParameters;
 
                 paths[path] = {};
