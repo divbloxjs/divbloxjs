@@ -130,7 +130,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     getInputParameter(options = {}) {
         return {
-            "in": typeof options["type"] !== "undefined" ? options["type"] : "path",
+            "in": typeof options["type"] !== "undefined" ? options["type"] : "query",
             "name": typeof options["name"] !== "undefined" ? options["name"] : "param",
             "required": typeof options["required"] !== "undefined" ? options["required"] : false,
             "description": typeof options["description"] !== "undefined" ? options["description"] : "",
