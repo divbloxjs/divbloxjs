@@ -129,10 +129,11 @@ class DivbloxWebService extends divbloxObjectBase {
                 router.all('/'+endpointName+'/'+operation, async (req, res, next) => {
                     await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
                     if (packageEndpoint.result["success"] !== true) {
+                        res.status(400);
+                        
                         if (packageEndpoint.result["message"] === "Not authorized") {
                             res.status(401);
                         }
-                        res.status(400);
                     }
                     res.send(packageEndpoint.result);
                 });
