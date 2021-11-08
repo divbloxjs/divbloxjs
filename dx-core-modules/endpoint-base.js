@@ -67,25 +67,27 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "requiresAuthentication": true,
             "parameters": [],
             "requestSchema": {},
-            "responseSchema": {}
+            "responseSchema": this.getSchema({"success":"boolean","message":"string"})
         }
 
         for (const property of Object.keys(operationDefinition)) {
-            if (typeof definition[property] !== "undefined") {
-                operationDefinition[property] = definition[property];
+            if (typeof definition[property] === "undefined") {
+                continue;
             }
+
             if (property === "responseSchema") {
-                const resultSchema = this.getSchema({"success":"boolean","message":"string"});
-                if (operationDefinition[property] === {}) {
-                    operationDefinition[property] = resultSchema;
-                } else {
-                    if (typeof operationDefinition[property]["properties"] !== "undefined") {
-                        for (const property of Object.keys(resultSchema)) {
-                            operationDefinition[property]["properties"][property] = resultSchema[property];
-                        }
-                    }
+                if (typeof definition[property]["properties"] === "undefined") {
+                    continue;
                 }
+
+                for (const definitionProperty of Object.keys(definition[property]["properties"])) {
+                    operationDefinition[property]["properties"][definitionProperty] = definition[property]["properties"][definitionProperty];
+                }
+
+                continue;
             }
+
+            operationDefinition[property] = definition[property];
         }
 
         if (definition.allowedAccess.includes("anonymous")) {
