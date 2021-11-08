@@ -118,6 +118,27 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     *
+     * @param options The options to use to format this input parameter
+     * @param {string} options.name The name of the input parameter
+     * @param {string} options.description The description of the input parameter
+     * @param {boolean} options.required Is the input parameter required
+     * @param {string} options.type "header|path|query"
+     * @param {*} options.schema The schema for the input parameter.
+     * Use this.getSchema() to provide a properly formatted schema
+     * @return {{schema: *, in: (string|string), name: (string|string), description: (string|string), required: (boolean|boolean)}}
+     */
+    getInputParameter(options = {}) {
+        return {
+            "in": typeof options["type"] !== "undefined" ? options["type"] : "path",
+            "name": typeof options["name"] !== "undefined" ? options["name"] : "param",
+            "required": typeof options["required"] !== "undefined" ? options["required"] : false,
+            "description": typeof options["description"] !== "undefined" ? options["description"] : "",
+            "schema": typeof options["schema"] !== "undefined" ? options["schema"] : {},
+        }
+    }
+
+    /**
      * Sets the current result with a message
      * @param {boolean} isSuccess
      * @param {string} message A message to return
