@@ -143,6 +143,27 @@ class DivbloxWebService extends divbloxObjectBase {
 
                     res.send(packageEndpoint.result);
                 });
+
+                const operationDefinition = packageEndpoint.declaredOperations[operation];
+
+                for (const param of operationDefinition.parameters) {
+                    if (param.in === "path") {
+                        router.all('/'+endpointName+'/'+operation+"/:"+param.name, async (req, res, next) => {
+                            await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req[param.name]}, this.dxInstance);
+                            if (packageEndpoint.result["success"] !== true) {
+                                res.status(400);
+
+                                if (packageEndpoint.result["message"] === "Not authorized") {
+                                    res.status(401);
+                                }
+                            }
+
+                            delete packageEndpoint.result["success"];
+
+                            res.send(packageEndpoint.result);
+                        });
+                    }
+                }
             }
         }
 
