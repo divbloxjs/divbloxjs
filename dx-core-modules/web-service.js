@@ -178,6 +178,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     "tags": [endpointName],
                     "summary": operationDefinition.operationDescription,
                     "requestBody": {
+                        "description": "The following should be provided in the request body",
                         "content": {
                             "application/json": requestBodyContent
                         }
@@ -204,6 +205,19 @@ class DivbloxWebService extends divbloxObjectBase {
                                 "application/json" : {}
                             }
                         }
+                    }
+                }
+                if (operationDefinition.requiresAuthentication) {
+                    if (typeof paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] === "undefined") {
+                        paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] = [
+                            {
+                                "$ref": "#/components/jwt"
+                            }
+                        ];
+                    } else {
+                        paths[path][operationDefinition.requestType.toLowerCase()]["parameters"].push({
+                            "$ref": "#/components/jwt"
+                        });
                     }
                 }
             }
