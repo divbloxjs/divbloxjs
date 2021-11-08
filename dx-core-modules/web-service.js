@@ -203,19 +203,52 @@ class DivbloxWebService extends divbloxObjectBase {
                         "400": {
                             "description": "Bad request",
                             "content" : {
-                                "application/json" : {}
+                                "application/json" : {
+                                    "schema": {
+                                        "properties": {
+                                            "success": {
+                                                "type": "boolean"
+                                            },
+                                            "message": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         },
                         "401": {
                             "description": "Unauthorized",
                             "content" : {
-                                "application/json" : {}
+                                "application/json" : {
+                                    "schema": {
+                                        "properties": {
+                                            "success": {
+                                                "type": "boolean"
+                                            },
+                                            "message": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         },
                         "408": {
                             "description": "Request timed out",
                             "content" : {
-                                "application/json" : {}
+                                "application/json" : {
+                                    "schema": {
+                                        "properties": {
+                                            "success": {
+                                                "type": "boolean"
+                                            },
+                                            "message": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
