@@ -84,15 +84,13 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
-     *
+     * Formats the properties provided into a schema that is acceptable for openapi 3
      * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
      * the type of the property, e.g {"firstName":"string","age":"integer"}
-     * @param {string} type The schema type. Defaults to "object"
      * @return {{type: string, properties: {}}}
      */
-    getSchema(properties, type = "object") {
+    getSchema(properties) {
         let schema = {
-            "type": type,
             "properties": {}
         };
         for (const key of Object.keys(properties)) {
