@@ -252,17 +252,18 @@ class DivbloxWebService extends divbloxObjectBase {
                     }
                 }
                 if (operationDefinition.requiresAuthentication) {
-                    if (typeof paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] === "undefined") {
-                        paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] = [
-                            {
-                                "$ref": "#/components/securitySchemes"
-                            }
-                        ];
-                    } else {
-                        paths[path][operationDefinition.requestType.toLowerCase()]["parameters"].push({
-                            "$ref": "#/components/securitySchemes"
-                        });
-                    }
+                    paths[path][operationDefinition.requestType.toLowerCase()]["security"] = {"bearerAuth": []};
+                    // if (typeof paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] === "undefined") {
+                    //     paths[path][operationDefinition.requestType.toLowerCase()]["parameters"] = [
+                    //         {
+                    //             "$ref": "#/components/securitySchemes"
+                    //         }
+                    //     ];
+                    // } else {
+                    //     paths[path][operationDefinition.requestType.toLowerCase()]["parameters"].push({
+                    //         "$ref": "#/components/securitySchemes"
+                    //     });
+                    // }
                 }
             }
         }
