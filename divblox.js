@@ -260,6 +260,24 @@ class DivbloxBase extends divbloxObjectBase {
         this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
         fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
     }
+
+    /**
+     * Registers the remote package name in the dxconfig.json file in order for it to be available at runtime
+     * @param {string} packageName The name of the package as it is defined in your project's package.json file
+     */
+    registerRemotePackage(packageName) {
+        if ((typeof packageName === "undefined") || (packageName.length < 1)) {
+            dxUtils.printErrorMessage("Invalid package name '"+packageName+"'");
+            return;
+        }
+        if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
+            dxUtils.printErrorMessage("Remote package '"+packageName+"' is already defined!");
+            return;
+        }
+
+        this.configObj["divbloxPackages"]["remote"].push(packageName);
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+    }
     //#endregion
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
