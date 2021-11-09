@@ -155,8 +155,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     addResultDetail(resultDetail = {}) {
         if (Object.keys(resultDetail).length > 0) {
-            const currentResult = JSON.parse(JSON.stringify(this.result));
-            this.result = {currentResult, ...resultDetail};
+            for (const key of Object.keys(resultDetail)) {
+                this.result[key] = resultDetail[key];
+            }
         }
     }
 
