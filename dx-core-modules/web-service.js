@@ -76,7 +76,7 @@ class DivbloxWebService extends divbloxObjectBase {
             this.setupExpress(this.expressHttp, this.port);
         }
 
-        this.addRoute('/', path.join(path.resolve("./"),this.wwwRoot));
+        this.addRoute('/', path.join(path.resolve("./"), this.wwwRoot));
 
         this.setupApiRouters();
 
@@ -107,8 +107,7 @@ class DivbloxWebService extends divbloxObjectBase {
         const router = express.Router();
 
         router.all('/', async (req, res, next) => {
-            //TODO: This must be updated to look nicer
-            res.render('dx-core-index', { title: 'Divblox API Root' });
+            res.redirect('/docs');
         });
 
         let instantiatedPackages = {};
@@ -150,6 +149,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     if (param.in === "path") {
                         router.all('/'+endpointName+'/'+operation+"/:"+param.name, async (req, res, next) => {
                             await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]}, this.dxInstance);
+
                             if (packageEndpoint.result["success"] !== true) {
                                 res.status(400);
 
@@ -181,14 +181,28 @@ class DivbloxWebService extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Returns the openapi json configuration that will be used to setup swagger ui
+     * @param {*} instantiatedPackages The packages that have be instantiated by the web-service
+     * @return {*} A json object that conforms to the openapi 3.0.3 spec
+     */
     getSwaggerConfig(instantiatedPackages) {
         let tags = [];
         let paths = {};
+        let declaredEntitySchemas = [];
 
         for (const packageName of Object.keys(instantiatedPackages)) {
             const packageEndpoint = instantiatedPackages[packageName];
             if (Object.keys(packageEndpoint.declaredOperations).length === 0) {
                 continue;
+            }
+
+            if (packageEndpoint.declaredSchemas.length > 0) {
+                for (const entity of packageEndpoint.declaredSchemas) {
+                    if (!declaredEntitySchemas.includes(entity)) {
+                        declaredEntitySchemas.push(entity);
+                    }
+                }
             }
 
             const endpointName = packageEndpoint.endpointName === null ? packageName : packageEndpoint.endpointName;
@@ -291,6 +305,8 @@ class DivbloxWebService extends divbloxObjectBase {
         let schemas = {};
 
         for (const entity of Object.keys(dataModelSchema)) {
+            if (!declaredEntitySchemas.includes(entity)) { continue; }
+
             const properties = dataModelSchema[entity];
             schemas[entity] = {
                 "type": "object",
@@ -298,6 +314,11 @@ class DivbloxWebService extends divbloxObjectBase {
                     ...properties
                 }
             };
+        }
+
+        if (Object.keys(schemas).length === 0) {
+            dxUtils.printWarningMessage("No data model entity schemas have been defined for swagger ui. You can define " +
+                "these within the package endpoint");
         }
 
         const tokensToReplace = {

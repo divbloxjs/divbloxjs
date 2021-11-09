@@ -14,6 +14,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.endpointDescription = "";
         this.result = {"success":false,"message":"none"};
         this.declaredOperations = [];
+        this.declaredSchemas = [];
         const echoOperation = this.getOperationDefinition(
             {
                 "operationName": "echo",
@@ -160,6 +161,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 continue;
             }
             this.declaredOperations[operation.operationName] = operation;
+        }
+    }
+
+    /**
+     * Declares the entities that should be provided as schemas to the api endpoint
+     * @param {[string]} entities A list of entity names to declare
+     */
+    declareEntitySchemas(entities = []) {
+        if (entities.length === 0) {return;}
+        for (const entity of entities) {
+            this.declaredSchemas.push(entity);
         }
     }
 
