@@ -144,9 +144,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {boolean} isSuccess
      * @param {string} message A message to return
      */
-    setResult(isSuccess = false, message = 'none') {
+    setResult(isSuccess = false, message) {
         this.result["success"] = isSuccess;
-        this.result["message"] = message;
+        if (typeof message !== "undefined") {
+            this.result["message"] = message;
+        }
     }
 
     /**
