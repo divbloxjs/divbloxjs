@@ -271,12 +271,30 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (remotePath.length < 1) {
-            dxUtils.printErrorMessage("Cannot register dx pacakge. Invalid remote path provided!");
+            dxUtils.printErrorMessage("Cannot register dx package. Invalid remote path provided!");
         }
 
-        const projectPackages = fs.readFileSync("./package.json",'utf-8');
-        console.dir(projectPackages);
-        return;
+        const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
+        const projectPackages = JSON.parse(projectPackagesStr);
+
+        if (typeof projectPackages["dependencies"] === "undefined") {
+            dxUtils.printErrorMessage("Cannot register dx package. Invalid package.json file found!");
+            return;
+        }
+
+        let registerPackageName = this.getPackageNameFromConfig(remotePath);
+
+        if (registerPackageName === null) {
+            //This means we need to attempt to install the package first
+        }
+
+        registerPackageName = this.getPackageNameFromConfig(remotePath);
+
+        if (registerPackageName === null) {
+            //This means something went wrong installing the package. We must stop
+            dxUtils.printErrorMessage("Cannot register dx package. Installation failed!");
+            return;
+        }
 
         // if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
         //     dxUtils.printErrorMessage("Remote package '"+packageName+"' is already defined!");
@@ -285,6 +303,33 @@ class DivbloxBase extends divbloxObjectBase {
         //
         // this.configObj["divbloxPackages"]["remote"].push(packageName);
         // fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+    }
+
+    /**
+     * Returns the package name from a remote path defined in the package.json file
+     * @param {string} remotePath The remote path of the package as it is defined in your project's package.json file
+     * @return {null|string} Null if not found, or if found the name of the package
+     */
+    getPackageNameFromConfig(remotePath) {
+        const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
+        const projectPackages = JSON.parse(projectPackagesStr);
+
+        console.dir(projectPackages);
+
+        if (typeof projectPackages["dependencies"] === "undefined") {
+            dxUtils.printErrorMessage("Cannot get package name. Invalid package.json file found!");
+            return null;
+        }
+
+        let retrievedPackageName = null;
+        for (const packageName of Object.keys(projectPackages["dependencies"])) {
+            if (projectPackages[packageName] === remotePath) {
+                retrievedPackageName = packageName;
+                break;
+            }
+        }
+
+        return retrievedPackageName;
     }
     //#endregion
 
@@ -523,7 +568,7 @@ class DivbloxBase extends divbloxObjectBase {
             const createResult = await this.dataLayer.create(
                 "globalIdentifierGrouping",
                 {"name": "super user",
-                        "description":"The highest level grouping that has access to EVERYTHING"});
+                    "description":"The highest level grouping that has access to EVERYTHING"});
 
             if (createResult === -1) {
                 this.populateError("Could not create super user grouping.");
