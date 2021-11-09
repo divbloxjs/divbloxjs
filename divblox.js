@@ -130,11 +130,11 @@ class DivbloxBase extends divbloxObjectBase {
 
                     }
                 }
-                if ((typeof this.configObj["divbloxPackages"]["npm"] !== "undefined") &&
-                    (this.configObj["divbloxPackages"]["npm"].length > 0)) {
-                    for (const npmPackage of this.configObj["divbloxPackages"]["npm"]) {
-                        this.packages[npmPackage] = {"packageRoot": "node_modules/"+npmPackage};
-                        const packageDataModelDataStr = fs.readFileSync("node_modules/"+npmPackage+"/data-model.json", "utf-8");
+                if ((typeof this.configObj["divbloxPackages"]["remote"] !== "undefined") &&
+                    (this.configObj["divbloxPackages"]["remote"].length > 0)) {
+                    for (const remotePackage of this.configObj["divbloxPackages"]["remote"]) {
+                        this.packages[remotePackage] = {"packageRoot": "node_modules/"+remotePackage};
+                        const packageDataModelDataStr = fs.readFileSync("node_modules/"+remotePackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
                         for (const entityName of Object.keys(packageDataModelObj)) {
                             if (typeof this.dataModelObj[entityName] !== "undefined") {
@@ -913,6 +913,7 @@ class DivbloxBase extends divbloxObjectBase {
                         2));
         }
     }
+
     /**
      * Returns a list of all available globalIdentifierGroupings with their children
      * @return {Promise<{}>}
