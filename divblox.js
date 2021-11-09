@@ -110,6 +110,7 @@ class DivbloxBase extends divbloxObjectBase {
         this.dataModelPath = DIVBLOX_ROOT_DIR+'/dx-orm/data-model-base.json';
         const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
+        this.dataModelSchema = {};
 
         this.packages = {};
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
@@ -240,6 +241,7 @@ class DivbloxBase extends divbloxObjectBase {
             this.webService = new DivbloxWebService(webServiceConfig, this);
         }
 
+        this.dataModelSchema = JSON.parse(fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js",'utf-8'));
 
         //Since startup was successful, let's clean potential errors
         this.resetError();
@@ -614,6 +616,18 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         return true;
+    }
+
+    /**
+     * Returns the schema for the given entity name
+     * @param {string} entityName The entity for which to return a schema
+     * @return {{}|*}
+     */
+    getEntitySchema(entityName) {
+        if (typeof this.dataModelSchema[entityName] !== "undefined") {
+            return this.dataModelSchema[entityName];
+        }
+        return {};
     }
 
     /**
