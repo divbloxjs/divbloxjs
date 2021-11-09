@@ -5,10 +5,12 @@ const divbloxObjectBase = require('./object-base');
  * for divbloxjs projects
  */
 class DivbloxEndpointBase extends divbloxObjectBase {
+
     /**
      * Initializes the result and declares the available operations
+     * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the app configuration
      */
-    constructor() {
+    constructor(dxInstance = null) {
         super();
         this.endpointName = null;
         this.endpointDescription = "";
@@ -24,7 +26,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
         this.declareOperations([echoOperation]);
         this.currentRequest = {};
-        this.dxInstance = null;
+        this.dxInstance = dxInstance;
         this.currentGlobalIdentifier = -1;
         this.currentGlobalIdentifierGroupings = [];
     }
@@ -68,7 +70,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "allowedAccess": definition.allowedAccess,
             "requestType": "GET",
             "requiresAuthentication": true,
-            "parameters": [], //TODO: Deal with this properly like with schemas
+            "parameters": [],
             "requestSchema": {},
             "responseSchema": this.getSchema({"message":"string"})
         }
@@ -205,13 +207,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * A wrapper function that executes the given operation
      * @param {string} operation The operation to execute
      * @param {*} request The received request object
-     * @param {DivbloxBase} dxInstance An instance of divbloxjs that gives us access to core dx functions
      * @return {Promise<*>}
      */
-    async executeOperation(operation, request, dxInstance = null) {
+    async executeOperation(operation, request) {
         this.result = {"success":false,"message":"none"};
         this.currentRequest = request;
-        this.dxInstance = dxInstance;
 
         let providedIdentifierGroupings = ["anonymous"];
 

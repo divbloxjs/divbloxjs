@@ -114,53 +114,54 @@ class DivbloxWebService extends divbloxObjectBase {
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
             const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot+"/endpoint"));
+            const packageInstance = new packageEndpoint(this.dxInstance);
 
-            instantiatedPackages[packageName] = packageEndpoint;
+            instantiatedPackages[packageName] = packageInstance;
 
-            const endpointName = packageEndpoint.endpointName === null ? packageName : packageEndpoint.endpointName
+            const endpointName = packageInstance.endpointName === null ? packageName : packageInstance.endpointName
 
             router.all('/'+endpointName, async (req, res, next) => {
-                await packageEndpoint.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
+                await packageInstance.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query});
 
-                delete packageEndpoint.result["success"];
+                delete packageInstance.result["success"];
 
-                res.send(packageEndpoint.result);
+                res.send(packageInstance.result);
             });
 
-            for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
+            for (const operation of Object.keys(packageInstance.declaredOperations)) {
                 router.all('/'+endpointName+'/'+operation, async (req, res, next) => {
-                    await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query}, this.dxInstance);
-                    if (packageEndpoint.result["success"] !== true) {
+                    await packageInstance.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query});
+                    if (packageInstance.result["success"] !== true) {
                         res.status(400);
 
-                        if (packageEndpoint.result["message"] === "Not authorized") {
+                        if (packageInstance.result["message"] === "Not authorized") {
                             res.status(401);
                         }
                     }
 
-                    delete packageEndpoint.result["success"];
+                    delete packageInstance.result["success"];
 
-                    res.send(packageEndpoint.result);
+                    res.send(packageInstance.result);
                 });
 
-                const operationDefinition = packageEndpoint.declaredOperations[operation];
+                const operationDefinition = packageInstance.declaredOperations[operation];
 
                 for (const param of operationDefinition.parameters) {
                     if (param.in === "path") {
                         router.all('/'+endpointName+'/'+operation+"/:"+param.name, async (req, res, next) => {
-                            await packageEndpoint.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]}, this.dxInstance);
+                            await packageInstance.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]});
 
-                            if (packageEndpoint.result["success"] !== true) {
+                            if (packageInstance.result["success"] !== true) {
                                 res.status(400);
 
-                                if (packageEndpoint.result["message"] === "Not authorized") {
+                                if (packageInstance.result["message"] === "Not authorized") {
                                     res.status(401);
                                 }
                             }
 
-                            delete packageEndpoint.result["success"];
+                            delete packageInstance.result["success"];
 
-                            res.send(packageEndpoint.result);
+                            res.send(packageInstance.result);
                         });
                     }
                 }
@@ -192,29 +193,29 @@ class DivbloxWebService extends divbloxObjectBase {
         let declaredEntitySchemas = [];
 
         for (const packageName of Object.keys(instantiatedPackages)) {
-            const packageEndpoint = instantiatedPackages[packageName];
-            if (Object.keys(packageEndpoint.declaredOperations).length === 0) {
+            const packageInstance = instantiatedPackages[packageName];
+            if (Object.keys(packageInstance.declaredOperations).length === 0) {
                 continue;
             }
 
-            if (packageEndpoint.declaredSchemas.length > 0) {
-                for (const entity of packageEndpoint.declaredSchemas) {
+            if (packageInstance.declaredSchemas.length > 0) {
+                for (const entity of packageInstance.declaredSchemas) {
                     if (!declaredEntitySchemas.includes(entity)) {
                         declaredEntitySchemas.push(entity);
                     }
                 }
             }
 
-            const endpointName = packageEndpoint.endpointName === null ? packageName : packageEndpoint.endpointName;
-            const endpointDescription = packageEndpoint.endpointDescription === null ? packageName : packageEndpoint.endpointDescription;
+            const endpointName = packageInstance.endpointName === null ? packageName : packageInstance.endpointName;
+            const endpointDescription = packageInstance.endpointDescription === null ? packageName : packageInstance.endpointDescription;
 
             tags.push({
                 "name": endpointName,
                 "description": endpointDescription,
             });
 
-            for (const operation of Object.keys(packageEndpoint.declaredOperations)) {
-                const operationDefinition = packageEndpoint.declaredOperations[operation];
+            for (const operation of Object.keys(packageInstance.declaredOperations)) {
+                const operationDefinition = packageInstance.declaredOperations[operation];
 
                 let pathParameters = "";
                 for (const param of operationDefinition.parameters) {
