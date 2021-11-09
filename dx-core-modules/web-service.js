@@ -107,7 +107,7 @@ class DivbloxWebService extends divbloxObjectBase {
         const router = express.Router();
 
         router.all('/', async (req, res, next) => {
-            res.redirect('/docs');
+            res.redirect('/api/docs');
         });
 
         let instantiatedPackages = {};
