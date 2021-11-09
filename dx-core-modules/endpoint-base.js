@@ -84,7 +84,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 if (typeof definition[property]["properties"] === "undefined") {
                     continue;
                 }
-                
+
                 operationDefinition[property] = definition[property];
 
                 continue;
