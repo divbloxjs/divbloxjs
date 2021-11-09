@@ -150,6 +150,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Appends the provided resultDetail to the result object
+     * @param {*} resultDetail An object containing additional result details
+     */
+    addResultDetail(resultDetail = {}) {
+        if (Object.keys(resultDetail).length > 0) {
+            const currentResult = this.result;
+            this.result = {currentResult, ...resultDetail};
+        }
+    }
+
+    /**
      * Declares the operations provided as available to the api endpoint
      * @param {[{operationDefinition}]} operations An array of operation definitions as provided by getOperationDefinition()
      */
