@@ -626,7 +626,7 @@ class DivbloxBase extends divbloxObjectBase {
      */
     getEntitySchema(entityName) {
         if (typeof this.dataModelSchema[entityName] !== "undefined") {
-            return this.dataModelSchema[entityName];
+            return {"properties": this.dataModelSchema[entityName]};
         }
         return {};
     }
