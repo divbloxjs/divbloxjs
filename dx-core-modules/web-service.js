@@ -264,20 +264,6 @@ class DivbloxWebService extends divbloxObjectBase {
                                 }
                             }
                         },
-                        "401": {
-                            "description": "Unauthorized",
-                            "content" : {
-                                "application/json" : {
-                                    "schema": {
-                                        "properties": {
-                                            "message": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
                         "408": {
                             "description": "Request timed out",
                             "content" : {
@@ -294,8 +280,31 @@ class DivbloxWebService extends divbloxObjectBase {
                         }
                     }
                 }
+
                 if (operationDefinition.requiresAuthentication) {
                     paths[path][operationDefinition.requestType.toLowerCase()]["security"] = [{"bearerAuth": []}];
+
+                    const securityDescription = "This operation requires JWT authentication using Authorization Bearer " +
+                        "<token>. This should be sent as part of the header of the request\n";
+
+                    paths[path][operationDefinition.requestType.toLowerCase()]["responses"]["401"] = {
+                        "description": "Unauthorized",
+                        "content" : {
+                            "application/json" : {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    paths[path][operationDefinition.requestType.toLowerCase()]["requestBody"]["description"] =
+                        securityDescription +
+                        paths[path][operationDefinition.requestType.toLowerCase()]["requestBody"]["description"];
                 }
             }
         }
