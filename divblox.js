@@ -263,20 +263,28 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Registers the remote package name in the dxconfig.json file in order for it to be available at runtime
-     * @param {string} packageName The name of the package as it is defined in your project's package.json file
+     * @param {string} remotePath The remote path of the package as it is defined in your project's package.json file
      */
-    registerRemotePackage(packageName) {
-        if ((typeof packageName === "undefined") || (packageName.length < 1)) {
-            dxUtils.printErrorMessage("Invalid package name '"+packageName+"'");
-            return;
-        }
-        if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
-            dxUtils.printErrorMessage("Remote package '"+packageName+"' is already defined!");
-            return;
+    async registerRemotePackage(remotePath) {
+        if ((typeof remotePath === "undefined") || (remotePath.length < 1)) {
+            remotePath = await dxUtils.getCommandLineInput("Please provide the package remote path: ");
         }
 
-        this.configObj["divbloxPackages"]["remote"].push(packageName);
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+        if (remotePath.length < 1) {
+            dxUtils.printErrorMessage("Cannot register dx pacakge. Invalid remote path provided!");
+        }
+
+        const projectPackages = fs.readFileSync("./package.json",'utf-8');
+        console.dir(projectPackages);
+        return;
+
+        // if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
+        //     dxUtils.printErrorMessage("Remote package '"+packageName+"' is already defined!");
+        //     return;
+        // }
+        //
+        // this.configObj["divbloxPackages"]["remote"].push(packageName);
+        // fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
     }
     //#endregion
 
