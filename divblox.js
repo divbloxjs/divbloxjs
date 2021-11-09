@@ -286,6 +286,19 @@ class DivbloxBase extends divbloxObjectBase {
 
         if (registerPackageName === null) {
             //This means we need to attempt to install the package first
+            dxUtils.printInfoMessage("Installing "+remotePath+"...");
+
+            const createResult = await dxUtils.executeCommand('npm install --save '+remotePath);
+            if ((typeof createResult === "undefined") || (createResult === null)) {
+                dxUtils.printErrorMessage("Could not install "+remotePath+". Please try again.");
+                return;
+            }
+
+            if (createResult.stdout.length > 0) {
+                dxUtils.printSuccessMessage(remotePath+' install result: '+createResult.stdout);
+            } else {
+                dxUtils.printErrorMessage(remotePath+' install failed: '+createResult.stderr);
+            }
         }
 
         registerPackageName = this.getPackageNameFromConfig(remotePath);
@@ -296,13 +309,15 @@ class DivbloxBase extends divbloxObjectBase {
             return;
         }
 
-        // if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
-        //     dxUtils.printErrorMessage("Remote package '"+packageName+"' is already defined!");
-        //     return;
-        // }
-        //
-        // this.configObj["divbloxPackages"]["remote"].push(packageName);
-        // fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+        if (this.configObj["divbloxPackages"]["remote"].includes(registerPackageName)) {
+            dxUtils.printErrorMessage("Remote package '"+registerPackageName+"' is already registered!");
+            return;
+        }
+
+        this.configObj["divbloxPackages"]["remote"].push(registerPackageName);
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+
+        dxUtils.printSuccessMessage(registerPackageName+" successfully registered!");
     }
 
     /**
@@ -314,16 +329,15 @@ class DivbloxBase extends divbloxObjectBase {
         const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
         const projectPackages = JSON.parse(projectPackagesStr);
 
-        console.dir(projectPackages);
-
         if (typeof projectPackages["dependencies"] === "undefined") {
             dxUtils.printErrorMessage("Cannot get package name. Invalid package.json file found!");
             return null;
         }
 
         let retrievedPackageName = null;
+
         for (const packageName of Object.keys(projectPackages["dependencies"])) {
-            if (projectPackages[packageName] === remotePath) {
+            if (projectPackages["dependencies"][packageName] === remotePath) {
                 retrievedPackageName = packageName;
                 break;
             }
