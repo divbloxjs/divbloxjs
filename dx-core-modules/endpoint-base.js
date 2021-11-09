@@ -146,6 +146,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     setResult(isSuccess = false, message) {
         this.result["success"] = isSuccess;
+        
+        delete this.result["message"];
         if (typeof message !== "undefined") {
             this.result["message"] = message;
         }
