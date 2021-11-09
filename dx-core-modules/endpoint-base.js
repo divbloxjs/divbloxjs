@@ -84,10 +84,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 if (typeof definition[property]["properties"] === "undefined") {
                     continue;
                 }
-
-                for (const definitionProperty of Object.keys(definition[property]["properties"])) {
-                    operationDefinition[property]["properties"][definitionProperty] = definition[property]["properties"][definitionProperty];
-                }
+                
+                operationDefinition[property] = definition[property];
 
                 continue;
             }

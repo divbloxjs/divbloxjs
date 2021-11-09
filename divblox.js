@@ -229,7 +229,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         //It is important that this is called before starting the webserver, otherwise the schemas will not be available
         this.dataModelSchema = require("./dx-orm/generated/schemas/data-model-schema.js");
-        
+
         if (!this.disableWebServer) {
             const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
                 3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
