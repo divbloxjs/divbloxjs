@@ -285,7 +285,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     paths[path][operationDefinition.requestType.toLowerCase()]["security"] = [{"bearerAuth": []}];
 
                     const securityDescription = "This operation requires JWT authentication using " +
-                        "Authorization: Bearer xxxx\nThis should be sent as part of the header of the request\n";
+                        "Authorization: Bearer xxxx<br>This should be sent as part of the header of the request<br><br>";
 
                     paths[path][operationDefinition.requestType.toLowerCase()]["responses"]["401"] = {
                         "description": "Unauthorized",
