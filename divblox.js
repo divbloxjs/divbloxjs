@@ -431,7 +431,8 @@ class DivbloxBase extends divbloxObjectBase {
             let entityData = "";
             let entitySchemaData = {
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "format": "int32"
                 }
             };
 
@@ -484,6 +485,21 @@ class DivbloxBase extends divbloxObjectBase {
                     "type": entityAttributeType
                 };
 
+                switch (attributes[attributeName]["type"]) {
+                    case "date":
+                        entitySchemaData[attributeName]["format"] = "date";
+                        break;
+                    case "datetime":
+                        entitySchemaData[attributeName]["format"] = "date-time";
+                        break;
+                    case "float":
+                        entitySchemaData[attributeName]["format"] = "float";
+                        break;
+                    case "double":
+                        entitySchemaData[attributeName]["format"] = "double";
+                        break;
+                }
+
                 if (typeof attributes[attributeName]["default"] === "undefined") {
                     entityData += 'null;'
                     continue;
@@ -507,7 +523,8 @@ class DivbloxBase extends divbloxObjectBase {
 
                     entityData += 'this.data["'+finalRelationshipName+'"] = null;';
                     entitySchemaData[relationshipName] = {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int32"
                     };
                 }
             }

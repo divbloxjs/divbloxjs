@@ -231,6 +231,8 @@ class DivbloxWebService extends divbloxObjectBase {
                 const requestBodyContent = Object.keys(operationDefinition.requestSchema).length > 0 ?
                     {"schema": operationDefinition.requestSchema} : {};
 
+                requestBodyContent["examples"] = {"input":"output"};
+
                 const responseBodyContent = Object.keys(operationDefinition.responseSchema).length > 0 ?
                     {"schema": operationDefinition.responseSchema} : {};
 
@@ -241,7 +243,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     "requestBody": {
                         "description": "The following should be provided in the request body",
                         "content": {
-                            "application/json": requestBodyContent
+                            "application/json": requestBodyContent,
                         }
                     },
                     "responses": {
