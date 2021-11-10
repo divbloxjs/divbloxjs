@@ -229,29 +229,34 @@ class DivbloxWebService extends divbloxObjectBase {
                 paths[path] = {};
 
                 const requestBodyContent = Object.keys(operationDefinition.requestSchema).length > 0 ?
-                    {"schema": operationDefinition.requestSchema} : {};
+                    {"application/json":
+                            {"schema": operationDefinition.requestSchema}
+                    } : {};
 
-                requestBodyContent["examples"] = {"input":"output"};
+                if (Object.keys(requestBodyContent).length > 0) {
+                    requestBodyContent["application/json"]["examples"] = {
+                        "exampleInput":{
+                            "summary": "Summary value",
+                            "values": {
+                                "def":"value1"
+                            }
+                        }
+                    };
+                }
 
                 const responseBodyContent = Object.keys(operationDefinition.responseSchema).length > 0 ?
-                    {"schema": operationDefinition.responseSchema} : {};
+                    {"application/json":
+                            {"schema": operationDefinition.responseSchema}
+                    } : {};
 
                 paths[path][operationDefinition.requestType.toLowerCase()] = {
                     "tags": [endpointName],
                     "summary": operationDefinition.operationDescription,
                     "parameters": operationDefinition.parameters,
-                    "requestBody": {
-                        "description": "The following should be provided in the request body",
-                        "content": {
-                            "application/json": requestBodyContent,
-                        }
-                    },
                     "responses": {
                         "200": {
                             "description": "OK",
-                            "content" : {
-                                "application/json" : responseBodyContent
-                            }
+                            "content" : responseBodyContent
                         },
                         "400": {
                             "description": "Bad request",
@@ -282,6 +287,14 @@ class DivbloxWebService extends divbloxObjectBase {
                             }
                         }
                     }
+                }
+
+                if (Object.keys(requestBodyContent).length > 0) {
+                    paths[path][operationDefinition.requestType.toLowerCase()]["requestBody"] =
+                        {
+                            "description": "The following should be provided in the request body",
+                            "content": requestBodyContent
+                        }
                 }
 
                 if (operationDefinition.requiresAuthentication) {
