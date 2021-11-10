@@ -233,7 +233,8 @@ class DivbloxWebService extends divbloxObjectBase {
                             {"schema": operationDefinition.requestSchema}
                     } : {};
 
-                if (Object.keys(requestBodyContent).length > 0) {
+                //TODO: Cater for examples in endpoint spec
+                /*if (Object.keys(requestBodyContent).length > 0) {
                     requestBodyContent["application/json"]["examples"] = {
                         "exampleInput":{
                             "summary": "Summary value",
@@ -242,7 +243,7 @@ class DivbloxWebService extends divbloxObjectBase {
                             }
                         }
                     };
-                }
+                }*/
 
                 const responseBodyContent = Object.keys(operationDefinition.responseSchema).length > 0 ?
                     {"application/json":
