@@ -12,20 +12,20 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer
      * @param {string} entityName Optional. The name of the entity to deal with. This will only be used if this base class is
      * used to instantiate an object. Otherwise, child classes will set their own entity name in their constructors
-     * @param {string} globalIdentifier Optional. The uniqueIdentifier token for a globaleIdentifier object.
+     * @param {string} globalIdentifier Optional. The uniqueIdentifier token for a globalIdentifier object.
      * Used to determine current user information if it is required for audit purposes
      */
-    constructor(dxInstance = null, entityName, globalIdentifier) {
+    constructor(dxInstance = null, entityName = 'base', globalIdentifier = '') {
         super();
         this.dxInstance = dxInstance;
 
         this.entityName = 'base';
-        if (typeof entityName !== "undefined") {
+        if ((typeof entityName !== "undefined") && (entityName.length > 0)) {
             this.entityName = entityName;
         }
 
-        this.globalIdentifier = null;
-        if (typeof globalIdentifier !== "undefined") {
+        this.globalIdentifier = '';
+        if ((typeof globalIdentifier !== "undefined") && (globalIdentifier.length > 0)) {
             this.globalIdentifier = globalIdentifier;
         }
 

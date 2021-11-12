@@ -9,11 +9,13 @@ class [EntityNamePascalCase] extends modelBase {
     /**
      * Basic initialization for the [EntityNameCamelCase] object model class.
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer
-     * @param {string} sessionId Optional. The id of the current session. Used to determine current user information if
-     * it is required for audit purposes
+     * @param {string} entityName Optional. The name of the entity to deal with. This will only be used if this base class is
+     * used to instantiate an object. Otherwise, child classes will set their own entity name in their constructors
+     * @param {string} globalIdentifier Optional. The uniqueIdentifier token for a globalIdentifier object.
+     * Used to determine current user information if it is required for audit purposes
      */
-    constructor(dxInstance, sessionId) {
-        super(dxInstance, "[EntityNameCamelCase]", sessionId);
+    constructor(dxInstance, entityName = '[EntityNameCamelCase]', globalIdentifier = '') {
+        super(dxInstance, entityName, globalIdentifier);
         this.entitySchema = entitySchema;
     }
 
