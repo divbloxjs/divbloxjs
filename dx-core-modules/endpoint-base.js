@@ -110,28 +110,33 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         let schema = {
             "properties": {}
         };
+
         for (const key of Object.keys(properties)) {
-            schema.properties[key] = {
-                "type": properties[key]
-            };
-            switch (key) {
+            let type = "string";
+            let format = "";
+
+            switch (properties[key]) {
                 case "date":
-                    schema.properties[key]["type"] = "string";
-                    schema.properties[key]["format"] = "date";
+                    format = "date";
                     break;
                 case "datetime":
-                    schema.properties[key]["type"] = "string";
-                    schema.properties[key]["format"] = "date-time";
+                case "date-time":
+                    format = "date-time";
                     break;
                 case "float":
-                    schema.properties[key]["type"] = "number";
-                    schema.properties[key]["format"] = "float";
+                    type = "number";
+                    format = "float";
                     break;
                 case "double":
-                    schema.properties[key]["type"] = "number";
-                    schema.properties[key]["format"] = "double";
+                    type = "number";
+                    format = "double";
                     break;
             }
+
+            schema.properties[key] = {
+                "type": type,
+                "format": format
+            };
         }
         return schema;
     }

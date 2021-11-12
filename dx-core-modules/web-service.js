@@ -192,9 +192,14 @@ class DivbloxWebService extends divbloxObjectBase {
         const swaggerPath = this.dxInstance.configPath.replace("dxconfig.json","swagger.json");
         if (fs.existsSync(swaggerPath)) {
             const staticConfigStr = fs.readFileSync(swaggerPath,'utf-8');
+            dxUtils.printInfoMessage("Swagger config was loaded from predefined swagger.json file. You can delete it to " +
+                "force divbloxjs to generate it dynamically, based on your package endpoints.");
             return JSON.parse(staticConfigStr);
+        } else {
+            dxUtils.printInfoMessage("Swagger config was dynamically generated. To use a predefined swagger config, copy " +
+                "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it");
         }
-        
+
         let tags = [];
         let paths = {};
         let declaredEntitySchemas = [];
