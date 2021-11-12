@@ -171,6 +171,7 @@ class DivbloxWebService extends divbloxObjectBase {
         this.addRoute('/api',undefined, router);
 
         const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
+        fs.writeFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/swagger.json", JSON.stringify(swaggerDocument,null,2));
 
         if (this.useHttps) {
             this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -188,6 +189,12 @@ class DivbloxWebService extends divbloxObjectBase {
      * @return {*} A json object that conforms to the openapi 3.0.3 spec
      */
     getSwaggerConfig(instantiatedPackages) {
+        const swaggerPath = this.dxInstance.configPath.replace("dxconfig.json","swagger.json");
+        if (fs.existsSync(swaggerPath)) {
+            const staticConfigStr = fs.readFileSync(swaggerPath,'utf-8');
+            return JSON.parse(staticConfigStr);
+        }
+        
         let tags = [];
         let paths = {};
         let declaredEntitySchemas = [];
