@@ -13,6 +13,10 @@ class DivbloxPackageControllerBase extends divbloxObjectBase {
     constructor(dxInstance = null) {
         super();
         this.dxInstance = dxInstance;
+
+        if ((typeof this.dxInstance === "undefined") || (this.dxInstance === null)) {
+            throw new Error("Divblox instance was not provided");
+        }
     }
 }
 
