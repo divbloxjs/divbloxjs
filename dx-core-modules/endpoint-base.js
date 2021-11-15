@@ -241,10 +241,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Checks whether the provided groupings have access to the provided operation, as defined in the constructor
      * @param {string} operationName The name of the operation to check
+     * @param {string} requestType The request method
      * @param {[]} globalIdentifierGroupings An array of groupings as received by the request
      * @return {boolean} True if access is allowed, false otherwise
      */
-    isAccessAllowed(operationName = '', globalIdentifierGroupings = []) {
+    isAccessAllowed(operationName = '', requestType = 'get', globalIdentifierGroupings = []) {
         if (globalIdentifierGroupings.includes("super user")) {
             return true;
         }
@@ -256,7 +257,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 (operation.operationName !== operationName)) {
                 continue;
             }
-            allowedAccess = operation.allowedAccess;
+            if ((operation.operationName === operationName) &&
+                (operation.requestType.toLowerCase() === requestType.toLowerCase())) {
+                allowedAccess = operation.allowedAccess;
+            }
         }
 
         for (const allowedGrouping of globalIdentifierGroupings) {
@@ -302,7 +306,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             }
         }
 
-        if (!this.isAccessAllowed(operation, providedIdentifierGroupings)) {
+        if (!this.isAccessAllowed(operation, request.method, providedIdentifierGroupings)) {
             this.setResult(false, "Not authorized");
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
             // on a true response to know whether they can proceed
