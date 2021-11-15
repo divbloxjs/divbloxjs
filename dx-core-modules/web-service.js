@@ -128,41 +128,53 @@ class DivbloxWebService extends divbloxObjectBase {
                 res.send(packageInstance.result);
             });
 
+            let handledPaths = [];
+
             for (const operation of packageInstance.declaredOperations) {
                 const operationName = operation.operationName;
+                const finalPath = '/'+endpointName+'/'+operationName;
 
-                router.all('/'+endpointName+'/'+operationName, async (req, res, next) => {
-                    await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query});
-                    if (packageInstance.result["success"] !== true) {
-                        res.status(400);
+                if (!handledPaths.includes(finalPath)) {
+                    router.all(finalPath, async (req, res, next) => {
+                        await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query});
+                        if (packageInstance.result["success"] !== true) {
+                            res.status(400);
 
-                        if (packageInstance.result["message"] === "Not authorized") {
-                            res.status(401);
+                            if (packageInstance.result["message"] === "Not authorized") {
+                                res.status(401);
+                            }
                         }
-                    }
 
-                    delete packageInstance.result["success"];
+                        delete packageInstance.result["success"];
 
-                    res.send(packageInstance.result);
-                });
+                        res.send(packageInstance.result);
+                    });
 
+                    handledPaths.push(finalPath);
+                }
                 for (const param of operation.parameters) {
                     if (param.in === "path") {
-                        router.all('/'+endpointName+'/'+operationName+"/:"+param.name, async (req, res, next) => {
-                            await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]});
+                        const finalPath = '/'+endpointName+'/'+operationName+"/:"+param.name;
 
-                            if (packageInstance.result["success"] !== true) {
-                                res.status(400);
+                        if (!handledPaths.includes(finalPath)) {
+                            router.all(finalPath, async (req, res, next) => {
+                                await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]});
 
-                                if (packageInstance.result["message"] === "Not authorized") {
-                                    res.status(401);
+                                if (packageInstance.result["success"] !== true) {
+                                    res.status(400);
+
+                                    if (packageInstance.result["message"] === "Not authorized") {
+                                        res.status(401);
+                                    }
                                 }
-                            }
 
-                            delete packageInstance.result["success"];
+                                delete packageInstance.result["success"];
 
-                            res.send(packageInstance.result);
-                        });
+                                res.send(packageInstance.result);
+                            });
+
+                            handledPaths.push(finalPath);
+                        }
                     }
                 }
             }
@@ -238,7 +250,9 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 const path = "/"+endpointName+"/"+operationName+pathParameters;
 
-                paths[path] = {};
+                if (typeof paths[path] === "undefined") {
+                    paths[path] = {};
+                }
 
                 const requestBodyContent = Object.keys(operation.requestSchema).length > 0 ?
                     {"application/json":
