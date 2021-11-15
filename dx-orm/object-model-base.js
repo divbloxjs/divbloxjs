@@ -38,7 +38,7 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
         this.entitySchema = {
             "id":
                 {"type": "int"}
-            };
+        };
 
         this.reset();
     }
@@ -108,8 +108,20 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
                 continue;
             }
 
-            if (this.data[key] !== this.lastLoadedData[key]) {
-                dataToSave[key] = this.data[key];
+            let inputData = this.data[key];
+            let compareData = this.lastLoadedData[key];
+
+            if (["date","date-time"].includes(this.entitySchema[key]["format"])) {
+                inputData = new Date(this.data[key]).getTime();
+                compareData = this.lastLoadedData[key].getTime();
+            }
+
+            if (inputData !== compareData) {
+                if (["date","date-time"].includes(this.entitySchema[key]["format"])) {
+                    dataToSave[key] = new Date(this.data[key]);
+                } else {
+                    dataToSave[key] = this.data[key];
+                }
             }
         }
 
