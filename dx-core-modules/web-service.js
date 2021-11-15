@@ -331,9 +331,7 @@ class DivbloxWebService extends divbloxObjectBase {
                         }
                     };
 
-                    paths[path][operationDefinition.requestType.toLowerCase()]["requestBody"]["description"] =
-                        securityDescription +
-                        paths[path][operationDefinition.requestType.toLowerCase()]["requestBody"]["description"];
+                    paths[path][operationDefinition.requestType.toLowerCase()]["description"] = securityDescription;
                 }
             }
         }
