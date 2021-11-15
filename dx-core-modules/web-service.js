@@ -264,7 +264,8 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 paths[path][operationDefinition.requestType.toLowerCase()] = {
                     "tags": [endpointName],
-                    "summary": operationDefinition.operationDescription,
+                    "summary": operationDefinition.operationSummary,
+                    "description": operationDefinition.operationDescription,
                     "parameters": operationDefinition.parameters,
                     "responses": {
                         "200": {
@@ -331,7 +332,9 @@ class DivbloxWebService extends divbloxObjectBase {
                         }
                     };
 
-                    paths[path][operationDefinition.requestType.toLowerCase()]["description"] = securityDescription;
+                    paths[path][operationDefinition.requestType.toLowerCase()]["description"] =
+                        securityDescription +
+                        paths[path][operationDefinition.requestType.toLowerCase()]["description"];
                 }
             }
         }

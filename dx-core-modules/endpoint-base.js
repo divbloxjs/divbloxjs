@@ -70,7 +70,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
         let operationDefinition = {
             "operationName": definition.operationName,
-            "operationDescription": definition.operationName,
+            "operationSummary": "",
+            "operationDescription": "",
             "allowedAccess": definition.allowedAccess,
             "requestType": "GET",
             "requiresAuthentication": true,
