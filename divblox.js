@@ -649,7 +649,7 @@ class DivbloxBase extends divbloxObjectBase {
             if (excludeId) {
                 delete returnSchema["id"];
             }
-            
+
             return {"properties": returnSchema};
         }
         return {};

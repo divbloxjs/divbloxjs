@@ -209,7 +209,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 (typeof operation["allowedAccess"] === "undefined")) {
                 continue;
             }
-            this.declaredOperations[operation.operationName] = operation;
+            this.declaredOperations.push(operation);
         }
     }
 
@@ -231,15 +231,20 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @return {boolean} True if access is allowed, false otherwise
      */
     isAccessAllowed(operationName = '', globalIdentifierGroupings = []) {
-        if (typeof this.declaredOperations[operationName] === "undefined") {
-            return false;
-        }
-
         if (globalIdentifierGroupings.includes("super user")) {
             return true;
         }
 
-        const allowedAccess = this.declaredOperations[operationName].allowedAccess;
+        let allowedAccess = [];
+        for (const operation of this.declaredOperations) {
+            if ((typeof operation.allowedAccess === "undefined") ||
+                (operation.allowedAccess.length === 0) ||
+                (operation.operationName !== operationName)) {
+                continue;
+            }
+            allowedAccess = operation.allowedAccess;
+        }
+
         for (const allowedGrouping of globalIdentifierGroupings) {
             if (allowedAccess.includes(allowedGrouping)) {
                 return true;

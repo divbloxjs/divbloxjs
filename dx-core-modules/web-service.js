@@ -128,9 +128,11 @@ class DivbloxWebService extends divbloxObjectBase {
                 res.send(packageInstance.result);
             });
 
-            for (const operation of Object.keys(packageInstance.declaredOperations)) {
-                router.all('/'+endpointName+'/'+operation, async (req, res, next) => {
-                    await packageInstance.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query});
+            for (const operation of packageInstance.declaredOperations) {
+                const operationName = operation.operationName;
+
+                router.all('/'+endpointName+'/'+operationName, async (req, res, next) => {
+                    await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query});
                     if (packageInstance.result["success"] !== true) {
                         res.status(400);
 
@@ -144,12 +146,10 @@ class DivbloxWebService extends divbloxObjectBase {
                     res.send(packageInstance.result);
                 });
 
-                const operationDefinition = packageInstance.declaredOperations[operation];
-
-                for (const param of operationDefinition.parameters) {
+                for (const param of operation.parameters) {
                     if (param.in === "path") {
-                        router.all('/'+endpointName+'/'+operation+"/:"+param.name, async (req, res, next) => {
-                            await packageInstance.executeOperation(operation, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]});
+                        router.all('/'+endpointName+'/'+operationName+"/:"+param.name, async (req, res, next) => {
+                            await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]});
 
                             if (packageInstance.result["success"] !== true) {
                                 res.status(400);
@@ -206,7 +206,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
         for (const packageName of Object.keys(instantiatedPackages)) {
             const packageInstance = instantiatedPackages[packageName];
-            if (Object.keys(packageInstance.declaredOperations).length === 0) {
+            if (packageInstance.declaredOperations.length === 0) {
                 continue;
             }
 
@@ -226,23 +226,23 @@ class DivbloxWebService extends divbloxObjectBase {
                 "description": endpointDescription,
             });
 
-            for (const operation of Object.keys(packageInstance.declaredOperations)) {
-                const operationDefinition = packageInstance.declaredOperations[operation];
+            for (const operation of packageInstance.declaredOperations) {
+                const operationName = operation.operationName;
 
                 let pathParameters = "";
-                for (const param of operationDefinition.parameters) {
+                for (const param of operation.parameters) {
                     if (param.in === "path") {
                         pathParameters += "/{"+param.name+"}";
                     }
                 }
 
-                const path = "/"+endpointName+"/"+operation+pathParameters;
+                const path = "/"+endpointName+"/"+operationName+pathParameters;
 
                 paths[path] = {};
 
-                const requestBodyContent = Object.keys(operationDefinition.requestSchema).length > 0 ?
+                const requestBodyContent = Object.keys(operation.requestSchema).length > 0 ?
                     {"application/json":
-                            {"schema": operationDefinition.requestSchema}
+                            {"schema": operation.requestSchema}
                     } : {};
 
                 //TODO: Cater for examples in endpoint spec
@@ -257,16 +257,16 @@ class DivbloxWebService extends divbloxObjectBase {
                     };
                 }*/
 
-                const responseBodyContent = Object.keys(operationDefinition.responseSchema).length > 0 ?
+                const responseBodyContent = Object.keys(operation.responseSchema).length > 0 ?
                     {"application/json":
-                            {"schema": operationDefinition.responseSchema}
+                            {"schema": operation.responseSchema}
                     } : {};
 
-                paths[path][operationDefinition.requestType.toLowerCase()] = {
+                paths[path][operation.requestType.toLowerCase()] = {
                     "tags": [endpointName],
-                    "summary": operationDefinition.operationSummary,
-                    "description": operationDefinition.operationDescription,
-                    "parameters": operationDefinition.parameters,
+                    "summary": operation.operationSummary,
+                    "description": operation.operationDescription,
+                    "parameters": operation.parameters,
                     "responses": {
                         "200": {
                             "description": "OK",
@@ -304,20 +304,20 @@ class DivbloxWebService extends divbloxObjectBase {
                 }
 
                 if (Object.keys(requestBodyContent).length > 0) {
-                    paths[path][operationDefinition.requestType.toLowerCase()]["requestBody"] =
+                    paths[path][operation.requestType.toLowerCase()]["requestBody"] =
                         {
                             "description": "The following should be provided in the request body",
                             "content": requestBodyContent
                         }
                 }
 
-                if (operationDefinition.requiresAuthentication) {
-                    paths[path][operationDefinition.requestType.toLowerCase()]["security"] = [{"bearerAuth": []}];
+                if (operation.requiresAuthentication) {
+                    paths[path][operation.requestType.toLowerCase()]["security"] = [{"bearerAuth": []}];
 
                     const securityDescription = "This operation requires JWT authentication using " +
                         "Authorization: Bearer xxxx<br>This should be sent as part of the header of the request<br><br>";
 
-                    paths[path][operationDefinition.requestType.toLowerCase()]["responses"]["401"] = {
+                    paths[path][operation.requestType.toLowerCase()]["responses"]["401"] = {
                         "description": "Unauthorized",
                         "content" : {
                             "application/json" : {
@@ -332,9 +332,9 @@ class DivbloxWebService extends divbloxObjectBase {
                         }
                     };
 
-                    paths[path][operationDefinition.requestType.toLowerCase()]["description"] =
+                    paths[path][operation.requestType.toLowerCase()]["description"] =
                         securityDescription +
-                        paths[path][operationDefinition.requestType.toLowerCase()]["description"];
+                        paths[path][operation.requestType.toLowerCase()]["description"];
                 }
             }
         }
