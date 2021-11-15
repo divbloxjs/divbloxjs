@@ -136,7 +136,12 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 if (!handledPaths.includes(finalPath)) {
                     router.all(finalPath, async (req, res, next) => {
-                        await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query});
+                        await packageInstance.executeOperation(operationName,
+                            {"headers": req.headers,
+                                "body": req.body,
+                                "query": req.query,
+                                "method": req.method});
+
                         if (packageInstance.result["success"] !== true) {
                             res.status(400);
 
@@ -158,7 +163,12 @@ class DivbloxWebService extends divbloxObjectBase {
 
                         if (!handledPaths.includes(finalPath)) {
                             router.all(finalPath, async (req, res, next) => {
-                                await packageInstance.executeOperation(operationName, {"headers":req.headers,"body":req.body,"query":req.query,"path":req.params[param.name]});
+                                await packageInstance.executeOperation(operationName,
+                                    {"headers": req.headers,
+                                        "body": req.body,
+                                        "query": req.query,
+                                        "path": req.params[param.name],
+                                        "method": req.method});
 
                                 if (packageInstance.result["success"] !== true) {
                                     res.status(400);
