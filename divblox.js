@@ -639,11 +639,18 @@ class DivbloxBase extends divbloxObjectBase {
     /**
      * Returns the schema for the given entity name
      * @param {string} entityName The entity for which to return a schema
+     * @param {boolean} excludeId If set to true, the schema is returned without the primary key id field
      * @return {{}|*}
      */
-    getEntitySchema(entityName) {
+    getEntitySchema(entityName, excludeId = false) {
         if (typeof this.dataModelSchema[entityName] !== "undefined") {
-            return {"properties": this.dataModelSchema[entityName]};
+            const returnSchema = (JSON.parse(JSON.stringify(this.dataModelSchema[entityName])));
+
+            if (excludeId) {
+                delete returnSchema["id"];
+            }
+            
+            return {"properties": returnSchema};
         }
         return {};
     }
