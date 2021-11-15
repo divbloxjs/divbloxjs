@@ -214,6 +214,20 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Returns the operation definition of the declared operation matching the name provided
+     * @param {string} operationName The name of the operation to find
+     * @return {null|*} Null if not found, operation definition if found
+     */
+    getDeclaredOperation(operationName) {
+        for (const operation of this.declaredOperations) {
+            if (operation.operationName === operationName) {
+                return operation;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Declares the entities that should be provided as schemas to the api endpoint
      * @param {[string]} entities A list of entity names to declare
      */
