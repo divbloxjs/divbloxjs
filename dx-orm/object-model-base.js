@@ -76,7 +76,7 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
 
         this.reset();
 
-        return false
+        return false;
     }
 
     /**

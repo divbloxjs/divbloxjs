@@ -128,6 +128,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 case "date-time":
                     format = "date-time";
                     break;
+                case "int":
+                case "integer":
+                    type = "number";
+                    format = "integer";
+                    break;
                 case "float":
                     type = "number";
                     format = "float";
