@@ -89,7 +89,13 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
     async save(mustIgnoreLockingConstraints = false) {
         if ((Object.keys(this.lastLoadedData).length === 0) || (this.lastLoadedData === null)) {
             // This means we are creating a new entry for this entity
-            const objId =  await this.dxInstance.create(this.entityName, this.data);
+            for (const key of Object.keys(this.data)) {
+                if (["date","date-time"].includes(this.entitySchema[key]["format"])) {
+                    this.data[key] = new Date(this.data[key]);
+                }
+            }
+
+            const objId = await this.dxInstance.create(this.entityName, this.data);
 
             if (objId !== -1) {
                 await this.load(objId);
