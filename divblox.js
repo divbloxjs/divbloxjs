@@ -465,7 +465,7 @@ class DivbloxBase extends divbloxObjectBase {
      * Deregisters the provided package name in the dxconfig.json file in order for it to be excluded at runtime
      * @param {string} packageName The name of the package as it is defined in your project's dxconfig.json file
      */
-    async deregisterRemotePackage(packageName) {
+    async deregisterPackage(packageName) {
         if ((typeof packageName === "undefined") || (packageName.length < 1)) {
             packageName = await dxUtils.getCommandLineInput("Please provide the package name: ");
         }
