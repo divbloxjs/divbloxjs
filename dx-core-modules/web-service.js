@@ -2,6 +2,7 @@ const dxUtils = require("dx-utils");
 const divbloxObjectBase = require('./object-base');
 const createError = require('http-errors');
 const express = require('express');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -127,7 +128,10 @@ class DivbloxWebService extends divbloxObjectBase {
             const endpointName = packageInstance.endpointName === null ? packageName : packageInstance.endpointName
 
             router.all('/'+endpointName, async (req, res, next) => {
-                await packageInstance.executeOperation(null, {"headers":req.headers,"body":req.body,"query":req.query});
+                await packageInstance.executeOperation(null,
+                    {"headers": req.headers,
+                            "body": req.body,
+                            "query": req.query});
 
                 delete packageInstance.result["success"];
 
@@ -146,7 +150,8 @@ class DivbloxWebService extends divbloxObjectBase {
                             {"headers": req.headers,
                                 "body": req.body,
                                 "query": req.query,
-                                "method": req.method});
+                                "method": req.method,
+                                "files": req.files});
 
                         if (packageInstance.result["success"] !== true) {
                             res.status(400);
@@ -174,7 +179,8 @@ class DivbloxWebService extends divbloxObjectBase {
                                         "body": req.body,
                                         "query": req.query,
                                         "path": req.params[param.name],
-                                        "method": req.method});
+                                        "method": req.method,
+                                        "files": req.files});
 
                                 if (packageInstance.result["success"] !== true) {
                                     res.status(400);
@@ -426,6 +432,7 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
+        expressInstance.use(fileUpload());
         expressInstance.use(express.static(path.join(path.resolve("./"), this.staticRoot)));
         expressInstance.set('views',
             [path.join(path.resolve("./"), this.viewsRoot),

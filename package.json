@@ -27,6 +27,7 @@
     "dx-db-sync": "github:divbloxjs/dx-db-sync",
     "dx-utils": "github:divbloxjs/dx-utils",
     "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
     "http": "^0.0.1-security",
     "http-errors": "^1.8.0",
     "jsonwebtoken": "^8.5.1",
