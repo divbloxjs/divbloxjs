@@ -136,18 +136,26 @@ class DivbloxBase extends divbloxObjectBase {
         this.packages = {};
 
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
+
             if (typeof this.configObj["divbloxPackages"] !== "undefined") {
+
                 if ((typeof this.configObj["divbloxPackages"]["local"] !== "undefined") &&
                     (this.configObj["divbloxPackages"]["local"].length > 0)) {
+
                     for (const localPackage of this.configObj["divbloxPackages"]["local"]) {
+
                         this.packages[localPackage] = {
                             "packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
+
                         const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
+
                         for (const entityName of Object.keys(packageDataModelObj)) {
+
                             if (typeof this.dataModelObj[entityName] !== "undefined") {
                                 throw new Error("Tried to define entity '"+entityName+"' multiple times in the data model");
                             }
+
                             this.dataModelObj[entityName] = packageDataModelObj[entityName];
                         }
 
@@ -156,15 +164,73 @@ class DivbloxBase extends divbloxObjectBase {
 
                 if ((typeof this.configObj["divbloxPackages"]["remote"] !== "undefined") &&
                     (this.configObj["divbloxPackages"]["remote"].length > 0)) {
+
                     for (const remotePackage of this.configObj["divbloxPackages"]["remote"]) {
-                        this.packages[remotePackage] = {"packageRoot": "node_modules/"+remotePackage};
+
+                        if (typeof this.packages[remotePackage] === "undefined") {
+                            this.packages[remotePackage] = {"packageRoot": "node_modules/"+remotePackage};
+                        } else {
+                            // This means we are specializing this package within a child package, so it should NOT be loaded
+                        }
+
                         const packageDataModelDataStr = fs.readFileSync("node_modules/"+remotePackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
+
                         for (const entityName of Object.keys(packageDataModelObj)) {
+
                             if (typeof this.dataModelObj[entityName] !== "undefined") {
-                                throw new Error("Tried to define entity '"+entityName+"' multiple times in the data model");
+
+                                // The entity is already defined, let's add any relevant attributes/relationships from the base package
+                                const entityObj = packageDataModelObj[entityName];
+
+                                // Let's ensure that this entity is placed inside a module
+                                if (typeof this.dataModelObj[entityName]["module"] === "undefined") {
+                                    this.dataModelObj[entityName]["module"] = entityObj["module"];
+                                }
+
+                                // Let's loop over the attributes and see if we need to add any that have not been defined by the child package
+                                const existingDataModelAttributes = Object.keys(this.dataModelObj[entityName]["attributes"]);
+                                const attributesToAdd = Object.keys(entityObj["attributes"]).filter(x => !existingDataModelAttributes.includes(x));
+
+                                for (const attributeToAdd of attributesToAdd) {
+                                    this.dataModelObj[entityName]["attributes"][attributeToAdd] = entityObj["attributes"][attributeToAdd];
+                                }
+
+                                // Let's add the base package's indexes to any existing ones
+                                if (typeof this.dataModelObj[entityName]["indexes"] === "undefined") {
+                                    this.dataModelObj[entityName]["indexes"] = [];
+                                }
+
+                                for (const indexToAdd of entityObj["indexes"]) {
+                                    this.dataModelObj[entityName]["indexes"].push(indexToAdd);
+                                }
+
+                                // Let's loop over the relationships and see if we need to add any that have not been defined by the child package
+                                if (typeof this.dataModelObj[entityName]["relationships"] === "undefined") {
+                                    this.dataModelObj[entityName]["relationships"] = {};
+                                }
+
+                                const existingDataModelRelationships = Object.keys(this.dataModelObj[entityName]["relationships"]);
+                                const relationshipsToAdd = Object.keys(entityObj["relationships"]).filter(x => !existingDataModelRelationships.includes(x));
+
+                                for (const relationshipToAdd of relationshipsToAdd) {
+                                    this.dataModelObj[entityName]["relationships"][relationshipToAdd] = entityObj["relationships"][relationshipToAdd];
+                                }
+
+                                // Let's loop over the relationships and see if we need to add any that have not been defined by the child package
+                                if (typeof this.dataModelObj[entityName]["options"] === "undefined") {
+                                    this.dataModelObj[entityName]["options"] = {};
+                                }
+                                const existingDataModelOptions = Object.keys(this.dataModelObj[entityName]["options"]);
+                                const optionsToAdd = Object.keys(entityObj["options"]).filter(x => !existingDataModelOptions.includes(x));
+
+                                for (const optionToAdd of optionsToAdd) {
+                                    this.dataModelObj[entityName]["options"][optionToAdd] = entityObj["options"][optionToAdd];
+                                }
+
+                            } else {
+                                this.dataModelObj[entityName] = packageDataModelObj[entityName];
                             }
-                            this.dataModelObj[entityName] = packageDataModelObj[entityName];
                         }
                     }
                 }
