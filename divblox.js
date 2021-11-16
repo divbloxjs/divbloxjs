@@ -31,6 +31,7 @@ class DivbloxJwtWrapper extends divbloxJwtWrapperBase {}
  * application
  */
 class DivbloxBase extends divbloxObjectBase {
+
     /**
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
@@ -48,34 +49,34 @@ class DivbloxBase extends divbloxObjectBase {
     constructor(options = {}) {
         super();
 
+        this.initOptions = options;
         this.isInitFinished = false;
 
+        this.initPrerequisites();
+
+        this.initPackages();
+
+        this.initDataLayer();
+
+        this.initJwtWrapper();
+
+        this.isInitFinished = true;
+    }
+
+    initPrerequisites() {
         this.disableWebServer = false
-        if (typeof options["disableWebServer"] !== "undefined") {
-            this.disableWebServer = options["disableWebServer"];
+
+        if (typeof this.initOptions["disableWebServer"] !== "undefined") {
+            this.disableWebServer = this.initOptions["disableWebServer"];
         }
 
-        if ((typeof options["configPath"] === "undefined") || (options["configPath"] === null)) {
+        if ((typeof this.initOptions["configPath"] === "undefined") || (this.initOptions["configPath"] === null)) {
             throw new Error("No config path provided");
         }
-        this.configPath = options["configPath"];
+
+        this.configPath = this.initOptions["configPath"];
         if (!fs.existsSync(this.configPath)) {
             throw new Error("Invalid config path ("+this.configPath+") provided");
-        }
-
-        if ((typeof options["dataLayerImplementationClass"] !== "undefined") &&
-            (options["dataLayerImplementationClass"] !== null)) {
-            DivbloxDataLayer = options["dataLayerImplementationClass"];
-        }
-
-        if ((typeof options["webServiceImplementationClass"] !== "undefined") &&
-            (options["webServiceImplementationClass"] !== null)) {
-            DivbloxWebService = options["webServiceImplementationClass"];
-        }
-
-        if ((typeof options["jwtWrapperImplementationClass"] !== "undefined") &&
-            (options["jwtWrapperImplementationClass"] !== null)) {
-            DivbloxJwtWrapper = options["jwtWrapperImplementationClass"];
         }
 
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
@@ -87,6 +88,7 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
                 " try running your script with NODE_ENV=development node [your_script.js]\n");
         }
+
         if (typeof process.env.NODE_ENV === "undefined") {
             process.env.NODE_ENV = this.configObj.environment;
         }
@@ -94,9 +96,11 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["environmentArray"] === "undefined") {
             throw new Error("No environments configured");
         }
+
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV] === "undefined") {
             throw new Error("No environments configured for NODE_ENV: "+process.env.NODE_ENV);
         }
+
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
@@ -110,9 +114,13 @@ class DivbloxBase extends divbloxObjectBase {
         this.dataModelPath = DIVBLOX_ROOT_DIR+'/dx-orm/data-model-base.json';
         const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
-        this.dataModelSchema = {};
 
+        this.dataModelSchema = {};
+    }
+
+    initPackages() {
         this.packages = {};
+
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
             if (typeof this.configObj["divbloxPackages"] !== "undefined") {
                 if ((typeof this.configObj["divbloxPackages"]["local"] !== "undefined") &&
@@ -147,6 +155,13 @@ class DivbloxBase extends divbloxObjectBase {
                 }
             }
         }
+    }
+
+    initDataLayer() {
+        if ((typeof this.initOptions["dataLayerImplementationClass"] !== "undefined") &&
+            (this.initOptions["dataLayerImplementationClass"] !== null)) {
+            DivbloxDataLayer = this.initOptions["dataLayerImplementationClass"];
+        }
 
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
         const currentDataModelHash = this.dataLayer.getDataModelHash();
@@ -160,14 +175,19 @@ class DivbloxBase extends divbloxObjectBase {
         } else {
             this.dataModelState = this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"];
         }
+    }
+
+    initJwtWrapper() {
+        if ((typeof this.initOptions["jwtWrapperImplementationClass"] !== "undefined") &&
+            (this.initOptions["jwtWrapperImplementationClass"] !== null)) {
+            DivbloxJwtWrapper = this.initOptions["jwtWrapperImplementationClass"];
+        }
 
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"] === "undefined") {
             throw new Error("No jwtSecret configured for the environment: "+process.env.NODE_ENV);
         }
 
         this.jwtWrapper = new DivbloxJwtWrapper(this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"], this);
-
-        this.isInitFinished = true;
     }
 
     /**
@@ -241,6 +261,12 @@ class DivbloxBase extends divbloxObjectBase {
                 "useHttps": webServerUseHttps,
                 "serverHttps": webServerHttpsConfig,
                 ...this.configObj["webServiceConfig"]};
+
+            if ((typeof this.initOptions["webServiceImplementationClass"] !== "undefined") &&
+                (this.initOptions["webServiceImplementationClass"] !== null)) {
+                DivbloxWebService = this.initOptions["webServiceImplementationClass"];
+            }
+
             this.webService = new DivbloxWebService(webServiceConfig, this);
         }
 
@@ -348,6 +374,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         return retrievedPackageName;
     }
+
     //#endregion
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
