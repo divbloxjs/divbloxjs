@@ -32,7 +32,7 @@ class DivbloxJwtWrapper extends divbloxJwtWrapperBase {}
  */
 class DivbloxBase extends divbloxObjectBase {
 
-    //#region Initialization
+    //#region Initialization & Startup
 
     /**
      * Constructs the Divblox instance with the options provided
