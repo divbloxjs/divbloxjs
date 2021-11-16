@@ -462,6 +462,63 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
+     * Deregisters the provided package name in the dxconfig.json file in order for it to be excluded at runtime
+     * @param {string} packageName The name of the package as it is defined in your project's dxconfig.json file
+     */
+    async deregisterRemotePackage(packageName) {
+        if ((typeof packageName === "undefined") || (packageName.length < 1)) {
+            packageName = await dxUtils.getCommandLineInput("Please provide the package name: ");
+        }
+
+        if (packageName.length < 1) {
+            dxUtils.printErrorMessage("Cannot deregister dx package. Invalid remote path provided!");
+            return;
+        }
+
+        if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
+            const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
+            const projectPackages = JSON.parse(projectPackagesStr);
+
+            if (typeof projectPackages["dependencies"] === "undefined") {
+                dxUtils.printErrorMessage("Cannot register dx package. Invalid package.json file found!");
+                return;
+            }
+
+            dxUtils.printInfoMessage("Removing "+packageName+"...");
+
+            const removeResult = await dxUtils.executeCommand('npm remove '+packageName);
+            if ((typeof removeResult === "undefined") || (removeResult === null)) {
+                dxUtils.printErrorMessage("Could not remove "+removeResult+". Please try again.");
+                return;
+            }
+
+            if (removeResult.stdout.length > 0) {
+                dxUtils.printSuccessMessage(packageName+' remove result: '+removeResult.stdout);
+            } else {
+                dxUtils.printErrorMessage(packageName+' remove failed: '+removeResult.stderr);
+            }
+
+            this.configObj["divbloxPackages"]["remote"] =
+                this.configObj["divbloxPackages"]["remote"].filter(
+                    function(element) {
+                        return element !== packageName
+                    });
+        }
+
+        if (this.configObj["divbloxPackages"]["local"].includes(packageName)) {
+            this.configObj["divbloxPackages"]["local"] =
+                this.configObj["divbloxPackages"]["local"].filter(
+                    function(element) {
+                        return element !== packageName
+                    });
+        }
+
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+
+        dxUtils.printSuccessMessage(packageName+" successfully deregistered!");
+    }
+
+    /**
      * Returns the package name from a remote path defined in the package.json file
      * @param {string} remotePath The remote path of the package as it is defined in your project's package.json file
      * @return {null|string} Null if not found, or if found the name of the package
