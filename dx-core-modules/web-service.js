@@ -561,9 +561,13 @@ class DivbloxWebService extends divbloxObjectBase {
         const bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
+
         dxUtils.printSuccessMessage('Web server listening on '+bind+';');
-        dxUtils.printInfoMessage('Public Root: https://localhost:'+bind);
-        dxUtils.printInfoMessage('API Root: https://localhost:'+bind+'/api');
+
+        if (typeof addr !== 'string') {
+            dxUtils.printInfoMessage('Public Root: http://localhost:'+addr.port);
+            dxUtils.printInfoMessage('API Root: http://localhost:'+addr.port+'/api');
+        }
     }
 
     /**
@@ -574,9 +578,13 @@ class DivbloxWebService extends divbloxObjectBase {
         const bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
+
         dxUtils.printSuccessMessage('Web server listening on '+bind+';');
-        dxUtils.printInfoMessage('Public Root: https://localhost:'+bind);
-        dxUtils.printInfoMessage('API Root: https://localhost:'+bind+'/api');
+
+        if (typeof addr !== 'string') {
+            dxUtils.printInfoMessage('Public Root: https://localhost:'+addr.port);
+            dxUtils.printInfoMessage('API Root: https://localhost:'+addr.port+'/api');
+        }
     }
 }
 
