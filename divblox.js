@@ -66,7 +66,7 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
-     * Sets up the prerequisite variable that are required for divbloxjs
+     * Sets up the prerequisite variables that are required for divbloxjs
      */
     initPrerequisites() {
         this.disableWebServer = false
@@ -208,7 +208,7 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Starts the Divblox instance using the provided configuration and data model data. This validates the data model
-     * and also start the Divblox web service
+     * and also starts the Divblox web service
      * @param {boolean} mustSkipDatabaseSync If true, divbloxjs will not even check if it should synchronize the data
      * model with the database. This is useful when running divbloxjs with a process manager like pm2 to ensure
      * uninterrupted restarts of the divbloxjs process
@@ -220,14 +220,17 @@ class DivbloxBase extends divbloxObjectBase {
                 await this.databaseConnector.checkDBConnection();
             } catch (error) {
                 this.populateError(error, true);
+
                 this.populateError("Your database might not be configured properly. You can update your " +
                     "database connection information in dxconfig.json", true);
+
                 dxUtils.printErrorMessage(JSON.stringify(this.getError()));
                 return;
             }
 
             if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
                 this.populateError(this.dataLayer.getError(), true);
+
                 dxUtils.printWarningMessage("Error validating data model: "+
                     JSON.stringify(this.getError(),null,2));
 
@@ -248,6 +251,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             if (!await this.checkOrmBaseClassesComplete()) {
                 dxUtils.printInfoMessage("Generating object models from data model...");
+
                 await this.generateOrmBaseClasses();
             }
 
@@ -259,7 +263,9 @@ class DivbloxBase extends divbloxObjectBase {
 
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
+
             dxUtils.printInfoMessage("Finishing divbloxjs startup...");
+
             await dxUtils.sleep(1000);
         }
 
@@ -269,9 +275,12 @@ class DivbloxBase extends divbloxObjectBase {
         if (!this.disableWebServer) {
             const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
                 3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
+
             const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
                 false : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
+
             const webServerHttpsConfig = this.configObj["environmentArray"][process.env.NODE_ENV]["serverHttps"];
+
             const webServiceConfig = {
                 "webServerPort": webServerPort,
                 "useHttps": webServerUseHttps,
@@ -290,6 +299,7 @@ class DivbloxBase extends divbloxObjectBase {
         this.resetError();
 
         dxUtils.printSuccessMessage("Divblox started!");
+
         if (this.disableWebServer) {
             dxUtils.printWarningMessage("Web server has been disabled");
         }
@@ -420,6 +430,7 @@ class DivbloxBase extends divbloxObjectBase {
             }
             return;
         }
+
         if (handleErrorSilently) {
             dxUtils.printWarningMessage("Synchronization cancelled");
         } else {
@@ -549,10 +560,12 @@ class DivbloxBase extends divbloxObjectBase {
                     entityData += 'null;'
                     continue;
                 }
+
                 if ((attributes[attributeName]["default"] === null) || (attributes[attributeName]["default"] === "CURRENT_TIMESTAMP")) {
                     entityData += 'null;'
                     continue;
                 }
+
                 entityData += (isNaN(attributes[attributeName]["default"]) || (attributes[attributeName]["default"].length === 0)) ?
                     "'"+attributes[attributeName]["default"]+"';" :
                     attributes[attributeName]["default"].toString();
@@ -1004,15 +1017,20 @@ class DivbloxBase extends divbloxObjectBase {
         switch (operation) {
             case 'create':
                 dxUtils.printHeadingMessage("Create Global Identifier Grouping");
+
                 const createName = await dxUtils.getCommandLineInput("Please provide a name for the grouping: ");
+
                 const createDescription = await dxUtils.getCommandLineInput("Optional: Provide a description for the grouping " +
                     "(Leave blank to skip): ");
+
                 const createParentId = await dxUtils.getCommandLineInput("Optional: Provide a parent grouping id for the " +
                     "grouping (Leave blank to skip): ");
+
                 const createResult = await this.createGlobalIdentifierGrouping(
                     createName,
                     createDescription,
                     createParentId === "" ? -1 : parseInt(createParentId));
+
                 if (!createResult) {
                     dxUtils.printErrorMessage("Error creating grouping:\n"+
                         JSON.stringify(
@@ -1025,22 +1043,29 @@ class DivbloxBase extends divbloxObjectBase {
                 break;
             case 'modify':
                 dxUtils.printHeadingMessage("Modify Global Identifier Grouping");
+
                 const modifyName = await dxUtils.getCommandLineInput("Please provide the name of the grouping" +
                     "to modify: ");
+
                 const modifiedName = await dxUtils.getCommandLineInput("Optional: Please provide the new name " +
                     "for the grouping (Leave blank to skip): ");
+
                 const modifiedDescription = await dxUtils.getCommandLineInput("Optional: Provide a new " +
                     "description for the grouping (Leave blank to skip): ");
+
                 const modifiedParentId = await dxUtils.getCommandLineInput("Optional: Provide a new parent " +
                     "grouping id for the grouping (Leave blank to skip or provide -1 to remove): ");
 
                 let modifications = {};
+
                 if (modifiedName.length > 0) {
                     modifications["name"] = modifiedName;
                 }
+
                 if (modifiedDescription.length > 0) {
                     modifications["description"] = modifiedDescription;
                 }
+
                 if (modifiedParentId.length > 0) {
                     modifications["parentGroupingId"] = modifiedParentId;
                 }
@@ -1058,6 +1083,7 @@ class DivbloxBase extends divbloxObjectBase {
                 break;
             case 'remove':
                 dxUtils.printHeadingMessage("Remove Global Identifier Grouping");
+
                 const removeName = await dxUtils.getCommandLineInput("Please provide a name for the grouping" +
                     "that should be removed: ");
 
