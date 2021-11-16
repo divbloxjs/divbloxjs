@@ -32,6 +32,8 @@ class DivbloxJwtWrapper extends divbloxJwtWrapperBase {}
  */
 class DivbloxBase extends divbloxObjectBase {
 
+    //#region Initialization
+
     /**
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
@@ -63,6 +65,9 @@ class DivbloxBase extends divbloxObjectBase {
         this.isInitFinished = true;
     }
 
+    /**
+     * Sets up the prerequisite variable that are required for divbloxjs
+     */
     initPrerequisites() {
         this.disableWebServer = false
 
@@ -118,6 +123,10 @@ class DivbloxBase extends divbloxObjectBase {
         this.dataModelSchema = {};
     }
 
+    /**
+     * Loads the packages defined in dxconfig.json into this.packages and merges the data model to ensure all entities
+     * defined across all packages are present
+     */
     initPackages() {
         this.packages = {};
 
@@ -139,6 +148,7 @@ class DivbloxBase extends divbloxObjectBase {
 
                     }
                 }
+
                 if ((typeof this.configObj["divbloxPackages"]["remote"] !== "undefined") &&
                     (this.configObj["divbloxPackages"]["remote"].length > 0)) {
                     for (const remotePackage of this.configObj["divbloxPackages"]["remote"]) {
@@ -157,6 +167,9 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Initializes the data layer
+     */
     initDataLayer() {
         if ((typeof this.initOptions["dataLayerImplementationClass"] !== "undefined") &&
             (this.initOptions["dataLayerImplementationClass"] !== null)) {
@@ -177,6 +190,9 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Initializes the wrapper for our built-in JSON Web Token functionality
+     */
     initJwtWrapper() {
         if ((typeof this.initOptions["jwtWrapperImplementationClass"] !== "undefined") &&
             (this.initOptions["jwtWrapperImplementationClass"] !== null)) {
@@ -278,6 +294,8 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printWarningMessage("Web server has been disabled");
         }
     }
+
+    //#endregion
 
     //#region Helper functions
 
