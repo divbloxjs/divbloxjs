@@ -206,7 +206,8 @@ class DivbloxWebService extends divbloxObjectBase {
     }
 
     /**
-     * Returns the openapi json configuration that will be used to setup swagger ui
+     * Returns the openapi json configuration that will be used to setup swagger ui.
+     * https://swagger.io/specification/
      * @param {*} instantiatedPackages The packages that have be instantiated by the web-service
      * @return {*} A json object that conforms to the openapi 3.0.3 spec
      */
