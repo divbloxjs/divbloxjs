@@ -198,10 +198,10 @@ class DivbloxWebService extends divbloxObjectBase {
 
         this.addRoute('/api',undefined, router);
 
+        dxUtils.printSubHeadingMessage("Configuring Swagger UI");
+
         const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
         fs.writeFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/swagger.json", JSON.stringify(swaggerDocument,null,2));
-
-        dxUtils.printSubHeadingMessage("Configuring Swagger UI");
 
         if (this.useHttps) {
             this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

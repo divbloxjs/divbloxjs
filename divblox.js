@@ -51,6 +51,8 @@ class DivbloxBase extends divbloxObjectBase {
     constructor(options = {}) {
         super();
 
+        dxUtils.printHeadingMessage("Initializing divbloxjs");
+
         this.initOptions = options;
         this.isInitFinished = false;
 
@@ -69,7 +71,7 @@ class DivbloxBase extends divbloxObjectBase {
      * Sets up the prerequisite variables that are required for divbloxjs
      */
     initPrerequisites() {
-        dxUtils.printSubHeadingMessage("Initializing prerequisites");
+        dxUtils.printSubHeadingMessage("Handling prerequisites");
 
         this.disableWebServer = false
 
@@ -130,7 +132,7 @@ class DivbloxBase extends divbloxObjectBase {
      * defined across all packages are present
      */
     initPackages() {
-        dxUtils.printSubHeadingMessage("Initializing packages");
+        dxUtils.printSubHeadingMessage("Loading packages");
         this.packages = {};
 
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
@@ -235,6 +237,8 @@ class DivbloxBase extends divbloxObjectBase {
                 return;
             }
 
+            dxUtils.printSubHeadingMessage("Checking for database & ORM synchronization");
+
             if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
                 this.populateError(this.dataLayer.getError(), true);
 
@@ -243,7 +247,8 @@ class DivbloxBase extends divbloxObjectBase {
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
                     dxUtils.printErrorMessage("You can run the application generator again to generate the " +
-                        "default model: npx github:divbloxjs/divbloxjs-application-generator");
+                        "default model:");
+                    dxUtils.printTerminalMessage("npx github:divbloxjs/divbloxjs-application-generator");
                     return;
                 }
 
@@ -257,8 +262,6 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             if (!await this.checkOrmBaseClassesComplete()) {
-                dxUtils.printInfoMessage("Generating object models from data model");
-
                 await this.generateOrmBaseClasses();
             }
 
