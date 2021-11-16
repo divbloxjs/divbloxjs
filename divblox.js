@@ -682,22 +682,25 @@ class DivbloxBase extends divbloxObjectBase {
 
         const superUser = await this.dataLayer.readByField("globalIdentifier","isSuperUser",1);
 
+        let uniqueIdentifier = '';
+
         if (superUser === null) {
             // If the super user does not exist, let's create its identifier and JWT for debug purposes
-            const identifier = await this.createGlobalIdentifier(
+            uniqueIdentifier = await this.createGlobalIdentifier(
                 '',
                 -1,
                 [superUserGroupId],
                 true);
-
-            const jwtToken = await this.jwtWrapper.issueJwt(identifier);
-            const jwtPath = this.configPath.replace("dxconfig.json","super-user.jwt");
-
-            fs.writeFileSync(
-                jwtPath,
-                jwtToken);
-
+        } else {
+            uniqueIdentifier = superUser.uniqueIdentifier;
         }
+
+        const jwtToken = await this.jwtWrapper.issueJwt(uniqueIdentifier);
+        const jwtPath = this.configPath.replace("dxconfig.json","super-user.jwt");
+
+        fs.writeFileSync(
+            jwtPath,
+            jwtToken);
 
         return true;
     }
