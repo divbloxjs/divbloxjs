@@ -221,7 +221,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     hideOperation(operationName = null, requestType = 'get') {
         this.declaredOperations = this.declaredOperations.filter(
             function(element) {
-                
+
                 if (element.operationName.toLowerCase() === operationName.toLowerCase()) {
                     return element.requestType.toLowerCase() !== requestType.toLowerCase();
                 }
