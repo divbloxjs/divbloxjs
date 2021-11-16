@@ -16,6 +16,7 @@ const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', '');
  * webserver-related functionality.
  */
 class DivbloxWebService extends divbloxObjectBase {
+
     /**
      * Sets up the divblox web service and starts an express web server
      * @param {*} config Our web service configuration, described below in more detail
@@ -40,6 +41,9 @@ class DivbloxWebService extends divbloxObjectBase {
      */
     constructor(config = {}, dxInstance = null) {
         super();
+
+        dxUtils.printSubHeadingMessage("Starting divbloxjs Web Service");
+
         this.config = config;
         this.dxInstance = dxInstance;
         this.apiEndPointRoot = typeof this.config["apiEndPointRoot"] !== "undefined" ? this.config.apiEndPointRoot : './divblox-routes/api';
@@ -104,6 +108,8 @@ class DivbloxWebService extends divbloxObjectBase {
      * for each endpoint and operation
      */
     setupApiRouters() {
+        dxUtils.printSubHeadingMessage("Configuring API routes");
+
         const router = express.Router();
 
         router.all('/', async (req, res, next) => {
@@ -194,6 +200,8 @@ class DivbloxWebService extends divbloxObjectBase {
 
         const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
         fs.writeFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/swagger.json", JSON.stringify(swaggerDocument,null,2));
+
+        dxUtils.printSubHeadingMessage("Configuring Swagger UI");
 
         if (this.useHttps) {
             this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

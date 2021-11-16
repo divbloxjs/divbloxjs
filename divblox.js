@@ -69,6 +69,8 @@ class DivbloxBase extends divbloxObjectBase {
      * Sets up the prerequisite variables that are required for divbloxjs
      */
     initPrerequisites() {
+        dxUtils.printSubHeadingMessage("Initializing prerequisites");
+
         this.disableWebServer = false
 
         if (typeof this.initOptions["disableWebServer"] !== "undefined") {
@@ -128,6 +130,7 @@ class DivbloxBase extends divbloxObjectBase {
      * defined across all packages are present
      */
     initPackages() {
+        dxUtils.printSubHeadingMessage("Initializing packages");
         this.packages = {};
 
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
@@ -171,6 +174,8 @@ class DivbloxBase extends divbloxObjectBase {
      * Initializes the data layer
      */
     initDataLayer() {
+        dxUtils.printSubHeadingMessage("Initializing data layer");
+
         if ((typeof this.initOptions["dataLayerImplementationClass"] !== "undefined") &&
             (this.initOptions["dataLayerImplementationClass"] !== null)) {
             DivbloxDataLayer = this.initOptions["dataLayerImplementationClass"];
@@ -194,6 +199,8 @@ class DivbloxBase extends divbloxObjectBase {
      * Initializes the wrapper for our built-in JSON Web Token functionality
      */
     initJwtWrapper() {
+        dxUtils.printSubHeadingMessage("Initializing JWT wrapper");
+
         if ((typeof this.initOptions["jwtWrapperImplementationClass"] !== "undefined") &&
             (this.initOptions["jwtWrapperImplementationClass"] !== null)) {
             DivbloxJwtWrapper = this.initOptions["jwtWrapperImplementationClass"];
@@ -250,7 +257,7 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             if (!await this.checkOrmBaseClassesComplete()) {
-                dxUtils.printInfoMessage("Generating object models from data model...");
+                dxUtils.printInfoMessage("Generating object models from data model");
 
                 await this.generateOrmBaseClasses();
             }
@@ -264,7 +271,7 @@ class DivbloxBase extends divbloxObjectBase {
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
 
-            dxUtils.printInfoMessage("Finishing divbloxjs startup...");
+            dxUtils.printSubHeadingMessage("Finishing divbloxjs startup");
 
             await dxUtils.sleep(1000);
         }
@@ -475,6 +482,8 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {Promise<void>}
      */
     async generateOrmBaseClasses() {
+        dxUtils.printSubHeadingMessage("Generating ORM base classes from data model specification");
+
         if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
             dxUtils.printInfoMessage("Creating /dx-orm/generated/ directory...");
             fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated");
@@ -665,6 +674,8 @@ class DivbloxBase extends divbloxObjectBase {
             "super user");
 
         if (superUserGrouping === null) {
+            dxUtils.printSubHeadingMessage("Initializing super user");
+
             const createResult = await this.dataLayer.create(
                 "globalIdentifierGrouping",
                 {"name": "super user",
