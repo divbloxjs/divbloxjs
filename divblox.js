@@ -169,9 +169,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (Object.keys(this.packages).length === 0) {
             dxUtils.printWarningMessage("You currently have ZERO packages defined or installed.");
             dxUtils.printWarningMessage("To get started, either create your own package by running:");
-            dxUtils.printFormattedMessage("npx github:divbloxjs/divbloxjs-package-generator",
-                dxUtils.commandLineFormats.default,
-                dxUtils.commandLineColors.foregroundBlack);
+            dxUtils.printTerminalMessage("npx github:divbloxjs/divbloxjs-package-generator");
         }
     }
 
