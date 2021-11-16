@@ -214,6 +214,24 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Removes the given operation with the specified type from the declared operations array
+     * @param {string} operationName The name of the operation to remove
+     * @param {string} requestType The request type to check on for operation uniqueness
+     */
+    hideOperation(operationName = null, requestType = 'get') {
+        this.declaredOperations = this.declaredOperations.filter(
+            function(element) {
+                
+                if (element.operationName.toLowerCase() === operationName.toLowerCase()) {
+                    return element.requestType.toLowerCase() !== requestType.toLowerCase();
+                }
+
+                return true;
+            }
+        );
+    }
+
+    /**
      * Returns the operation definition of the declared operation matching the name provided
      * @param {string} operationName The name of the operation to find
      * @return {null|*} Null if not found, operation definition if found
