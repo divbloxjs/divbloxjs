@@ -303,10 +303,17 @@ class DivbloxWebService extends divbloxObjectBase {
                     };
                 }*/
 
-                const responseBodyContent = Object.keys(operation.responseSchema).length > 0 ?
+                let responseBodyContent = Object.keys(operation.responseSchema).length > 0 ?
                     {"application/json":
                             {"schema": operation.responseSchema}
                     } : {};
+
+                if (Object.keys(operation.additionalResponseSchemas).length > 0) {
+                    for (const additionalSchema of Object.keys(operation.additionalResponseSchemas)) {
+                        responseBodyContent[additionalSchema] = {};
+                        responseBodyContent[additionalSchema]["schema"] = operation.additionalResponseSchemas[additionalSchema];
+                    }
+                }
 
                 paths[path][operation.requestType.toLowerCase()] = {
                     "tags": [endpointName],

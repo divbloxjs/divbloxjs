@@ -80,9 +80,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "parameters": [],
             "requestSchema": {},
             "responseSchema": this.getSchema({"message":"string"}),
-            "additionalRequestSchemas": {
-                "multipart/form-data": {}
-            }
+            "additionalRequestSchemas": {},
+            "additionalResponseSchemas": {}
         }
 
         for (const property of Object.keys(operationDefinition)) {
