@@ -279,10 +279,16 @@ class DivbloxWebService extends divbloxObjectBase {
                     paths[path] = {};
                 }
 
-                const requestBodyContent = Object.keys(operation.requestSchema).length > 0 ?
+                let requestBodyContent = Object.keys(operation.requestSchema).length > 0 ?
                     {"application/json":
                             {"schema": operation.requestSchema}
                     } : {};
+
+                if (Object.keys(operation.additionalRequestSchemas).length > 0) {
+                    for (const additionalSchema of Object.keys(operation.additionalRequestSchemas)) {
+                        requestBodyContent[additionalSchema] = operation.additionalRequestSchemas[additionalSchema];
+                    }
+                }
 
                 //TODO: Cater for examples in endpoint spec
                 /*if (Object.keys(requestBodyContent).length > 0) {

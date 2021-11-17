@@ -46,6 +46,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {*} definition.parameters Optional. Follows the openapi spec for the parameter object: https://swagger.io/specification/
      * @param {*} definition.requestSchema Optional. A schema for what should be sent via the request body.
      * Use this.getSchema() to provide a properly formatted schema
+     * @param {*} definition.additionalRequestSchemas Optional. Any additional request schemas that you want to specify that
+     * are not of media type "application/json". Specified as {"[mediaType]": {[schema]}}
      * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response.
      * Use this.getSchema() to provide a properly formatted schema
      * @return {
@@ -77,7 +79,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "requiresAuthentication": true,
             "parameters": [],
             "requestSchema": {},
-            "responseSchema": this.getSchema({"message":"string"})
+            "responseSchema": this.getSchema({"message":"string"}),
+            "additionalRequestSchemas": {
+                "multipart/form-data": {}
+            }
         }
 
         for (const property of Object.keys(operationDefinition)) {
