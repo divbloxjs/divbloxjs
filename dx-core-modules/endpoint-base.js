@@ -118,6 +118,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     getSchema(properties) {
         let schema = {
+            "type": "object",
             "properties": {}
         };
 
