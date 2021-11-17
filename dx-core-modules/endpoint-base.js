@@ -113,7 +113,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Formats the properties provided into a schema that is acceptable for openapi 3
      * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
-     * the type of the property, e.g {"firstName":"string","age":"integer"}
+     * the type of the property, e.g {"firstName":"string","age":"integer"}. For file names, use the type "file"
      * @return {{properties: {}}}
      */
     getSchema(properties) {
@@ -145,6 +145,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 case "double":
                     type = "number";
                     format = "double";
+                    break;
+                case "file":
+                    type = "string";
+                    format = "binary";
                     break;
             }
 
