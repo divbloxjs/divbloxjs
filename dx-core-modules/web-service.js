@@ -286,6 +286,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 if (Object.keys(operation.additionalRequestSchemas).length > 0) {
                     for (const additionalSchema of Object.keys(operation.additionalRequestSchemas)) {
+                        requestBodyContent[additionalSchema] = {};
                         requestBodyContent[additionalSchema]["schema"] = operation.additionalRequestSchemas[additionalSchema];
                     }
                 }
