@@ -51,15 +51,22 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * are not of media type "application/json". Specified as {"[mediaType]": {[schema]}}
      * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response.
      * Use this.getSchema() to provide a properly formatted schema
+     * @param {*} definition.additionalResponseSchemas Optional. Any additional response schemas that you want to specify that
+     * are not of media type "application/json". Specified as {"[mediaType]": {[schema]}}
+     * @param {boolean} definition.disableSwaggerDoc If set to true, this operation will not be included in swagger UI
      * @return {
      * {allowedAccess: ([string]|*),
-     * responseSchema: {},
+     * responseSchema: {properties: {}},
      * requestSchema: {},
-     * operationDescription: (string|*),
+     * operationDescription: string,
      * requestType: string,
      * operationName: (string|*),
+     * additionalResponseSchemas: {},
+     * operationSummary: string,
      * requiresAuthentication: boolean,
-     * parameters: []}}
+     * parameters: *[],
+     * disableSwaggerDoc: boolean,
+     * additionalRequestSchemas: {}}}
      */
     getOperationDefinition(definition) {
         const requiredProperties = [
