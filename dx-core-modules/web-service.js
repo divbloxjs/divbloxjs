@@ -268,6 +268,9 @@ class DivbloxWebService extends divbloxObjectBase {
             });
 
             for (const operation of packageInstance.declaredOperations) {
+                if (operation.disableSwaggerDoc) {
+                    continue;
+                }
                 const operationName = operation.operationName;
 
                 let pathParameters = "";

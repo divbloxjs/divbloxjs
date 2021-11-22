@@ -82,7 +82,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "requestSchema": {},
             "responseSchema": this.getSchema({"message":"string"}),
             "additionalRequestSchemas": {},
-            "additionalResponseSchemas": {}
+            "additionalResponseSchemas": {},
+            "disableSwaggerDoc": false
         }
 
         for (const property of Object.keys(operationDefinition)) {
