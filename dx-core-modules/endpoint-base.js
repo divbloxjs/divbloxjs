@@ -29,6 +29,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.dxInstance = dxInstance;
         this.currentGlobalIdentifier = -1;
         this.currentGlobalIdentifierGroupings = [];
+        this.disableSwaggerDocs = false;
 
         if ((typeof this.dxInstance === "undefined") || (this.dxInstance === null)) {
             throw new Error("Divblox instance was not provided");

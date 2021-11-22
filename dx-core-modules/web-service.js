@@ -247,6 +247,10 @@ class DivbloxWebService extends divbloxObjectBase {
                 continue;
             }
 
+            if (packageInstance.disableSwaggerDocs) {
+                continue;
+            }
+
             if (packageInstance.declaredSchemas.length > 0) {
                 for (const entity of packageInstance.declaredSchemas) {
                     if (!declaredEntitySchemas.includes(entity)) {

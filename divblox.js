@@ -1453,6 +1453,48 @@ class DivbloxBase extends divbloxObjectBase {
         return '';
     }
     //#endregion
+
+    //#region Project specific functions (To be overridden by the developer as needed)
+
+    /**
+     * @return {string} The text value of the default global identifier grouping for the project
+     */
+    getDefaultGlobalIdentifierGrouping() {
+        return 'user';
+    }
+
+    /**
+     * @return {string} The text value of the default global identifier grouping for the project
+     */
+    getFileUploadPath() {
+        return path.join(path.resolve("./","/divblox-uploads"));
+    }
+
+    /**
+     * A wrapper function for emailing functionality. The idea is that the developer can implement this function in their
+     * project using an emailing library of their choice
+     * @param {*} options Any relevant options, e.g fromAddress, toAddress(es), messageHtml, etc as required by the
+     * implemented emailing library
+     * @return {boolean} True if the email was sent, false otherwise with an error populated
+     */
+    sendEmail(options = {}) {
+        this.populateError(options,true);
+        this.populateError("sendEmail function is NOT implemented",true);
+        return false;
+    }
+
+    /**
+     * A wrapper function for messaging functionality. The idea is that the developer can implement this function in their
+     * project using an messaging library of their choice. Intended for platforms like telegram, whatsapp, sms, etc
+     * @param {*} options Any relevant options, e.g platform, message, etc as required by the implemented messaging library
+     * @return {boolean} True if the message was sent, false otherwise with an error populated
+     */
+    sendMessage(options = {}) {
+        this.populateError(options,true);
+        this.populateError("sendMessage function is NOT implemented",true);
+        return false;
+    }
+    //#endregion
 }
 
 module.exports = DivbloxBase;
