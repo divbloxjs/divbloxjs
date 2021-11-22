@@ -167,7 +167,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {string} options.name The name of the input parameter
      * @param {string} options.description The description of the input parameter
      * @param {boolean} options.required Is the input parameter required
-     * @param {string} options.type "header|path|query"
+     * @param {"header|path|query"} options.type "header|path|query"
      * @param {*} options.schema The schema for the input parameter.
      * Use this.getSchema() to provide a properly formatted schema
      * @return {{schema: *, in: (string|string), name: (string|string), description: (string|string), required: (boolean|boolean)}}
