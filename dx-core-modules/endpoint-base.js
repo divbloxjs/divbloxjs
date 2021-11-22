@@ -162,6 +162,18 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Formats the properties provided into a schema that is acceptable for openapi 3
+     * @param {{}} itemSchema Use this.getSchema() to provide a properly formatted schema
+     * @return {{type: "array", items: {}}}
+     */
+    getArraySchema(itemSchema) {
+        return {
+            "type": "array",
+            "items": itemSchema
+        };
+    }
+
+    /**
      *
      * @param options The options to use to format this input parameter
      * @param {string} options.name The name of the input parameter
