@@ -164,9 +164,18 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Formats the properties provided into a schema that is acceptable for openapi 3
      * @param {{}} itemSchema Use this.getSchema() to provide a properly formatted schema
-     * @return {{type: "array", items: {}}}
+     * @param {string} [wrapperKey] If provided, the schema is wrapped inside the key provided
+     * @return {{type: "array", items: {}}|{properties:{"wrapperkey":{type: "array", items: {}}}}}
      */
-    getArraySchema(itemSchema) {
+    getArraySchema(itemSchema, wrapperKey) {
+        if (typeof wrapperKey !== "undefined") {
+            const returnSchema = {"properties":{}};
+            returnSchema.properties[wrapperKey] = {
+                "type": "array",
+                "items": itemSchema
+            };
+            return returnSchema;
+        }
         return {
             "type": "array",
             "items": itemSchema
