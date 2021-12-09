@@ -323,8 +323,15 @@ class DivbloxBase extends divbloxObjectBase {
                 this.updateDataModelState(this.dataModelState);
 
                 await this.syncDatabase(false);
+
+                // We always want to generate ORM classes here since there were probably changes to the data model.
+                await this.generateOrmBaseClasses();
+
             } else if (this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp) {
                 await this.syncDatabase(false);
+
+                // We always want to generate ORM classes here since there were probably changes to the data model.
+                await this.generateOrmBaseClasses();
             }
 
             if (!await this.checkOrmBaseClassesComplete()) {
