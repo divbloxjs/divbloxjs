@@ -1083,7 +1083,7 @@ class DivbloxBase extends divbloxObjectBase {
             return null;
         }
 
-        return this.transformSqlObjectToJs(queryResult[0]);
+        return this.dataLayer.transformSqlObjectToJs(queryResult[0]);
     }
 
     /**
