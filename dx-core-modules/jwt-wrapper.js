@@ -16,6 +16,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
         super();
         this.jwtSecret = jwtSecret;
         this.dxInstance = dxInstance;
+        this.jwtExpiryInHours = 24;
 
         if (this.dxInstance === null) {
             throw new Error("No Divblox instance provided for jwt wrapper.");
@@ -37,11 +38,11 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
             "globalIdentifier": globalIdentifier,
             "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier),
             "isSuperUser": isSuperUser};
-
-        const options = expiresIn === null ?
-            {"issuer": this.dxInstance.appName} :
-            {"issuer": this.dxInstance.appName,
-            "expiresIn": expiresIn};
+        const expiresInFinal = expiresIn === null ? this.jwtExpiryInHours+"h" : expiresIn;
+        const options = {
+            "issuer": this.dxInstance.appName,
+            "expiresIn": expiresInFinal
+        };
 
         return jwt.sign(payload, this.jwtSecret, options);
     }
