@@ -1007,6 +1007,7 @@ class DivbloxBase extends divbloxObjectBase {
             "linkedEntityId": linkedEntityId,
             "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings),
             "isSuperUser": isSuperUser ? 1 : 0,
+            "configurationData": '{}',
             "sessionData": '{}'
         };
 

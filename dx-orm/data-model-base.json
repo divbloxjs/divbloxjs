@@ -87,6 +87,12 @@
         "default": 0,
         "allowNull": false
       },
+      "configurationData": {
+        "type": "text",
+        "lengthOrValues": null,
+        "default": null,
+        "allowNull": true
+      },
       "sessionData": {
         "type": "text",
         "lengthOrValues": null,
