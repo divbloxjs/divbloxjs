@@ -1071,10 +1071,10 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {Promise<{}|null>} A globalIdentifier object if found, null otherwise with an error possibly populated
      */
     async getGlobalIdentifierByLinkedEntity(entityName = 'none', entityId = -1) {
-        const query = "SELECT * FROM `"+this.getSqlReadyName("globalIdentifier")+"` WHERE " +
-            "`"+this.getSqlReadyName("linkedEntity")+"` = '"+entityName+"' AND " +
-            "`"+this.getSqlReadyName("linkedEntityId")+"` = '"+entityId+"';";
-        
+        const query = "SELECT * FROM `"+this.dataLayer.getSqlReadyName("globalIdentifier")+"` WHERE " +
+            "`"+this.dataLayer.getSqlReadyName("linkedEntity")+"` = '"+entityName+"' AND " +
+            "`"+this.dataLayer.getSqlReadyName("linkedEntityId")+"` = '"+entityId+"';";
+
         const queryResult = await this.dataLayer.executeQuery(query,
             this.dataLayer.getModuleNameFromEntityName(entityName));
 
