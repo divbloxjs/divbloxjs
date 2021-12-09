@@ -337,6 +337,8 @@ class DivbloxBase extends divbloxObjectBase {
                 return;
             }
 
+            await this.createGlobalIdentifierGrouping(this.getDefaultGlobalIdentifierGrouping(),"The default globalIdentifierGrouping");
+
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
 
