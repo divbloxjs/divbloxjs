@@ -1065,6 +1065,28 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
+     * Returns the globalIdentifier object from the database for the given entity and id
+     * @param {string} entityName The name of the entity to search on
+     * @param {number} entityId The id of the row to search on
+     * @return {Promise<{}|null>} A globalIdentifier object if found, null otherwise with an error possibly populated
+     */
+    async getGlobalIdentifierByLinkedEntity(entityName = 'none', entityId = -1) {
+        const query = "SELECT * FROM `"+this.getSqlReadyName("globalIdentifier")+"` WHERE " +
+            "`"+this.getSqlReadyName("linkedEntity")+"` = '"+entityName+"' AND " +
+            "`"+this.getSqlReadyName("linkedEntityId")+"` = '"+entityId+"';";
+        
+        const queryResult = await this.dataLayer.executeQuery(query,
+            this.dataLayer.getModuleNameFromEntityName(entityName));
+
+        if ((queryResult === null) || (queryResult.length === 0)) {
+            this.populateError(this.dataLayer.getError());
+            return null;
+        }
+
+        return this.transformSqlObjectToJs(queryResult[0]);
+    }
+
+    /**
      * Returns an array containing the hierarchical list of globalIdentifierGroupings for the given
      * globalIdentifier
      * @param {string} uniqueIdentifier The unique identifier token
