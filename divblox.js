@@ -1494,6 +1494,22 @@ class DivbloxBase extends divbloxObjectBase {
         this.populateError("sendMessage function is NOT implemented",true);
         return false;
     }
+
+    /**
+     * A global generic function that can be used to create globally accessible functionality. This function should be
+     * overridden in your child divblox class
+     * @param {string} functionName The name of the function that should be executed
+     * @param {*} options Any options to pass to the executed function
+     * @return {{*}} Can be anything that the implemented function returns
+     */
+    executeUserDefinedFunction(functionName = "echo", options = {}) {
+        switch(functionName) {
+            case "echo": dxUtils.printInfoMessage("echo invoked: "+Date.now());
+                return {};
+            default: dxUtils.printErrorMessage("Function "+functionName+" is not implemented");
+        }
+        return {};
+    }
     //#endregion
 }
 
