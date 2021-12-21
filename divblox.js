@@ -911,6 +911,27 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
+     * Loads the data for a specific entity from the database
+     * @param {string} entityName The entity type to load for (The table to perform a select query on)
+     * @param {string} fieldName The primary key id of the relevant row
+     * @param {string|number} fieldValue The primary key id of the relevant row
+     * @returns {Promise<null|*>} An object with the entity's data represented or NULL
+     */
+    async readByField(entityName = '', fieldName = 'id', fieldValue = -1) {
+        if (!this.isInitFinished) {
+            this.populateError("Divblox initialization not finished");
+            return null;
+        }
+
+        const dataObj = await this.dataLayer.readByField(entityName, fieldName, fieldValue);
+        if (dataObj === null) {
+            this.populateError(this.dataLayer.getError(), true, true);
+        }
+
+        return dataObj;
+    }
+
+    /**
      * Attempts to modify a row in the database for the table matching the entityName
      * @param {string} entityName The name of the table to update a row for
      * @param {*} data The relevant key/value data pairs for this entry. Only the provided keys will be updated

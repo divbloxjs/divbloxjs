@@ -80,6 +80,28 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
     }
 
     /**
+     * Selects a row from the database for the table matching this entity and the fieldValue
+     * provided for the given fieldName and then stores the data for this entity in the
+     * "this.data" object
+     * @param {string} fieldName The name of the field or attribute to constrain on
+     * @param {*} fieldValue The value to compare against
+     * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
+     */
+    async loadByField(fieldName = 'id', fieldValue = -1) {
+        this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue);
+        if (this.lastLoadedData !== null) {
+            this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
+            return true;
+        }
+
+        this.populateError(this.dxInstance.getError());
+
+        this.reset();
+
+        return false;
+    }
+
+    /**
      * Saves the current entity instance to the database. If the object does not yet exist in the database, an insert is
      * performed. Otherwise an update is performed, whereby only the changed fields are updated.
      * @param {boolean} mustIgnoreLockingConstraints If set to true, we will not check whether a locking constraint is
