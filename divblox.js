@@ -1564,7 +1564,7 @@ class DivbloxBase extends divbloxObjectBase {
      * implemented emailing library
      * @return {boolean} True if the email was sent, false otherwise with an error populated
      */
-    sendEmail(options = {}) {
+    async sendEmail(options = {}) {
         this.populateError(options,true);
         this.populateError("sendEmail function is NOT implemented",true);
         return false;
@@ -1576,7 +1576,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {*} options Any relevant options, e.g platform, message, etc as required by the implemented messaging library
      * @return {boolean} True if the message was sent, false otherwise with an error populated
      */
-    sendMessage(options = {}) {
+    async sendMessage(options = {}) {
         this.populateError(options,true);
         this.populateError("sendMessage function is NOT implemented",true);
         return false;
@@ -1589,7 +1589,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {*} options Any options to pass to the executed function
      * @return {{*}} Can be anything that the implemented function returns
      */
-    executeUserDefinedFunction(functionName = "echo", options = {}) {
+    async executeUserDefinedFunction(functionName = "echo", options = {}) {
         switch(functionName) {
             case "echo": dxUtils.printInfoMessage("echo invoked: "+Date.now());
                 return {};
