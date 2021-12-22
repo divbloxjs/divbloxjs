@@ -117,6 +117,9 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
         }
 
+        process.env.TZ = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined" ?
+            this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] : 'Africa/Abidjan';
+
         if (typeof this.configObj["webServiceConfig"] === "undefined") {
             throw new Error("No web service configuration provided");
         }
