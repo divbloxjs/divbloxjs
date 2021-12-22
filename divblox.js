@@ -159,7 +159,7 @@ class DivbloxBase extends divbloxObjectBase {
                             "packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
 
                         if (typeof this.packageOptions[process.env.NODE_ENV][localPackage] === "undefined") {
-                            this.packageOptions[process.env.NODE_ENV][localPackage]
+                            this.packageOptions[process.env.NODE_ENV][localPackage] = {};
                         }
 
                         const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
@@ -184,6 +184,11 @@ class DivbloxBase extends divbloxObjectBase {
 
                         if (typeof this.packages[remotePackage] === "undefined") {
                             this.packages[remotePackage] = {"packageRoot": "node_modules/"+remotePackage};
+
+                            if (typeof this.packageOptions[process.env.NODE_ENV][remotePackage] === "undefined") {
+                                this.packageOptions[process.env.NODE_ENV][remotePackage] = {};
+                            }
+
                         } else {
                             // This means we are specializing this package within a child package, so it should NOT be loaded
                         }
