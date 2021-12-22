@@ -55,6 +55,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.initOptions = options;
         this.isInitFinished = false;
+        this.configRoot = '';
 
         this.initPrerequisites();
 
@@ -87,6 +88,8 @@ class DivbloxBase extends divbloxObjectBase {
         if (!fs.existsSync(this.configPath)) {
             throw new Error("Invalid config path ("+this.configPath+") provided");
         }
+
+        this.configRoot = this.configPath.substring(0,this.configPath.lastIndexOf("/"));
 
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
         this.configObj = JSON.parse(configDataStr);
@@ -129,7 +132,8 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Loads the packages defined in dxconfig.json into this.packages and merges the data model to ensure all entities
-     * defined across all packages are present
+     * defined across all packages are present.
+     * Also loads any package options defined in the file package-options.json, located in the config folder
      */
     initPackages() {
         dxUtils.printSubHeadingMessage("Loading packages");
@@ -235,6 +239,15 @@ class DivbloxBase extends divbloxObjectBase {
                     }
                 }
             }
+        }
+
+        dxUtils.printInfoMessage("Loading package options");
+
+        this.packageOptions = {};
+
+        if (fs.existsSync(this.configRoot+"/package-options.json")) {
+            const packageOptionsStr = fs.readFileSync(this.configRoot+"/package-options.json", "utf-8");
+            this.packageOptions = JSON.parse(packageOptionsStr);
         }
     }
 
@@ -553,6 +566,18 @@ class DivbloxBase extends divbloxObjectBase {
         return retrievedPackageName;
     }
 
+    /**
+     * Returns any options defined for the requested package
+     * @param {string} packageName The name of the package to check on
+     * @return {{}|*} An options object
+     */
+    getPackageOptions(packageName) {
+        if (typeof this.packageOptions[packageName] !== "undefined") {
+            return this.packageOptions[packageName];
+        }
+        return {};
+    }
+
     //#endregion
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
@@ -842,7 +867,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         const jwtToken = await this.jwtWrapper.issueJwt(uniqueIdentifier);
-        const jwtPath = this.configPath.replace("dxconfig.json","super-user.jwt");
+        const jwtPath = this.configRoot + "/super-user.jwt";
 
         fs.writeFileSync(
             jwtPath,
