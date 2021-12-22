@@ -138,6 +138,13 @@ class DivbloxBase extends divbloxObjectBase {
     initPackages() {
         dxUtils.printSubHeadingMessage("Loading packages");
         this.packages = {};
+        this.packageOptions = {};
+        this.packageOptions[process.env.NODE_ENV] = {}
+
+        if (fs.existsSync(this.configRoot+"/package-options.json")) {
+            const packageOptionsStr = fs.readFileSync(this.configRoot+"/package-options.json", "utf-8");
+            this.packageOptions = JSON.parse(packageOptionsStr);
+        }
 
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
 
@@ -150,6 +157,10 @@ class DivbloxBase extends divbloxObjectBase {
 
                         this.packages[localPackage] = {
                             "packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
+
+                        if (typeof this.packageOptions[process.env.NODE_ENV][localPackage] === "undefined") {
+                            this.packageOptions[process.env.NODE_ENV][localPackage]
+                        }
 
                         const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
@@ -241,14 +252,7 @@ class DivbloxBase extends divbloxObjectBase {
             }
         }
 
-        dxUtils.printInfoMessage("Loading package options");
-
-        this.packageOptions = {};
-
-        if (fs.existsSync(this.configRoot+"/package-options.json")) {
-            const packageOptionsStr = fs.readFileSync(this.configRoot+"/package-options.json", "utf-8");
-            this.packageOptions = JSON.parse(packageOptionsStr);
-        }
+        fs.writeFileSync(this.configRoot+"/package-options.json", JSON.stringify(this.packageOptions,null,2));
     }
 
     /**
@@ -572,8 +576,8 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {{}|*} An options object
      */
     getPackageOptions(packageName) {
-        if (typeof this.packageOptions[packageName] !== "undefined") {
-            return this.packageOptions[packageName];
+        if (typeof this.packageOptions[process.env.NODE_ENV][packageName] !== "undefined") {
+            return this.packageOptions[process.env.NODE_ENV][packageName];
         }
         return {};
     }
