@@ -386,6 +386,9 @@ class DivbloxBase extends divbloxObjectBase {
             const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
                 3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
 
+            const webServerCorsAllowedList = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"] === "undefined" ?
+                [] : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"];
+
             const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
                 false : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
 
@@ -395,6 +398,7 @@ class DivbloxBase extends divbloxObjectBase {
                 "webServerPort": webServerPort,
                 "useHttps": webServerUseHttps,
                 "serverHttps": webServerHttpsConfig,
+                "webServerCorsAllowedList": webServerCorsAllowedList,
                 ...this.configObj["webServiceConfig"]};
 
             if ((typeof this.initOptions["webServiceImplementationClass"] !== "undefined") &&
