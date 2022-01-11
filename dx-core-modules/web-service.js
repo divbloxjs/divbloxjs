@@ -2,6 +2,7 @@ const dxUtils = require("dx-utils");
 const divbloxObjectBase = require('./object-base');
 const createError = require('http-errors');
 const express = require('express');
+const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -450,6 +451,7 @@ class DivbloxWebService extends divbloxObjectBase {
     setupExpress(expressInstance, port) {
         expressInstance.set('port', this.port);
         expressInstance.use(logger('dev'));
+        expressInstance.use(cors());
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
