@@ -53,6 +53,8 @@ class DivbloxWebService extends divbloxObjectBase {
         this.viewsRoot = typeof this.config["viewsRoot"] !== "undefined" ? this.config.viewsRoot : 'divblox-views';
         this.staticRoot = typeof this.config["staticRoot"] !== "undefined" ? this.config.staticRoot : 'public';
         this.port = typeof this.config["webServerPort"] !== "undefined" ? this.config.webServerPort : 3000;
+        this.corsAllowedList = typeof this.config["webServerCorsAllowedList"] !== "undefined" ?
+            this.config["webServerCorsAllowedList"] : [];
         this.useHttps = typeof this.config["useHttps"] !== "undefined" ? this.config.useHttps : false;
         this.serverHttpsConfig =
             typeof this.config["serverHttps"] !== "undefined" ?
@@ -452,19 +454,24 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.set('port', this.port);
         expressInstance.use(logger('dev'));
 
-        const corsAllowList = ['http://example1.com', 'http://example2.com'];
-        
-        const corsOptionsDelegate = function (req, callback) {
-            let corsOptions;
-            if (corsAllowList.indexOf(req.header('Origin')) !== -1) {
-                corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
-            } else {
-                corsOptions = { origin: false } // disable CORS for this request
+        if (this.corsAllowedList.includes("*")) {
+            expressInstance.use(cors());
+        } else if (this.corsAllowedList.length > 0) {
+
+            const corsOptionsDelegate = function (req, callback) {
+                let corsOptions;
+                if (this.corsAllowedList.indexOf(req.header('Origin')) !== -1) {
+                    corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
+                } else {
+                    corsOptions = { origin: false } // disable CORS for this request
+                }
+                callback(null, corsOptions) // callback expects two parameters: error and options
             }
-            callback(null, corsOptions) // callback expects two parameters: error and options
+
+            expressInstance.use(cors(corsOptionsDelegate));
         }
 
-        expressInstance.use(cors(corsOptionsDelegate));
+
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
