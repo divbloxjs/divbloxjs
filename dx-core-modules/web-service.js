@@ -458,7 +458,7 @@ class DivbloxWebService extends divbloxObjectBase {
             expressInstance.use(cors());
         } else if (this.corsAllowedList.length > 0) {
 
-            const corsOptionsDelegate = function (req, callback) {
+            const corsOptionsDelegate = (req, callback) => {
                 let corsOptions;
                 if (this.corsAllowedList.indexOf(req.header('Origin')) !== -1) {
                     corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
@@ -470,8 +470,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
             expressInstance.use(cors(corsOptionsDelegate));
         }
-
-
+        
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
