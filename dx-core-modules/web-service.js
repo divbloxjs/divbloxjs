@@ -136,6 +136,18 @@ class DivbloxWebService extends divbloxObjectBase {
                             "body": req.body,
                             "query": req.query});
 
+                if (packageInstance.result["cookie"] !== null) {
+                    const cookie = packageInstance.result["cookie"];
+                    res.cookie(cookie["name"],
+                        JSON.stringify(cookie["data"]), {
+                        secure: cookie["secure"],
+                        httpOnly: cookie["httpOnly"],
+                        expires: cookie["expires"]
+                    });
+
+                    packageInstance.result["cookie"] = null;
+                }
+
                 delete packageInstance.result["success"];
 
                 res.send(packageInstance.result);
@@ -162,6 +174,18 @@ class DivbloxWebService extends divbloxObjectBase {
                             if (packageInstance.result["message"] === "Not authorized") {
                                 res.status(401);
                             }
+                        }
+
+                        if (packageInstance.result["cookie"] !== null) {
+                            const cookie = packageInstance.result["cookie"];
+                            res.cookie(cookie["name"],
+                                JSON.stringify(cookie["data"]), {
+                                    secure: cookie["secure"],
+                                    httpOnly: cookie["httpOnly"],
+                                    expires: cookie["expires"]
+                                });
+
+                            packageInstance.result["cookie"] = null;
                         }
 
                         delete packageInstance.result["success"];
@@ -191,6 +215,18 @@ class DivbloxWebService extends divbloxObjectBase {
                                     if (packageInstance.result["message"] === "Not authorized") {
                                         res.status(401);
                                     }
+                                }
+
+                                if (packageInstance.result["cookie"] !== null) {
+                                    const cookie = packageInstance.result["cookie"];
+                                    res.cookie(cookie["name"],
+                                        JSON.stringify(cookie["data"]), {
+                                            secure: cookie["secure"],
+                                            httpOnly: cookie["httpOnly"],
+                                            expires: cookie["expires"]
+                                        });
+
+                                    packageInstance.result["cookie"] = null;
                                 }
 
                                 delete packageInstance.result["success"];
@@ -470,7 +506,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
             expressInstance.use(cors(corsOptionsDelegate));
         }
-        
+
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());

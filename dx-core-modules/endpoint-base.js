@@ -14,7 +14,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         super();
         this.endpointName = null;
         this.endpointDescription = "";
-        this.result = {"success":false,"message":"none"};
+        this.result = {
+            "success":false,
+            "message":"none",
+            "cookie":null
+        };
         this.declaredOperations = [];
         this.declaredSchemas = [];
         const echoOperation = this.getOperationDefinition(
@@ -234,6 +238,30 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             for (const key of Object.keys(resultDetail)) {
                 this.result[key] = resultDetail[key];
             }
+        }
+    }
+
+    /**
+     * Sets the cookie attribute in the result object to instruct the web service to send the cookie with the response
+     * @param {string} name The name of the cookie
+     * @param {*} data The data object that will be stored
+     * @param {boolean} isSecure True or false
+     * @param {boolean} isHttpOnly True or false
+     * @param {number} expiryInDays How many days from now should it expire
+     */
+    setCookie(name = "cookie",data = {}, isSecure = true, isHttpOnly = true, expiryInDays = 30) {
+        const expiryDate = function (days) {
+            let date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toUTCString();
+        };
+
+        this.result.cookie = {
+            "name": name,
+            "data": data,
+            "secure": isSecure,
+            "httpOnly": isHttpOnly,
+            "expires": expiryDate(expiryInDays)
         }
     }
 
