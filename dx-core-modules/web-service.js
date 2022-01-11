@@ -451,7 +451,20 @@ class DivbloxWebService extends divbloxObjectBase {
     setupExpress(expressInstance, port) {
         expressInstance.set('port', this.port);
         expressInstance.use(logger('dev'));
-        expressInstance.use(cors());
+
+        const corsAllowList = ['http://example1.com', 'http://example2.com'];
+        
+        const corsOptionsDelegate = function (req, callback) {
+            let corsOptions;
+            if (corsAllowList.indexOf(req.header('Origin')) !== -1) {
+                corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
+            } else {
+                corsOptions = { origin: false } // disable CORS for this request
+            }
+            callback(null, corsOptions) // callback expects two parameters: error and options
+        }
+
+        expressInstance.use(cors(corsOptionsDelegate));
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
