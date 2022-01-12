@@ -371,14 +371,31 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             return false;
         }
 
+        let jwtToken = null;
         if (typeof request["headers"] !== "undefined") {
+
             if (typeof request["headers"]["authorization"] !== "undefined") {
-                const jwtToken = request["headers"]["authorization"].replace("Bearer ","");
+                jwtToken = request["headers"]["authorization"].replace("Bearer ","");
+
+            } else if (typeof request["headers"]["cookie"] !== "undefined") {
+
+                const cookies = request["headers"]["cookie"].split(";");
+
+                for (const cookie of cookies) {
+                    if (cookie.indexOf("jwt=") !== -1) {
+                        jwtToken = cookie.replace("jwt=","");
+                    }
+                }
+            }
+
+            if (jwtToken !== null) {
                 this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
                 this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+
                 for (const grouping of this.currentGlobalIdentifierGroupings) {
                     providedIdentifierGroupings.push(grouping.toLowerCase());
                 }
+                
                 if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
                     providedIdentifierGroupings.push("super user");
                 }
