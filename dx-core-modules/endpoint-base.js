@@ -244,12 +244,12 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Sets the cookie attribute in the result object to instruct the web service to send the cookie with the response
      * @param {string} name The name of the cookie
-     * @param {*} data The data object that will be stored
+     * @param {string} data The data, in string format, that will be stored
      * @param {boolean} isSecure True or false
      * @param {boolean} isHttpOnly True or false
      * @param {number} expiryInDays How many days from now should it expire
      */
-    setCookie(name = "cookie",data = {}, isSecure = true, isHttpOnly = true, expiryInDays = 30) {
+    setCookie(name = "cookie",data = "", isSecure = true, isHttpOnly = true, expiryInDays = 30) {
         this.result.cookie = {
             "name": name,
             "data": data,
