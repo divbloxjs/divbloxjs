@@ -250,18 +250,12 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {number} expiryInDays How many days from now should it expire
      */
     setCookie(name = "cookie",data = {}, isSecure = true, isHttpOnly = true, expiryInDays = 30) {
-        const expiryDate = function (days) {
-            let date = new Date();
-            date.setDate(date.getDate() + days);
-            return date.getTime();
-        };
-
         this.result.cookie = {
             "name": name,
             "data": data,
             "secure": isSecure,
             "httpOnly": isHttpOnly,
-            "maxAge": expiryDate(expiryInDays)
+            "maxAge": expiryInDays * 24 * 60 * 60 * 1000
         }
     }
 
