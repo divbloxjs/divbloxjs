@@ -136,7 +136,8 @@ class DivbloxWebService extends divbloxObjectBase {
                             "body": req.body,
                             "query": req.query});
 
-                if (packageInstance.result["cookie"] !== null) {
+                if ((typeof packageInstance.result["cookie"] !== "undefined") &&
+                    (packageInstance.result["cookie"] !== null)) {
                     const cookie = packageInstance.result["cookie"];
                     res.cookie(cookie["name"],
                         JSON.stringify(cookie["data"]), {
@@ -176,7 +177,8 @@ class DivbloxWebService extends divbloxObjectBase {
                             }
                         }
 
-                        if (packageInstance.result["cookie"] !== null) {
+                        if ((typeof packageInstance.result["cookie"] !== "undefined") &&
+                            (packageInstance.result["cookie"] !== null)) {
                             const cookie = packageInstance.result["cookie"];
                             res.cookie(cookie["name"],
                                 JSON.stringify(cookie["data"]), {
@@ -217,7 +219,8 @@ class DivbloxWebService extends divbloxObjectBase {
                                     }
                                 }
 
-                                if (packageInstance.result["cookie"] !== null) {
+                                if ((typeof packageInstance.result["cookie"] !== "undefined") &&
+                                    (packageInstance.result["cookie"] !== null)) {
                                     const cookie = packageInstance.result["cookie"];
                                     res.cookie(cookie["name"],
                                         JSON.stringify(cookie["data"]), {
