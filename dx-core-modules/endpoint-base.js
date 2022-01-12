@@ -253,7 +253,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         const expiryDate = function (days) {
             let date = new Date();
             date.setDate(date.getDate() + days);
-            return date.toUTCString();
+            return date.getTime();
         };
 
         this.result.cookie = {
@@ -261,7 +261,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             "data": data,
             "secure": isSecure,
             "httpOnly": isHttpOnly,
-            "expires": expiryDate(expiryInDays)
+            "maxAge": expiryDate(expiryInDays)
         }
     }
 
