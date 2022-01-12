@@ -145,7 +145,7 @@ class DivbloxWebService extends divbloxObjectBase {
                             maxAge: cookie["maxAge"]
                         });
 
-                    packageInstance.result["cookie"] = null;
+                    delete packageInstance.result["cookie"];
                 }
 
                 delete packageInstance.result["success"];
@@ -187,7 +187,7 @@ class DivbloxWebService extends divbloxObjectBase {
                                     maxAge: cookie["maxAge"]
                                 });
 
-                            packageInstance.result["cookie"] = null;
+                            delete packageInstance.result["cookie"];
                         }
 
                         delete packageInstance.result["success"];
@@ -228,7 +228,7 @@ class DivbloxWebService extends divbloxObjectBase {
                                             maxAge: cookie["maxAge"]
                                         });
 
-                                    packageInstance.result["cookie"] = null;
+                                    delete packageInstance.result["cookie"];
                                 }
 
                                 delete packageInstance.result["success"];
