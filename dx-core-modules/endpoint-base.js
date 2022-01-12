@@ -382,8 +382,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 const cookies = request["headers"]["cookie"].split(";");
 
                 for (const cookie of cookies) {
-                    if (cookie.indexOf("jwt=") !== -1) {
-                        jwtToken = cookie.replace("jwt=","");
+                    const cookieDecoded = decodeURIComponent(cookie);
+                    if (cookieDecoded.indexOf('jwt="') !== -1) {
+                        jwtToken = cookieDecoded.replace('jwt="',"");
+                        jwtToken = jwtToken.substring(0,jwtToken.length - 1);
                     }
                 }
             }
@@ -395,7 +397,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                 for (const grouping of this.currentGlobalIdentifierGroupings) {
                     providedIdentifierGroupings.push(grouping.toLowerCase());
                 }
-                
+
                 if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
                     providedIdentifierGroupings.push("super user");
                 }
