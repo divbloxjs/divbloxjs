@@ -133,18 +133,17 @@ class DivbloxWebService extends divbloxObjectBase {
             router.all('/'+endpointName, async (req, res, next) => {
                 await packageInstance.executeOperation(null,
                     {"headers": req.headers,
-                            "body": req.body,
-                            "query": req.query});
+                        "body": req.body,
+                        "query": req.query});
 
-                if ((typeof packageInstance.result["cookie"] !== "undefined") &&
-                    (packageInstance.result["cookie"] !== null)) {
+                if (packageInstance.result["cookie"] !== null) {
                     const cookie = packageInstance.result["cookie"];
                     res.cookie(cookie["name"],
                         JSON.stringify(cookie["data"]), {
-                        secure: cookie["secure"],
-                        httpOnly: cookie["httpOnly"],
-                        expires: cookie["expires"]
-                    });
+                            secure: cookie["secure"],
+                            httpOnly: cookie["httpOnly"],
+                            maxAge: cookie["maxAge"]
+                        });
 
                     packageInstance.result["cookie"] = null;
                 }
@@ -179,12 +178,13 @@ class DivbloxWebService extends divbloxObjectBase {
 
                         if ((typeof packageInstance.result["cookie"] !== "undefined") &&
                             (packageInstance.result["cookie"] !== null)) {
+                            console.dir(packageInstance.result["cookie"]);
                             const cookie = packageInstance.result["cookie"];
                             res.cookie(cookie["name"],
                                 JSON.stringify(cookie["data"]), {
                                     secure: cookie["secure"],
                                     httpOnly: cookie["httpOnly"],
-                                    expires: cookie["expires"]
+                                    maxAge: cookie["maxAge"]
                                 });
 
                             packageInstance.result["cookie"] = null;
@@ -219,14 +219,13 @@ class DivbloxWebService extends divbloxObjectBase {
                                     }
                                 }
 
-                                if ((typeof packageInstance.result["cookie"] !== "undefined") &&
-                                    (packageInstance.result["cookie"] !== null)) {
+                                if (packageInstance.result["cookie"] !== null) {
                                     const cookie = packageInstance.result["cookie"];
                                     res.cookie(cookie["name"],
                                         JSON.stringify(cookie["data"]), {
                                             secure: cookie["secure"],
                                             httpOnly: cookie["httpOnly"],
-                                            expires: cookie["expires"]
+                                            maxAge: cookie["maxAge"]
                                         });
 
                                     packageInstance.result["cookie"] = null;
