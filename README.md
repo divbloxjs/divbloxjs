@@ -4,6 +4,6 @@ The divblox nodejs library
 
 ## Getting Started
 
-`npx divbloxjs-application-generator`
+`npx divbloxjs-create-app`
 
 This will generate a new divblox js project with all prerequisites.
