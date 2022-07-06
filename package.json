@@ -1,42 +1,42 @@
 {
-  "name": "divbloxjs",
-  "version": "1.0.0",
-  "description": "The divblox node.js backend",
-  "main": "divblox.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/divbloxjs/divbloxjs.git"
-  },
-  "keywords": [
-    "Divblox",
-    "divblox"
-  ],
-  "author": "Johan Griesel, johan@divblox.com - Divblox (Pty) Ltd",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/divbloxjs/divbloxjs/issues"
-  },
-  "homepage": "https://github.com/divbloxjs/divbloxjs#readme",
-  "dependencies": {
-    "cookie-parser": "^1.4.5",
-    "cors": "^2.8.5",
-    "debug": "^4.3.2",
-    "dx-db-connector": "github:divbloxjs/dx-db-connector",
-    "dx-db-sync": "github:divbloxjs/dx-db-sync",
-    "dx-utils": "github:divbloxjs/dx-utils",
-    "express": "^4.17.1",
-    "express-fileupload": "^1.2.1",
-    "http": "^0.0.1-security",
-    "http-errors": "^1.8.0",
-    "jsonwebtoken": "^8.5.1",
-    "morgan": "^1.10.0",
-    "mysql": "^2.18.1",
-    "path": "^0.12.7",
-    "pug": "^3.0.2",
-    "swagger-ui-express": "^4.1.6",
-    "util": "^0.12.3"
-  }
+    "name": "divbloxjs",
+    "version": "1.0.1",
+    "description": "The divblox node.js backend",
+    "main": "divblox.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/divbloxjs/divbloxjs.git"
+    },
+    "keywords": [
+        "Divblox",
+        "divblox"
+    ],
+    "author": "Johan Griesel, johan@divblox.com - Divblox (Pty) Ltd",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/divbloxjs/divbloxjs/issues"
+    },
+    "homepage": "https://github.com/divbloxjs/divbloxjs#readme",
+    "dependencies": {
+        "cookie-parser": "^1.4.5",
+        "cors": "^2.8.5",
+        "debug": "^4.3.2",
+        "dx-db-connector": "^1.0.1",
+        "dx-db-sync": "^1.0.1",
+        "dx-utilities": "^1.0.0",
+        "express": "^4.17.1",
+        "express-fileupload": "^1.2.1",
+        "http": "^0.0.1-security",
+        "http-errors": "^1.8.0",
+        "jsonwebtoken": "^8.5.1",
+        "morgan": "^1.10.0",
+        "mysql": "^2.18.1",
+        "path": "^0.12.7",
+        "pug": "^3.0.2",
+        "swagger-ui-express": "^4.1.6",
+        "util": "^0.12.3"
+    }
 }

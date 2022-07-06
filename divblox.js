@@ -1,12 +1,12 @@
 const fs = require("fs");
-const path = require('path')
-const dxUtils = require("dx-utils");
-const divbloxObjectBase = require('./dx-core-modules/object-base');
+const path = require("path");
+const dxUtils = require("dx-utilities");
+const divbloxObjectBase = require("./dx-core-modules/object-base");
 const divbloxDatabaseConnector = require("dx-db-connector");
-const divbloxDataLayerBase = require('./dx-core-modules/data-layer');
-const divbloxWebServiceBase = require('./dx-core-modules/web-service');
-const divbloxJwtWrapperBase = require('./dx-core-modules/jwt-wrapper');
-const DIVBLOX_ROOT_DIR = path.join(__dirname, '..', 'divbloxjs');
+const divbloxDataLayerBase = require("./dx-core-modules/data-layer");
+const divbloxWebServiceBase = require("./dx-core-modules/web-service");
+const divbloxJwtWrapperBase = require("./dx-core-modules/jwt-wrapper");
+const DIVBLOX_ROOT_DIR = path.join(__dirname, "..", "divbloxjs");
 
 /**
  * This class overrides the default divbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
@@ -31,7 +31,6 @@ class DivbloxJwtWrapper extends divbloxJwtWrapperBase {}
  * application
  */
 class DivbloxBase extends divbloxObjectBase {
-
     //#region Initialization & Startup
 
     /**
@@ -55,7 +54,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.initOptions = options;
         this.isInitFinished = false;
-        this.configRoot = '';
+        this.configRoot = "";
 
         this.initPrerequisites();
 
@@ -74,31 +73,33 @@ class DivbloxBase extends divbloxObjectBase {
     initPrerequisites() {
         dxUtils.printSubHeadingMessage("Handling prerequisites");
 
-        this.disableWebServer = false
+        this.disableWebServer = false;
 
         if (typeof this.initOptions["disableWebServer"] !== "undefined") {
             this.disableWebServer = this.initOptions["disableWebServer"];
         }
 
-        if ((typeof this.initOptions["configPath"] === "undefined") || (this.initOptions["configPath"] === null)) {
+        if (typeof this.initOptions["configPath"] === "undefined" || this.initOptions["configPath"] === null) {
             throw new Error("No config path provided");
         }
 
         this.configPath = this.initOptions["configPath"];
         if (!fs.existsSync(this.configPath)) {
-            throw new Error("Invalid config path ("+this.configPath+") provided");
+            throw new Error("Invalid config path (" + this.configPath + ") provided");
         }
 
-        this.configRoot = this.configPath.substring(0,this.configPath.lastIndexOf("/"));
+        this.configRoot = this.configPath.substring(0, this.configPath.lastIndexOf("/"));
 
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
         this.configObj = JSON.parse(configDataStr);
 
-        this.appName = (typeof this.configObj["appName"] !== "undefined")? this.configObj["appName"] : "Divblox";
+        this.appName = typeof this.configObj["appName"] !== "undefined" ? this.configObj["appName"] : "Divblox";
 
-        if ((typeof process.env.NODE_ENV === "undefined") && (typeof this.configObj.environment === "undefined")) {
-            throw new Error("NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
-                " try running your script with NODE_ENV=development node [your_script.js]\n");
+        if (typeof process.env.NODE_ENV === "undefined" && typeof this.configObj.environment === "undefined") {
+            throw new Error(
+                "NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
+                    " try running your script with NODE_ENV=development node [your_script.js]\n"
+            );
         }
 
         if (typeof process.env.NODE_ENV === "undefined") {
@@ -110,23 +111,27 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV] === "undefined") {
-            throw new Error("No environments configured for NODE_ENV: "+process.env.NODE_ENV);
+            throw new Error("No environments configured for NODE_ENV: " + process.env.NODE_ENV);
         }
 
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
-            throw new Error("No databases configured for the environment: "+process.env.NODE_ENV);
+            throw new Error("No databases configured for the environment: " + process.env.NODE_ENV);
         }
 
-        process.env.TZ = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined" ?
-            this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] : 'Africa/Abidjan';
+        process.env.TZ =
+            typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined"
+                ? this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"]
+                : "Africa/Abidjan";
 
         if (typeof this.configObj["webServiceConfig"] === "undefined") {
             throw new Error("No web service configuration provided");
         }
 
-        this.databaseConnector = new divbloxDatabaseConnector(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
+        this.databaseConnector = new divbloxDatabaseConnector(
+            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]
+        );
 
-        this.dataModelPath = DIVBLOX_ROOT_DIR+'/dx-orm/data-model-base.json';
+        this.dataModelPath = DIVBLOX_ROOT_DIR + "/dx-orm/data-model-base.json";
         const dataModelDataStr = fs.readFileSync(this.dataModelPath, "utf-8");
         this.dataModelObj = JSON.parse(dataModelDataStr);
 
@@ -142,67 +147,69 @@ class DivbloxBase extends divbloxObjectBase {
         dxUtils.printSubHeadingMessage("Loading packages");
         this.packages = {};
         this.packageOptions = {};
-        this.packageOptions[process.env.NODE_ENV] = {}
+        this.packageOptions[process.env.NODE_ENV] = {};
 
-        if (fs.existsSync(this.configRoot+"/package-options.json")) {
-            const packageOptionsStr = fs.readFileSync(this.configRoot+"/package-options.json", "utf-8");
+        if (fs.existsSync(this.configRoot + "/package-options.json")) {
+            const packageOptionsStr = fs.readFileSync(this.configRoot + "/package-options.json", "utf-8");
             this.packageOptions = JSON.parse(packageOptionsStr);
         }
 
         if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
-
             if (typeof this.configObj["divbloxPackages"] !== "undefined") {
-
-                if ((typeof this.configObj["divbloxPackages"]["local"] !== "undefined") &&
-                    (this.configObj["divbloxPackages"]["local"].length > 0)) {
-
+                if (
+                    typeof this.configObj["divbloxPackages"]["local"] !== "undefined" &&
+                    this.configObj["divbloxPackages"]["local"].length > 0
+                ) {
                     for (const localPackage of this.configObj["divbloxPackages"]["local"]) {
-
                         this.packages[localPackage] = {
-                            "packageRoot": this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage};
+                            packageRoot: this.configObj["divbloxPackagesRootLocal"] + "/" + localPackage,
+                        };
 
                         if (typeof this.packageOptions[process.env.NODE_ENV][localPackage] === "undefined") {
                             this.packageOptions[process.env.NODE_ENV][localPackage] = {};
                         }
 
-                        const packageDataModelDataStr = fs.readFileSync(this.configObj["divbloxPackagesRootLocal"]+"/"+localPackage+"/data-model.json", "utf-8");
+                        const packageDataModelDataStr = fs.readFileSync(
+                            this.configObj["divbloxPackagesRootLocal"] + "/" + localPackage + "/data-model.json",
+                            "utf-8"
+                        );
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
 
                         for (const entityName of Object.keys(packageDataModelObj)) {
-
                             if (typeof this.dataModelObj[entityName] !== "undefined") {
-                                throw new Error("Tried to define entity '"+entityName+"' multiple times in the data model");
+                                throw new Error(
+                                    "Tried to define entity '" + entityName + "' multiple times in the data model"
+                                );
                             }
 
                             this.dataModelObj[entityName] = packageDataModelObj[entityName];
                         }
-
                     }
                 }
 
-                if ((typeof this.configObj["divbloxPackages"]["remote"] !== "undefined") &&
-                    (this.configObj["divbloxPackages"]["remote"].length > 0)) {
-
+                if (
+                    typeof this.configObj["divbloxPackages"]["remote"] !== "undefined" &&
+                    this.configObj["divbloxPackages"]["remote"].length > 0
+                ) {
                     for (const remotePackage of this.configObj["divbloxPackages"]["remote"]) {
-
                         if (typeof this.packages[remotePackage] === "undefined") {
-                            this.packages[remotePackage] = {"packageRoot": "node_modules/"+remotePackage};
+                            this.packages[remotePackage] = { packageRoot: "node_modules/" + remotePackage };
 
                             if (typeof this.packageOptions[process.env.NODE_ENV][remotePackage] === "undefined") {
                                 this.packageOptions[process.env.NODE_ENV][remotePackage] = {};
                             }
-
                         } else {
                             // This means we are specializing this package within a child package, so it should NOT be loaded
                         }
 
-                        const packageDataModelDataStr = fs.readFileSync("node_modules/"+remotePackage+"/data-model.json", "utf-8");
+                        const packageDataModelDataStr = fs.readFileSync(
+                            "node_modules/" + remotePackage + "/data-model.json",
+                            "utf-8"
+                        );
                         const packageDataModelObj = JSON.parse(packageDataModelDataStr);
 
                         for (const entityName of Object.keys(packageDataModelObj)) {
-
                             if (typeof this.dataModelObj[entityName] !== "undefined") {
-
                                 // The entity is already defined, let's add any relevant attributes/relationships from the base package
                                 const entityObj = packageDataModelObj[entityName];
 
@@ -212,11 +219,16 @@ class DivbloxBase extends divbloxObjectBase {
                                 }
 
                                 // Let's loop over the attributes and see if we need to add any that have not been defined by the child package
-                                const existingDataModelAttributes = Object.keys(this.dataModelObj[entityName]["attributes"]);
-                                const attributesToAdd = Object.keys(entityObj["attributes"]).filter(x => !existingDataModelAttributes.includes(x));
+                                const existingDataModelAttributes = Object.keys(
+                                    this.dataModelObj[entityName]["attributes"]
+                                );
+                                const attributesToAdd = Object.keys(entityObj["attributes"]).filter(
+                                    (x) => !existingDataModelAttributes.includes(x)
+                                );
 
                                 for (const attributeToAdd of attributesToAdd) {
-                                    this.dataModelObj[entityName]["attributes"][attributeToAdd] = entityObj["attributes"][attributeToAdd];
+                                    this.dataModelObj[entityName]["attributes"][attributeToAdd] =
+                                        entityObj["attributes"][attributeToAdd];
                                 }
 
                                 // Let's add the base package's indexes to any existing ones
@@ -233,11 +245,16 @@ class DivbloxBase extends divbloxObjectBase {
                                     this.dataModelObj[entityName]["relationships"] = {};
                                 }
 
-                                const existingDataModelRelationships = Object.keys(this.dataModelObj[entityName]["relationships"]);
-                                const relationshipsToAdd = Object.keys(entityObj["relationships"]).filter(x => !existingDataModelRelationships.includes(x));
+                                const existingDataModelRelationships = Object.keys(
+                                    this.dataModelObj[entityName]["relationships"]
+                                );
+                                const relationshipsToAdd = Object.keys(entityObj["relationships"]).filter(
+                                    (x) => !existingDataModelRelationships.includes(x)
+                                );
 
                                 for (const relationshipToAdd of relationshipsToAdd) {
-                                    this.dataModelObj[entityName]["relationships"][relationshipToAdd] = entityObj["relationships"][relationshipToAdd];
+                                    this.dataModelObj[entityName]["relationships"][relationshipToAdd] =
+                                        entityObj["relationships"][relationshipToAdd];
                                 }
 
                                 // Let's loop over the relationships and see if we need to add any that have not been defined by the child package
@@ -245,12 +262,14 @@ class DivbloxBase extends divbloxObjectBase {
                                     this.dataModelObj[entityName]["options"] = {};
                                 }
                                 const existingDataModelOptions = Object.keys(this.dataModelObj[entityName]["options"]);
-                                const optionsToAdd = Object.keys(entityObj["options"]).filter(x => !existingDataModelOptions.includes(x));
+                                const optionsToAdd = Object.keys(entityObj["options"]).filter(
+                                    (x) => !existingDataModelOptions.includes(x)
+                                );
 
                                 for (const optionToAdd of optionsToAdd) {
-                                    this.dataModelObj[entityName]["options"][optionToAdd] = entityObj["options"][optionToAdd];
+                                    this.dataModelObj[entityName]["options"][optionToAdd] =
+                                        entityObj["options"][optionToAdd];
                                 }
-
                             } else {
                                 this.dataModelObj[entityName] = packageDataModelObj[entityName];
                             }
@@ -260,7 +279,7 @@ class DivbloxBase extends divbloxObjectBase {
             }
         }
 
-        fs.writeFileSync(this.configRoot+"/package-options.json", JSON.stringify(this.packageOptions,null,2));
+        fs.writeFileSync(this.configRoot + "/package-options.json", JSON.stringify(this.packageOptions, null, 2));
     }
 
     /**
@@ -269,8 +288,10 @@ class DivbloxBase extends divbloxObjectBase {
     initDataLayer() {
         dxUtils.printSubHeadingMessage("Initializing data layer");
 
-        if ((typeof this.initOptions["dataLayerImplementationClass"] !== "undefined") &&
-            (this.initOptions["dataLayerImplementationClass"] !== null)) {
+        if (
+            typeof this.initOptions["dataLayerImplementationClass"] !== "undefined" &&
+            this.initOptions["dataLayerImplementationClass"] !== null
+        ) {
             DivbloxDataLayer = this.initOptions["dataLayerImplementationClass"];
         }
 
@@ -278,10 +299,10 @@ class DivbloxBase extends divbloxObjectBase {
         const currentDataModelHash = this.dataLayer.getDataModelHash();
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] === "undefined") {
             this.dataModelState = {
-                "currentDataModelHash": currentDataModelHash,
-                "lastDataModelChangeTimestamp": Date.now(),
-                "lastDataModelSyncTimestamp": 0
-            }
+                currentDataModelHash: currentDataModelHash,
+                lastDataModelChangeTimestamp: Date.now(),
+                lastDataModelSyncTimestamp: 0,
+            };
             this.updateDataModelState(this.dataModelState);
         } else {
             this.dataModelState = this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"];
@@ -294,16 +315,21 @@ class DivbloxBase extends divbloxObjectBase {
     initJwtWrapper() {
         dxUtils.printSubHeadingMessage("Initializing JWT wrapper");
 
-        if ((typeof this.initOptions["jwtWrapperImplementationClass"] !== "undefined") &&
-            (this.initOptions["jwtWrapperImplementationClass"] !== null)) {
+        if (
+            typeof this.initOptions["jwtWrapperImplementationClass"] !== "undefined" &&
+            this.initOptions["jwtWrapperImplementationClass"] !== null
+        ) {
             DivbloxJwtWrapper = this.initOptions["jwtWrapperImplementationClass"];
         }
 
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"] === "undefined") {
-            throw new Error("No jwtSecret configured for the environment: "+process.env.NODE_ENV);
+            throw new Error("No jwtSecret configured for the environment: " + process.env.NODE_ENV);
         }
 
-        this.jwtWrapper = new DivbloxJwtWrapper(this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"], this);
+        this.jwtWrapper = new DivbloxJwtWrapper(
+            this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"],
+            this
+        );
     }
 
     /**
@@ -321,8 +347,11 @@ class DivbloxBase extends divbloxObjectBase {
             } catch (error) {
                 this.populateError(error, true);
 
-                this.populateError("Your database might not be configured properly. You can update your " +
-                    "database connection information in dxconfig.json", true);
+                this.populateError(
+                    "Your database might not be configured properly. You can update your " +
+                        "database connection information in dxconfig.json",
+                    true
+                );
 
                 dxUtils.printErrorMessage(JSON.stringify(this.getError()));
                 return;
@@ -330,15 +359,15 @@ class DivbloxBase extends divbloxObjectBase {
 
             dxUtils.printSubHeadingMessage("Checking for database & ORM synchronization");
 
-            if (!await this.dataLayer.validateDataModel(this.dataModelState)) {
+            if (!(await this.dataLayer.validateDataModel(this.dataModelState))) {
                 this.populateError(this.dataLayer.getError(), true);
 
-                dxUtils.printWarningMessage("Error validating data model: "+
-                    JSON.stringify(this.getError(),null,2));
+                dxUtils.printWarningMessage("Error validating data model: " + JSON.stringify(this.getError(), null, 2));
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
-                    dxUtils.printErrorMessage("You can run the application generator again to generate the " +
-                        "default model:");
+                    dxUtils.printErrorMessage(
+                        "You can run the application generator again to generate the " + "default model:"
+                    );
                     dxUtils.printTerminalMessage("npx github:divbloxjs/divbloxjs-application-generator");
                     return;
                 }
@@ -351,25 +380,29 @@ class DivbloxBase extends divbloxObjectBase {
 
                 // We always want to generate ORM classes here since there were probably changes to the data model.
                 await this.generateOrmBaseClasses();
-
-            } else if (this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp) {
+            } else if (
+                this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp
+            ) {
                 await this.syncDatabase(false);
 
                 // We always want to generate ORM classes here since there were probably changes to the data model.
                 await this.generateOrmBaseClasses();
             }
 
-            if (!await this.checkOrmBaseClassesComplete()) {
+            if (!(await this.checkOrmBaseClassesComplete())) {
                 await this.generateOrmBaseClasses();
             }
 
-            if (!await this.ensureGlobalSuperUserPresent()) {
+            if (!(await this.ensureGlobalSuperUserPresent())) {
                 dxUtils.printErrorMessage(this.getError());
                 process.exit(1);
                 return;
             }
 
-            await this.createGlobalIdentifierGrouping(this.getDefaultGlobalIdentifierGrouping(),"The default globalIdentifierGrouping");
+            await this.createGlobalIdentifierGrouping(
+                this.getDefaultGlobalIdentifierGrouping(),
+                "The default globalIdentifierGrouping"
+            );
 
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
@@ -383,26 +416,36 @@ class DivbloxBase extends divbloxObjectBase {
         this.dataModelSchema = require("./dx-orm/generated/schemas/data-model-schema.js");
 
         if (!this.disableWebServer) {
-            const webServerPort = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined" ?
-                3000 : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
+            const webServerPort =
+                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined"
+                    ? 3000
+                    : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
 
-            const webServerCorsAllowedList = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"] === "undefined" ?
-                [] : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"];
+            const webServerCorsAllowedList =
+                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"] ===
+                "undefined"
+                    ? []
+                    : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"];
 
-            const webServerUseHttps = typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined" ?
-                false : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
+            const webServerUseHttps =
+                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined"
+                    ? false
+                    : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
 
             const webServerHttpsConfig = this.configObj["environmentArray"][process.env.NODE_ENV]["serverHttps"];
 
             const webServiceConfig = {
-                "webServerPort": webServerPort,
-                "useHttps": webServerUseHttps,
-                "serverHttps": webServerHttpsConfig,
-                "webServerCorsAllowedList": webServerCorsAllowedList,
-                ...this.configObj["webServiceConfig"]};
+                webServerPort: webServerPort,
+                useHttps: webServerUseHttps,
+                serverHttps: webServerHttpsConfig,
+                webServerCorsAllowedList: webServerCorsAllowedList,
+                ...this.configObj["webServiceConfig"],
+            };
 
-            if ((typeof this.initOptions["webServiceImplementationClass"] !== "undefined") &&
-                (this.initOptions["webServiceImplementationClass"] !== null)) {
+            if (
+                typeof this.initOptions["webServiceImplementationClass"] !== "undefined" &&
+                this.initOptions["webServiceImplementationClass"] !== null
+            ) {
                 DivbloxWebService = this.initOptions["webServiceImplementationClass"];
             }
 
@@ -437,7 +480,7 @@ class DivbloxBase extends divbloxObjectBase {
      */
     updateDataModelState(dataModelState) {
         this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
     }
 
     /**
@@ -445,7 +488,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} remotePath The remote path of the package as it is defined in your project's package.json file
      */
     async registerRemotePackage(remotePath) {
-        if ((typeof remotePath === "undefined") || (remotePath.length < 1)) {
+        if (typeof remotePath === "undefined" || remotePath.length < 1) {
             remotePath = await dxUtils.getCommandLineInput("Please provide the package remote path: ");
         }
 
@@ -453,7 +496,7 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printErrorMessage("Cannot register dx package. Invalid remote path provided!");
         }
 
-        const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
+        const projectPackagesStr = fs.readFileSync("./package.json", "utf-8");
         const projectPackages = JSON.parse(projectPackagesStr);
 
         if (typeof projectPackages["dependencies"] === "undefined") {
@@ -465,18 +508,18 @@ class DivbloxBase extends divbloxObjectBase {
 
         if (registerPackageName === null) {
             //This means we need to attempt to install the package first
-            dxUtils.printInfoMessage("Installing "+remotePath+"...");
+            dxUtils.printInfoMessage("Installing " + remotePath + "...");
 
-            const createResult = await dxUtils.executeCommand('npm install --save '+remotePath);
-            if ((typeof createResult === "undefined") || (createResult === null)) {
-                dxUtils.printErrorMessage("Could not install "+remotePath+". Please try again.");
+            const createResult = await dxUtils.executeCommand("npm install --save " + remotePath);
+            if (typeof createResult === "undefined" || createResult === null) {
+                dxUtils.printErrorMessage("Could not install " + remotePath + ". Please try again.");
                 return;
             }
 
             if (createResult.stdout.length > 0) {
-                dxUtils.printSuccessMessage(remotePath+' install result: '+createResult.stdout);
+                dxUtils.printSuccessMessage(remotePath + " install result: " + createResult.stdout);
             } else {
-                dxUtils.printErrorMessage(remotePath+' install failed: '+createResult.stderr);
+                dxUtils.printErrorMessage(remotePath + " install failed: " + createResult.stderr);
             }
         }
 
@@ -489,14 +532,14 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (this.configObj["divbloxPackages"]["remote"].includes(registerPackageName)) {
-            dxUtils.printErrorMessage("Remote package '"+registerPackageName+"' is already registered!");
+            dxUtils.printErrorMessage("Remote package '" + registerPackageName + "' is already registered!");
             return;
         }
 
         this.configObj["divbloxPackages"]["remote"].push(registerPackageName);
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
 
-        dxUtils.printSuccessMessage(registerPackageName+" successfully registered!");
+        dxUtils.printSuccessMessage(registerPackageName + " successfully registered!");
     }
 
     /**
@@ -504,7 +547,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} packageName The name of the package as it is defined in your project's dxconfig.json file
      */
     async deregisterPackage(packageName) {
-        if ((typeof packageName === "undefined") || (packageName.length < 1)) {
+        if (typeof packageName === "undefined" || packageName.length < 1) {
             packageName = await dxUtils.getCommandLineInput("Please provide the package name: ");
         }
 
@@ -514,7 +557,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
-            const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
+            const projectPackagesStr = fs.readFileSync("./package.json", "utf-8");
             const projectPackages = JSON.parse(projectPackagesStr);
 
             if (typeof projectPackages["dependencies"] === "undefined") {
@@ -522,38 +565,38 @@ class DivbloxBase extends divbloxObjectBase {
                 return;
             }
 
-            dxUtils.printInfoMessage("Removing "+packageName+"...");
+            dxUtils.printInfoMessage("Removing " + packageName + "...");
 
-            const removeResult = await dxUtils.executeCommand('npm remove '+packageName);
-            if ((typeof removeResult === "undefined") || (removeResult === null)) {
-                dxUtils.printErrorMessage("Could not remove "+removeResult+". Please try again.");
+            const removeResult = await dxUtils.executeCommand("npm remove " + packageName);
+            if (typeof removeResult === "undefined" || removeResult === null) {
+                dxUtils.printErrorMessage("Could not remove " + removeResult + ". Please try again.");
                 return;
             }
 
             if (removeResult.stdout.length > 0) {
-                dxUtils.printSuccessMessage(packageName+' remove result: '+removeResult.stdout);
+                dxUtils.printSuccessMessage(packageName + " remove result: " + removeResult.stdout);
             } else {
-                dxUtils.printErrorMessage(packageName+' remove failed: '+removeResult.stderr);
+                dxUtils.printErrorMessage(packageName + " remove failed: " + removeResult.stderr);
             }
 
-            this.configObj["divbloxPackages"]["remote"] =
-                this.configObj["divbloxPackages"]["remote"].filter(
-                    function(element) {
-                        return element !== packageName
-                    });
+            this.configObj["divbloxPackages"]["remote"] = this.configObj["divbloxPackages"]["remote"].filter(function (
+                element
+            ) {
+                return element !== packageName;
+            });
         }
 
         if (this.configObj["divbloxPackages"]["local"].includes(packageName)) {
-            this.configObj["divbloxPackages"]["local"] =
-                this.configObj["divbloxPackages"]["local"].filter(
-                    function(element) {
-                        return element !== packageName
-                    });
+            this.configObj["divbloxPackages"]["local"] = this.configObj["divbloxPackages"]["local"].filter(function (
+                element
+            ) {
+                return element !== packageName;
+            });
         }
 
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj,null,2));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
 
-        dxUtils.printSuccessMessage(packageName+" successfully deregistered!");
+        dxUtils.printSuccessMessage(packageName + " successfully deregistered!");
     }
 
     /**
@@ -562,7 +605,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {null|string} Null if not found, or if found the name of the package
      */
     getPackageNameFromConfig(remotePath) {
-        const projectPackagesStr = fs.readFileSync("./package.json",'utf-8');
+        const projectPackagesStr = fs.readFileSync("./package.json", "utf-8");
         const projectPackages = JSON.parse(projectPackagesStr);
 
         if (typeof projectPackages["dependencies"] === "undefined") {
@@ -605,15 +648,14 @@ class DivbloxBase extends divbloxObjectBase {
      * @returns {Promise<void>}
      */
     async syncDatabase(handleErrorSilently = false) {
-        const syncStr = await dxUtils.getCommandLineInput(
-            "Synchronize data model with database now? [y/n]");
+        const syncStr = await dxUtils.getCommandLineInput("Synchronize data model with database now? [y/n]");
 
         if (syncStr.toLowerCase() === "y") {
-            if (!await this.dataLayer.syncDatabase()) {
+            if (!(await this.dataLayer.syncDatabase())) {
                 if (handleErrorSilently) {
-                    console.error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
+                    console.error("Error synchronizing data model: " + JSON.stringify(this.getError(), null, 2));
                 } else {
-                    throw new Error("Error synchronizing data model: "+JSON.stringify(this.getError(),null,2));
+                    throw new Error("Error synchronizing data model: " + JSON.stringify(this.getError(), null, 2));
                 }
             } else {
                 this.dataModelState.lastDataModelSyncTimestamp = Date.now();
@@ -634,19 +676,33 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {Promise<boolean>} True if all expected classes exists, false otherwise
      */
     async checkOrmBaseClassesComplete() {
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated")) {
             return false;
         }
 
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas")){
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas")) {
             return false;
         }
 
         for (const entityName of Object.keys(this.dataModelObj)) {
-            if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+".js")) {
+            if (
+                !fs.existsSync(
+                    DIVBLOX_ROOT_DIR +
+                        "/dx-orm/generated/" +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".js"
+                )
+            ) {
                 return false;
             }
-            if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+"-schema.js")) {
+            if (
+                !fs.existsSync(
+                    DIVBLOX_ROOT_DIR +
+                        "/dx-orm/generated/schemas/" +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        "-schema.js"
+                )
+            ) {
                 return false;
             }
         }
@@ -660,78 +716,83 @@ class DivbloxBase extends divbloxObjectBase {
     async generateOrmBaseClasses() {
         dxUtils.printSubHeadingMessage("Generating ORM base classes from data model specification");
 
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated")){
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated")) {
             dxUtils.printInfoMessage("Creating /dx-orm/generated/ directory...");
-            fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated");
+            fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated");
         }
 
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas")){
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas")) {
             dxUtils.printInfoMessage("Creating /dx-orm/generated/schemas directory...");
-            fs.mkdirSync(DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas");
+            fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas");
         }
 
         const schemaComplete = {};
 
         for (const entityName of Object.keys(this.dataModelObj)) {
-            dxUtils.printInfoMessage("Generating base object model class for '"+entityName+"'...");
+            dxUtils.printInfoMessage("Generating base object model class for '" + entityName + "'...");
 
-            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(dxUtils.getCamelCaseSplittedToLowerCase(entityName,'_'),"_");
+            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
+                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
+                "_"
+            );
             const entityNameCamelCase = entityName;
             let entityData = "";
             let entitySchemaData = {
-                "id": {
-                    "type": "integer",
-                    "format": "int32"
-                }
+                id: {
+                    type: "integer",
+                    format: "int32",
+                },
             };
 
             const attributes = this.dataModelObj[entityName]["attributes"];
             const relationships = this.dataModelObj[entityName]["relationships"];
 
             const attributeTypeMapping = {
-                "char": "string",
-                "varchar": "string",
-                "tinytext": "string",
-                "text": "string",
-                "mediumtext": "string",
-                "longtext": "string",
-                "binary": "string",
-                "varbinary": "string",
-                "tinyblob": "string",
-                "mediumblob": "string",
-                "blob": "string",
-                "longblob": "string",
-                "enum": "string",
-                "json": "string",
-                "date": "string",
-                "datetime": "string",
-                "timestamp": "integer",
-                "year": "integer",
-                "tinyint": "integer",
-                "smallint": "integer",
-                "mediumint": "integer",
-                "int": "integer",
-                "bigint": "integer",
-                "decimal": "number",
-                "float": "number",
-                "double": "number",
-                "real": "number",
-                "bit": "integer",
-                "boolean": "boolean",
-                "serial": "integer",
-            }
+                char: "string",
+                varchar: "string",
+                tinytext: "string",
+                text: "string",
+                mediumtext: "string",
+                longtext: "string",
+                binary: "string",
+                varbinary: "string",
+                tinyblob: "string",
+                mediumblob: "string",
+                blob: "string",
+                longblob: "string",
+                enum: "string",
+                json: "string",
+                date: "string",
+                datetime: "string",
+                timestamp: "integer",
+                year: "integer",
+                tinyint: "integer",
+                smallint: "integer",
+                mediumint: "integer",
+                int: "integer",
+                bigint: "integer",
+                decimal: "number",
+                float: "number",
+                double: "number",
+                real: "number",
+                bit: "integer",
+                boolean: "boolean",
+                serial: "integer",
+            };
 
             for (const attributeName of Object.keys(attributes)) {
                 if (entityData.length > 0) {
-                    entityData += '\n        ';
+                    entityData += "\n        ";
                 }
 
-                entityData += 'this.data["'+attributeName+'"] = ';
-                const entityAttributeType = (typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined") ?
-                    "string" : attributeTypeMapping[attributes[attributeName]["type"]];
+                entityData += 'this.data["' + attributeName + '"] = ';
+                const entityAttributeType =
+                    typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined"
+                        ? "string"
+                        : attributeTypeMapping[attributes[attributeName]["type"]];
 
                 entitySchemaData[attributeName] = {
-                    "type": entityAttributeType
+                    type: entityAttributeType,
                 };
 
                 switch (attributes[attributeName]["type"]) {
@@ -750,32 +811,36 @@ class DivbloxBase extends divbloxObjectBase {
                 }
 
                 if (typeof attributes[attributeName]["default"] === "undefined") {
-                    entityData += 'null;'
+                    entityData += "null;";
                     continue;
                 }
 
-                if ((attributes[attributeName]["default"] === null) || (attributes[attributeName]["default"] === "CURRENT_TIMESTAMP")) {
-                    entityData += 'null;'
+                if (
+                    attributes[attributeName]["default"] === null ||
+                    attributes[attributeName]["default"] === "CURRENT_TIMESTAMP"
+                ) {
+                    entityData += "null;";
                     continue;
                 }
 
-                entityData += (isNaN(attributes[attributeName]["default"]) || (attributes[attributeName]["default"].length === 0)) ?
-                    "'"+attributes[attributeName]["default"]+"';" :
-                    attributes[attributeName]["default"].toString();
+                entityData +=
+                    isNaN(attributes[attributeName]["default"]) || attributes[attributeName]["default"].length === 0
+                        ? "'" + attributes[attributeName]["default"] + "';"
+                        : attributes[attributeName]["default"].toString();
             }
 
             for (const relationshipName of Object.keys(relationships)) {
                 for (const relationshipUniqueName of relationships[relationshipName]) {
-                    const finalRelationshipName = relationshipName+"_"+relationshipUniqueName;
+                    const finalRelationshipName = relationshipName + "_" + relationshipUniqueName;
 
                     if (entityData.length > 0) {
-                        entityData += '\n        ';
+                        entityData += "\n        ";
                     }
 
-                    entityData += 'this.data["'+finalRelationshipName+'"] = null;';
+                    entityData += 'this.data["' + finalRelationshipName + '"] = null;';
                     entitySchemaData[finalRelationshipName] = {
-                        "type": "integer",
-                        "format": "int32"
+                        type: "integer",
+                        format: "int32",
                     };
                 }
             }
@@ -783,18 +848,18 @@ class DivbloxBase extends divbloxObjectBase {
             schemaComplete[entityName] = entitySchemaData;
 
             const tokensToReplace = {
-                "EntityNamePascalCase": entityNamePascalCase,
-                "EntityNameCamelCase": entityNameCamelCase,
-                "EntityNameLowerCaseSplitted": dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-"),
-                "EntityData": entityData,
-                "EntitySchemaData": JSON.stringify(entitySchemaData,null,2)
+                EntityNamePascalCase: entityNamePascalCase,
+                EntityNameCamelCase: entityNameCamelCase,
+                EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
+                EntityData: entityData,
+                EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
             };
 
-            let fileContentObjectModelStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-model.tpl",'utf-8');
-            let fileContentObjectSchemaStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/object-schema.tpl",'utf-8');
+            let fileContentObjectModelStr = fs.readFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/object-model.tpl", "utf-8");
+            let fileContentObjectSchemaStr = fs.readFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/object-schema.tpl", "utf-8");
 
             for (const token of Object.keys(tokensToReplace)) {
-                const search = '['+token+']';
+                const search = "[" + token + "]";
 
                 let done = false;
                 while (!done) {
@@ -812,18 +877,29 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             fs.writeFileSync(
-                DIVBLOX_ROOT_DIR+"/dx-orm/generated/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+".js",
-                fileContentObjectModelStr);
+                DIVBLOX_ROOT_DIR +
+                    "/dx-orm/generated/" +
+                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                    ".js",
+                fileContentObjectModelStr
+            );
 
             fs.writeFileSync(
-                DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/"+dxUtils.getCamelCaseSplittedToLowerCase(entityName,"-")+"-schema.js",
-                fileContentObjectSchemaStr);
+                DIVBLOX_ROOT_DIR +
+                    "/dx-orm/generated/schemas/" +
+                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                    "-schema.js",
+                fileContentObjectSchemaStr
+            );
         }
 
-        let fileContentDataModelSchemaStr = fs.readFileSync(DIVBLOX_ROOT_DIR+"/dx-orm/data-model-schema.tpl",'utf-8');
+        let fileContentDataModelSchemaStr = fs.readFileSync(
+            DIVBLOX_ROOT_DIR + "/dx-orm/data-model-schema.tpl",
+            "utf-8"
+        );
 
-        const search = '[SchemaData]';
-        const replace =  JSON.stringify(schemaComplete,null,2);
+        const search = "[SchemaData]";
+        const replace = JSON.stringify(schemaComplete, null, 2);
 
         let done = false;
         while (!done) {
@@ -833,8 +909,9 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         fs.writeFileSync(
-            DIVBLOX_ROOT_DIR+"/dx-orm/generated/schemas/data-model-schema.js",
-            fileContentDataModelSchemaStr);
+            DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/data-model-schema.js",
+            fileContentDataModelSchemaStr
+        );
     }
 
     /**
@@ -844,18 +921,15 @@ class DivbloxBase extends divbloxObjectBase {
      */
     async ensureGlobalSuperUserPresent() {
         let superUserGroupId = -1;
-        const superUserGrouping = await this.dataLayer.readByField(
-            "globalIdentifierGrouping",
-            "name",
-            "super user");
+        const superUserGrouping = await this.dataLayer.readByField("globalIdentifierGrouping", "name", "super user");
 
         if (superUserGrouping === null) {
             dxUtils.printSubHeadingMessage("Initializing super user");
 
-            const createResult = await this.dataLayer.create(
-                "globalIdentifierGrouping",
-                {"name": "super user",
-                    "description":"The highest level grouping that has access to EVERYTHING"});
+            const createResult = await this.dataLayer.create("globalIdentifierGrouping", {
+                name: "super user",
+                description: "The highest level grouping that has access to EVERYTHING",
+            });
 
             if (createResult === -1) {
                 this.populateError("Could not create super user grouping.");
@@ -867,17 +941,13 @@ class DivbloxBase extends divbloxObjectBase {
             superUserGroupId = superUserGrouping["id"];
         }
 
-        const superUser = await this.dataLayer.readByField("globalIdentifier","isSuperUser",1);
+        const superUser = await this.dataLayer.readByField("globalIdentifier", "isSuperUser", 1);
 
-        let uniqueIdentifier = '';
+        let uniqueIdentifier = "";
 
         if (superUser === null) {
             // If the super user does not exist, let's create its identifier and JWT for debug purposes
-            uniqueIdentifier = await this.createGlobalIdentifier(
-                '',
-                -1,
-                [superUserGroupId],
-                true);
+            uniqueIdentifier = await this.createGlobalIdentifier("", -1, [superUserGroupId], true);
         } else {
             uniqueIdentifier = superUser.uniqueIdentifier;
         }
@@ -885,9 +955,7 @@ class DivbloxBase extends divbloxObjectBase {
         const jwtToken = await this.jwtWrapper.issueJwt(uniqueIdentifier);
         const jwtPath = this.configRoot + "/super-user.jwt";
 
-        fs.writeFileSync(
-            jwtPath,
-            jwtToken);
+        fs.writeFileSync(jwtPath, jwtToken);
 
         return true;
     }
@@ -900,13 +968,13 @@ class DivbloxBase extends divbloxObjectBase {
      */
     getEntitySchema(entityName, excludeId = false) {
         if (typeof this.dataModelSchema[entityName] !== "undefined") {
-            const returnSchema = (JSON.parse(JSON.stringify(this.dataModelSchema[entityName])));
+            const returnSchema = JSON.parse(JSON.stringify(this.dataModelSchema[entityName]));
 
             if (excludeId) {
                 delete returnSchema["id"];
             }
 
-            return {"properties": returnSchema};
+            return { properties: returnSchema };
         }
         return {};
     }
@@ -917,13 +985,13 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {*} data The relevant key/value data pairs for this entry
      * @returns {Promise<number|*>}
      */
-    async create(entityName = '',data = {}) {
+    async create(entityName = "", data = {}) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return -1;
         }
 
-        const objId = await this.dataLayer.create(entityName,data);
+        const objId = await this.dataLayer.create(entityName, data);
         if (objId === -1) {
             this.populateError(this.dataLayer.getError(), true, true);
         }
@@ -937,13 +1005,13 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {number} id The primary key id of the relevant row
      * @returns {Promise<*>}
      */
-    async read(entityName = '',id = -1) {
+    async read(entityName = "", id = -1) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return null;
         }
 
-        const dataObj = await this.dataLayer.read(entityName,id);
+        const dataObj = await this.dataLayer.read(entityName, id);
         if (dataObj === null) {
             this.populateError(this.dataLayer.getError(), true, true);
         }
@@ -958,7 +1026,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string|number} fieldValue The primary key id of the relevant row
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async readByField(entityName = '', fieldName = 'id', fieldValue = -1) {
+    async readByField(entityName = "", fieldName = "id", fieldValue = -1) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return null;
@@ -978,13 +1046,13 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {*} data The relevant key/value data pairs for this entry. Only the provided keys will be updated
      * @returns {Promise<number|*>}
      */
-    async update(entityName = '',data = {}) {
+    async update(entityName = "", data = {}) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
 
-        if (!await this.dataLayer.update(entityName, data)) {
+        if (!(await this.dataLayer.update(entityName, data))) {
             this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
@@ -998,13 +1066,13 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {number} id The primary key id of the relevant row
      * @returns {Promise<boolean>}
      */
-    async delete(entityName = '',id = -1) {
+    async delete(entityName = "", id = -1) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
 
-        if (!await this.dataLayer.delete(entityName,id)) {
+        if (!(await this.dataLayer.delete(entityName, id))) {
             this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
@@ -1029,7 +1097,7 @@ class DivbloxBase extends divbloxObjectBase {
             return false;
         }
 
-        if (!await this.dataLayer.addAuditLogEntry(entry)) {
+        if (!(await this.dataLayer.addAuditLogEntry(entry))) {
             this.populateError(this.dataLayer.getError());
             return false;
         }
@@ -1052,28 +1120,26 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {Promise<string|null>} If created successfully, it returns the globally unique id. Null, otherwise with
      * an error populated in the error array.
      */
-    async createGlobalIdentifier(linkedEntity = '',
-                                 linkedEntityId = -1,
-                                 globalIdentifierGroupings = [],
-                                 isSuperUser = false) {
-        const uniqueIdentifierRaw = Date.now().toString()+Math.round(1000000*Math.random()).toString();
-        const uniqueIdentifier =
-            require('crypto')
-                .createHash('md5')
-                .update(uniqueIdentifierRaw)
-                .digest("hex");
+    async createGlobalIdentifier(
+        linkedEntity = "",
+        linkedEntityId = -1,
+        globalIdentifierGroupings = [],
+        isSuperUser = false
+    ) {
+        const uniqueIdentifierRaw = Date.now().toString() + Math.round(1000000 * Math.random()).toString();
+        const uniqueIdentifier = require("crypto").createHash("md5").update(uniqueIdentifierRaw).digest("hex");
 
         const objectToSave = {
-            "uniqueIdentifier": uniqueIdentifier,
-            "linkedEntity": linkedEntity,
-            "linkedEntityId": linkedEntityId,
-            "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings),
-            "isSuperUser": isSuperUser ? 1 : 0,
-            "configurationData": '{}',
-            "sessionData": '{}'
+            uniqueIdentifier: uniqueIdentifier,
+            linkedEntity: linkedEntity,
+            linkedEntityId: linkedEntityId,
+            globalIdentifierGroupings: JSON.stringify(globalIdentifierGroupings),
+            isSuperUser: isSuperUser ? 1 : 0,
+            configurationData: "{}",
+            sessionData: "{}",
         };
 
-        const objId = await this.dataLayer.create('globalIdentifier', objectToSave);
+        const objId = await this.dataLayer.create("globalIdentifier", objectToSave);
 
         if (objId !== -1) {
             return uniqueIdentifier;
@@ -1101,11 +1167,11 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         const objectToSave = {
-            "id": globalIdentifier["id"],
-            "globalIdentifierGroupings": JSON.stringify(globalIdentifierGroupings)
+            id: globalIdentifier["id"],
+            globalIdentifierGroupings: JSON.stringify(globalIdentifierGroupings),
         };
 
-        return await this.dataLayer.update('globalIdentifier', objectToSave);
+        return await this.dataLayer.update("globalIdentifier", objectToSave);
     }
 
     /**
@@ -1117,7 +1183,8 @@ class DivbloxBase extends divbloxObjectBase {
         const globalIdentifier = await this.dataLayer.readByField(
             "globalIdentifier",
             "uniqueIdentifier",
-            uniqueIdentifier);
+            uniqueIdentifier
+        );
 
         if (globalIdentifier === null) {
             this.populateError(this.dataLayer.getError());
@@ -1132,15 +1199,28 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {number} entityId The id of the row to search on
      * @return {Promise<{}|null>} A globalIdentifier object if found, null otherwise with an error possibly populated
      */
-    async getGlobalIdentifierByLinkedEntity(entityName = 'none', entityId = -1) {
-        const query = "SELECT * FROM `"+this.dataLayer.getSqlReadyName("globalIdentifier")+"` WHERE " +
-            "`"+this.dataLayer.getSqlReadyName("linkedEntity")+"` = '"+entityName+"' AND " +
-            "`"+this.dataLayer.getSqlReadyName("linkedEntityId")+"` = '"+entityId+"';";
+    async getGlobalIdentifierByLinkedEntity(entityName = "none", entityId = -1) {
+        const query =
+            "SELECT * FROM `" +
+            this.dataLayer.getSqlReadyName("globalIdentifier") +
+            "` WHERE " +
+            "`" +
+            this.dataLayer.getSqlReadyName("linkedEntity") +
+            "` = '" +
+            entityName +
+            "' AND " +
+            "`" +
+            this.dataLayer.getSqlReadyName("linkedEntityId") +
+            "` = '" +
+            entityId +
+            "';";
 
-        const queryResult = await this.dataLayer.executeQuery(query,
-            this.dataLayer.getModuleNameFromEntityName(entityName));
+        const queryResult = await this.dataLayer.executeQuery(
+            query,
+            this.dataLayer.getModuleNameFromEntityName(entityName)
+        );
 
-        if ((queryResult === null) || (queryResult.length === 0)) {
+        if (queryResult === null || queryResult.length === 0) {
             this.populateError(this.dataLayer.getError());
             return null;
         }
@@ -1163,20 +1243,23 @@ class DivbloxBase extends divbloxObjectBase {
             return globalIdentifierGroupings;
         }
 
-        if ((typeof globalIdentifier["globalIdentifierGroupings"] === "undefined") ||
-            (globalIdentifier["globalIdentifierGroupings"] === null)) {
+        if (
+            typeof globalIdentifier["globalIdentifierGroupings"] === "undefined" ||
+            globalIdentifier["globalIdentifierGroupings"] === null
+        ) {
             return globalIdentifierGroupings;
         }
 
         if (globalIdentifier["globalIdentifierGroupings"].length > 0) {
-
             for (const groupingId of JSON.parse(globalIdentifier["globalIdentifierGroupings"])) {
                 globalIdentifierGroupings.push(groupingId);
             }
 
             let childrenArray = [];
             for (const globalIdentifierGroupingId of globalIdentifierGroupings) {
-                for (const childId of await this.getGlobalIdentifierGroupingChildrenRecursive(globalIdentifierGroupingId)) {
+                for (const childId of await this.getGlobalIdentifierGroupingChildrenRecursive(
+                    globalIdentifierGroupingId
+                )) {
                     childrenArray.push(childId);
                 }
             }
@@ -1197,11 +1280,12 @@ class DivbloxBase extends divbloxObjectBase {
     async getGlobalIdentifierGroupingChildrenRecursive(parentId = -1) {
         let returnArray = [];
 
-        const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping")
+        const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping");
 
         const childGroupings = await this.dataLayer.executeQuery(
-            "SELECT id FROM `global_identifier_grouping` WHERE `parent_grouping_id` = '"+parentId+"'",
-            moduleName);
+            "SELECT id FROM `global_identifier_grouping` WHERE `parent_grouping_id` = '" + parentId + "'",
+            moduleName
+        );
 
         if (childGroupings === null) {
             return returnArray;
@@ -1235,7 +1319,7 @@ class DivbloxBase extends divbloxObjectBase {
         const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping");
 
         const globalIdentifierGroupingsReadable = await this.dataLayer.executeQuery(
-            "SELECT * FROM global_identifier_grouping WHERE id IN("+globalIdentifierGroupingsStr+")",
+            "SELECT * FROM global_identifier_grouping WHERE id IN(" + globalIdentifierGroupingsStr + ")",
             moduleName
         );
 
@@ -1255,48 +1339,52 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} operation show|create|modify|remove
      * @return {Promise<void>}
      */
-    async manageGlobalIdentifierGroupings(operation = 'show') {
+    async manageGlobalIdentifierGroupings(operation = "show") {
         switch (operation) {
-            case 'create':
+            case "create":
                 dxUtils.printHeadingMessage("Create Global Identifier Grouping");
 
                 const createName = await dxUtils.getCommandLineInput("Please provide a name for the grouping: ");
 
-                const createDescription = await dxUtils.getCommandLineInput("Optional: Provide a description for the grouping " +
-                    "(Leave blank to skip): ");
+                const createDescription = await dxUtils.getCommandLineInput(
+                    "Optional: Provide a description for the grouping " + "(Leave blank to skip): "
+                );
 
-                const createParentId = await dxUtils.getCommandLineInput("Optional: Provide a parent grouping id for the " +
-                    "grouping (Leave blank to skip): ");
+                const createParentId = await dxUtils.getCommandLineInput(
+                    "Optional: Provide a parent grouping id for the " + "grouping (Leave blank to skip): "
+                );
 
                 const createResult = await this.createGlobalIdentifierGrouping(
                     createName,
                     createDescription,
-                    createParentId === "" ? -1 : parseInt(createParentId));
+                    createParentId === "" ? -1 : parseInt(createParentId)
+                );
 
                 if (!createResult) {
-                    dxUtils.printErrorMessage("Error creating grouping:\n"+
-                        JSON.stringify(
-                            this.getError(),
-                            null,
-                            2))
+                    dxUtils.printErrorMessage("Error creating grouping:\n" + JSON.stringify(this.getError(), null, 2));
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully created!");
                 }
                 break;
-            case 'modify':
+            case "modify":
                 dxUtils.printHeadingMessage("Modify Global Identifier Grouping");
 
-                const modifyName = await dxUtils.getCommandLineInput("Please provide the name of the grouping" +
-                    "to modify: ");
+                const modifyName = await dxUtils.getCommandLineInput(
+                    "Please provide the name of the grouping" + "to modify: "
+                );
 
-                const modifiedName = await dxUtils.getCommandLineInput("Optional: Please provide the new name " +
-                    "for the grouping (Leave blank to skip): ");
+                const modifiedName = await dxUtils.getCommandLineInput(
+                    "Optional: Please provide the new name " + "for the grouping (Leave blank to skip): "
+                );
 
-                const modifiedDescription = await dxUtils.getCommandLineInput("Optional: Provide a new " +
-                    "description for the grouping (Leave blank to skip): ");
+                const modifiedDescription = await dxUtils.getCommandLineInput(
+                    "Optional: Provide a new " + "description for the grouping (Leave blank to skip): "
+                );
 
-                const modifiedParentId = await dxUtils.getCommandLineInput("Optional: Provide a new parent " +
-                    "grouping id for the grouping (Leave blank to skip or provide -1 to remove): ");
+                const modifiedParentId = await dxUtils.getCommandLineInput(
+                    "Optional: Provide a new parent " +
+                        "grouping id for the grouping (Leave blank to skip or provide -1 to remove): "
+                );
 
                 let modifications = {};
 
@@ -1314,40 +1402,31 @@ class DivbloxBase extends divbloxObjectBase {
 
                 const modifyResult = await this.modifyGlobalIdentifierGrouping(modifyName, modifications);
                 if (!modifyResult) {
-                    dxUtils.printErrorMessage("Error modifying grouping:\n"+
-                        JSON.stringify(
-                            this.getError(),
-                            null,
-                            2))
+                    dxUtils.printErrorMessage("Error modifying grouping:\n" + JSON.stringify(this.getError(), null, 2));
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully modified!");
                 }
                 break;
-            case 'remove':
+            case "remove":
                 dxUtils.printHeadingMessage("Remove Global Identifier Grouping");
 
-                const removeName = await dxUtils.getCommandLineInput("Please provide a name for the grouping" +
-                    "that should be removed: ");
+                const removeName = await dxUtils.getCommandLineInput(
+                    "Please provide a name for the grouping" + "that should be removed: "
+                );
 
                 const removeResult = await this.removeGlobalIdentifierGrouping(removeName);
                 if (!removeResult) {
-                    dxUtils.printErrorMessage("Error removing grouping:\n"+
-                        JSON.stringify(
-                            this.getError(),
-                            null,
-                            2))
+                    dxUtils.printErrorMessage("Error removing grouping:\n" + JSON.stringify(this.getError(), null, 2));
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully removed!");
                 }
                 break;
-            case 'show':
+            case "show":
             default:
                 dxUtils.printHeadingMessage("Available Global Identifier Groupings");
                 dxUtils.printSuccessMessage(
-                    JSON.stringify(
-                        await this.getGlobalIdentifierGroupingsHierarchy(),
-                        null,
-                        2));
+                    JSON.stringify(await this.getGlobalIdentifierGroupingsHierarchy(), null, 2)
+                );
         }
     }
 
@@ -1358,22 +1437,19 @@ class DivbloxBase extends divbloxObjectBase {
     async getGlobalIdentifierGroupingsHierarchy() {
         const moduleName = this.dataLayer.getModuleNameFromEntityName("globalIdentifierGrouping");
 
-        const allGroupings = await this.dataLayer.executeQuery(
-            "SELECT * FROM global_identifier_grouping",
-            moduleName
-        );
+        const allGroupings = await this.dataLayer.executeQuery("SELECT * FROM global_identifier_grouping", moduleName);
 
         let nameIdMapping = {};
         for (const grouping of allGroupings) {
             nameIdMapping[grouping["id"]] = grouping["name"].toLowerCase();
         }
 
-        let hierarchy = {}
+        let hierarchy = {};
         for (const grouping of allGroupings) {
             const index = grouping["name"].toLowerCase();
             hierarchy[index] = {
-                "id": grouping["id"],
-                "children": []
+                id: grouping["id"],
+                children: [],
             };
 
             const children = await this.getGlobalIdentifierGroupingChildrenRecursive(grouping["id"]);
@@ -1393,7 +1469,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {Promise<boolean>} Returns true if the grouping was successfully created, false otherwise with an error
      * populated in the error array
      */
-    async createGlobalIdentifierGrouping(name, description = '', parentGroupingId = -1) {
+    async createGlobalIdentifierGrouping(name, description = "", parentGroupingId = -1) {
         if (typeof name === "undefined") {
             this.populateError("Could not create global identifier grouping. No name provided");
             return false;
@@ -1401,27 +1477,24 @@ class DivbloxBase extends divbloxObjectBase {
 
         const nameNormalized = name.toLowerCase();
 
-        const existingGrouping = await this.dataLayer.readByField(
-            "globalIdentifierGrouping",
-            "name",
-            nameNormalized);
+        const existingGrouping = await this.dataLayer.readByField("globalIdentifierGrouping", "name", nameNormalized);
 
         if (existingGrouping === null) {
-            const createResult = await this.dataLayer.create(
-                "globalIdentifierGrouping",
-                {"name": nameNormalized,
-                    "description": description,
-                    "parentGroupingId": parentGroupingId});
+            const createResult = await this.dataLayer.create("globalIdentifierGrouping", {
+                name: nameNormalized,
+                description: description,
+                parentGroupingId: parentGroupingId,
+            });
 
             if (createResult === -1) {
-                this.populateError("Could not create "+nameNormalized+" grouping.");
+                this.populateError("Could not create " + nameNormalized + " grouping.");
                 this.populateError(this.dataLayer.getError());
                 return false;
             }
 
             return true;
         } else {
-            this.populateError("Could not create "+nameNormalized+" grouping. It already exists!");
+            this.populateError("Could not create " + nameNormalized + " grouping. It already exists!");
 
             return false;
         }
@@ -1449,10 +1522,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const nameNormalized = name.toLowerCase();
 
-        const existingGrouping = await this.dataLayer.readByField(
-            "globalIdentifierGrouping",
-            "name",
-            nameNormalized);
+        const existingGrouping = await this.dataLayer.readByField("globalIdentifierGrouping", "name", nameNormalized);
 
         if (existingGrouping === null) {
             this.populateError("Could not modify global identifier grouping. Invalid name provided");
@@ -1468,12 +1538,11 @@ class DivbloxBase extends divbloxObjectBase {
             }
         }
 
-        const modificationData = {"id": existingGrouping["id"], ...modificationsNormalized};
-        const updateResult = await this.dataLayer.update(
-            "globalIdentifierGrouping",modificationData);
+        const modificationData = { id: existingGrouping["id"], ...modificationsNormalized };
+        const updateResult = await this.dataLayer.update("globalIdentifierGrouping", modificationData);
 
         if (!updateResult) {
-            this.populateError("Could not modify "+nameNormalized+" grouping.");
+            this.populateError("Could not modify " + nameNormalized + " grouping.");
             this.populateError(this.dataLayer.getError());
             return false;
         }
@@ -1494,10 +1563,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const nameNormalized = name.toLowerCase();
 
-        const existingGrouping = await this.dataLayer.readByField(
-            "globalIdentifierGrouping",
-            "name",
-            nameNormalized);
+        const existingGrouping = await this.dataLayer.readByField("globalIdentifierGrouping", "name", nameNormalized);
 
         if (existingGrouping === null) {
             this.populateError("Could not remove global identifier grouping. Invalid name provided");
@@ -1506,14 +1572,15 @@ class DivbloxBase extends divbloxObjectBase {
 
         const children = await this.getGlobalIdentifierGroupingChildrenRecursive(existingGrouping["id"]);
         if (children.length > 0) {
-            this.populateError("Could not remove global identifier grouping. It has children. First remove " +
-                "children");
+            this.populateError(
+                "Could not remove global identifier grouping. It has children. First remove " + "children"
+            );
             return false;
         }
 
-        const removeResult = await this.dataLayer.delete("globalIdentifierGrouping",existingGrouping["id"]);
+        const removeResult = await this.dataLayer.delete("globalIdentifierGrouping", existingGrouping["id"]);
         if (!removeResult) {
-            this.populateError("Could not remove "+nameNormalized+" grouping.");
+            this.populateError("Could not remove " + nameNormalized + " grouping.");
             this.populateError(this.dataLayer.getError());
             return false;
         }
@@ -1528,7 +1595,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {*} value The data to store
      * @return {Promise<boolean>} True if store was successful
      */
-    async storeSessionData(globalIdentifier = '', key = '', value = null) {
+    async storeSessionData(globalIdentifier = "", key = "", value = null) {
         // TODO: Implement this functionality
         return true;
     }
@@ -1539,12 +1606,12 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} key The key for the data
      * @return {Promise<string>}
      */
-    async retrieveSessionData(globalIdentifier = null, key = '') {
+    async retrieveSessionData(globalIdentifier = null, key = "") {
         // TODO: Implement this functionality
         if (globalIdentifier === null) {
             return null;
         }
-        return '';
+        return "";
     }
     //#endregion
 
@@ -1554,14 +1621,14 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {string} The text value of the default global identifier grouping for the project
      */
     getDefaultGlobalIdentifierGrouping() {
-        return 'user';
+        return "user";
     }
 
     /**
      * @return {string} The text value of the default global identifier grouping for the project
      */
     getFileUploadPath() {
-        return path.join(path.resolve("./","/divblox-uploads"));
+        return path.join(path.resolve("./", "/divblox-uploads"));
     }
 
     /**
@@ -1572,8 +1639,8 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {boolean} True if the email was sent, false otherwise with an error populated
      */
     async sendEmail(options = {}) {
-        this.populateError(options,true);
-        this.populateError("sendEmail function is NOT implemented",true);
+        this.populateError(options, true);
+        this.populateError("sendEmail function is NOT implemented", true);
         return false;
     }
 
@@ -1584,8 +1651,8 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {boolean} True if the message was sent, false otherwise with an error populated
      */
     async sendMessage(options = {}) {
-        this.populateError(options,true);
-        this.populateError("sendMessage function is NOT implemented",true);
+        this.populateError(options, true);
+        this.populateError("sendMessage function is NOT implemented", true);
         return false;
     }
 
@@ -1597,10 +1664,12 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {{*}} Can be anything that the implemented function returns
      */
     async executeUserDefinedFunction(functionName = "echo", options = {}) {
-        switch(functionName) {
-            case "echo": dxUtils.printInfoMessage("echo invoked: "+Date.now());
+        switch (functionName) {
+            case "echo":
+                dxUtils.printInfoMessage("echo invoked: " + Date.now());
                 return {};
-            default: dxUtils.printErrorMessage("Function "+functionName+" is not implemented");
+            default:
+                dxUtils.printErrorMessage("Function " + functionName + " is not implemented");
         }
         return {};
     }

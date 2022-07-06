@@ -1,6 +1,6 @@
-const dxUtils = require("dx-utils");
-const divbloxObjectBase = require('./object-base');
-const dxDbSync = require('dx-db-sync');
+const dxUtils = require("dx-utilities");
+const divbloxObjectBase = require("./object-base");
+const dxDbSync = require("dx-db-sync");
 
 /**
  * The DivbloxDataLayer is responsible for managing the interaction of logic of your app with the database, honouring
@@ -37,13 +37,13 @@ class DivbloxDataLayer extends divbloxObjectBase {
     async validateDataModel(dataModelState) {
         for (const entityName of this.requiredEntities) {
             if (this.dataModelEntities.indexOf(this.getSqlReadyName(entityName)) === -1) {
-                this.populateError("Entity '"+entityName+"' not present");
+                this.populateError("Entity '" + entityName + "' not present");
                 this.isRequiredEntitiesMissing = true;
             }
         }
 
         if (this.getError().length > 0) {
-            this.populateError("Required entities are missing from data model",true);
+            this.populateError("Required entities are missing from data model", true);
             return false;
         }
 
@@ -57,7 +57,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      */
     async validateDataModelAgainstDatabase(dataModelState) {
         if (this.getDataModelHash() !== dataModelState.currentDataModelHash) {
-            this.populateError("Data model has changes")
+            this.populateError("Data model has changes");
             return false;
         }
         return true;
@@ -68,7 +68,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @returns {string} The md5 hashed data model
      */
     getDataModelHash() {
-        return require('crypto').createHash('md5').update(JSON.stringify(this.dataModel)).digest("hex");
+        return require("crypto").createHash("md5").update(JSON.stringify(this.dataModel)).digest("hex");
     }
 
     /**
@@ -76,7 +76,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @returns {Promise<boolean>} Return false if synchronization failed, true otherwise
      */
     async syncDatabase() {
-        const dbSync = new dxDbSync(this.dataModel, null, this.databaseConnector,"lowercase");
+        const dbSync = new dxDbSync(this.dataModel, null, this.databaseConnector, "lowercase");
         return await dbSync.syncDatabase();
     }
 
@@ -85,7 +85,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The name of the entity to get the module for
      * @returns {null|*}
      */
-    getModuleNameFromEntityName(entityName = '') {
+    getModuleNameFromEntityName(entityName = "") {
         if (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined") {
             return null;
         }
@@ -98,10 +98,13 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The name of the entity to determine for
      * @return {boolean|*} True if audited, false if not
      */
-    isEntityAudited(entityName = '') {
-        if ((typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined") ||
-            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"] === "undefined") ||
-            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["isAuditEnabled"] === "undefined")) {
+    isEntityAudited(entityName = "") {
+        if (
+            typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined" ||
+            typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"] === "undefined" ||
+            typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["isAuditEnabled"] ===
+                "undefined"
+        ) {
             return false;
         }
         return this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["isAuditEnabled"];
@@ -112,15 +115,18 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The name of the entity to determine for
      * @return {boolean|*} True if locking constraint is enforced, false if not
      */
-    isLockingConstraintEnforced(entityName = '') {
-        if ((typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined") ||
-            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"] === "undefined") ||
-            (typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["enforceLockingConstraints"] === "undefined")) {
+    isLockingConstraintEnforced(entityName = "") {
+        if (
+            typeof this.dataModelNormalized[this.getSqlReadyName(entityName)] === "undefined" ||
+            typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"] === "undefined" ||
+            typeof this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"][
+                "enforceLockingConstraints"
+            ] === "undefined"
+        ) {
             return false;
         }
         return this.dataModelNormalized[this.getSqlReadyName(entityName)]["options"]["enforceLockingConstraints"];
     }
-
 
     /**
      * Responsible for performing an insert query on the database for the relevant entity
@@ -128,12 +134,14 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {*} data An object who's properties determines the fields to set values for when inserting
      * @returns {Promise<number|*>} Returns the primary key id of the inserted item or -1
      */
-    async create(entityName = '',data = {}) {
-        if (!this.doPreDatabaseInteractionCheck(entityName)) {return -1;}
+    async create(entityName = "", data = {}) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {
+            return -1;
+        }
 
         const dataKeys = Object.keys(data);
-        let sqlKeys = '';
-        let sqlPlaceholders = '';
+        let sqlKeys = "";
+        let sqlPlaceholders = "";
         let sqlValues = [];
 
         for (const key of dataKeys) {
@@ -142,17 +150,22 @@ class DivbloxDataLayer extends divbloxObjectBase {
                 continue;
             }
 
-            sqlKeys += ", `"+this.getSqlReadyName(key)+"`";
+            sqlKeys += ", `" + this.getSqlReadyName(key) + "`";
             sqlPlaceholders += ", ?";
             sqlValues.push(this.getSqlReadyValue(data[key]));
         }
 
-        const query = "INSERT INTO `"+this.getSqlReadyName(entityName)+"` " +
-            "(`id`"+sqlKeys+") VALUES (NULL"+sqlPlaceholders+");";
+        const query =
+            "INSERT INTO `" +
+            this.getSqlReadyName(entityName) +
+            "` " +
+            "(`id`" +
+            sqlKeys +
+            ") VALUES (NULL" +
+            sqlPlaceholders +
+            ");";
 
-        const queryResult = await this.executeQuery(query,
-            this.getModuleNameFromEntityName(entityName),
-            sqlValues);
+        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
 
         if (queryResult === null) {
             return -1;
@@ -167,18 +180,17 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {number} id The primary key id of the relevant row
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async read(entityName = '', id = -1) {
-        if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
+    async read(entityName = "", id = -1) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {
+            return null;
+        }
 
-        const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `id` = ? LIMIT 1;";
+        const query = "SELECT * FROM `" + this.getSqlReadyName(entityName) + "` " + "WHERE `id` = ? LIMIT 1;";
         const sqlValues = [id];
 
-        const queryResult = await this.executeQuery(query,
-            this.getModuleNameFromEntityName(entityName),
-            sqlValues);
+        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
 
-        if ((queryResult === null) || (queryResult.length === 0)) {
+        if (queryResult === null || queryResult.length === 0) {
             return null;
         }
 
@@ -192,18 +204,23 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string|number} fieldValue The primary key id of the relevant row
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async readByField(entityName = '', fieldName = 'id', fieldValue = -1) {
-        if (!this.doPreDatabaseInteractionCheck(entityName)) {return null;}
+    async readByField(entityName = "", fieldName = "id", fieldValue = -1) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {
+            return null;
+        }
 
-        const query = "SELECT * FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `"+this.getSqlReadyName(fieldName)+"` = ? LIMIT 1;";
+        const query =
+            "SELECT * FROM `" +
+            this.getSqlReadyName(entityName) +
+            "` " +
+            "WHERE `" +
+            this.getSqlReadyName(fieldName) +
+            "` = ? LIMIT 1;";
         const sqlValues = [fieldValue];
 
-        const queryResult = await this.executeQuery(query,
-            this.getModuleNameFromEntityName(entityName),
-            sqlValues);
+        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
 
-        if ((queryResult === null) || (queryResult.length === 0)) {
+        if (queryResult === null || queryResult.length === 0) {
             return null;
         }
 
@@ -216,9 +233,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {*} data The primary key id of the relevant row
      * @returns {Promise<boolean>} Returns true if the update was successful, false otherwise
      */
-    async update(entityName = '',data = {}) {
-
-        if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
+    async update(entityName = "", data = {}) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {
+            return false;
+        }
 
         if (typeof data["id"] === "undefined") {
             this.populateError("No id provided");
@@ -226,27 +244,36 @@ class DivbloxDataLayer extends divbloxObjectBase {
         }
 
         const dataKeys = Object.keys(data);
-        let sqlUpdateKeys = '';
+        let sqlUpdateKeys = "";
         let sqlUpdateValues = [];
 
         for (const key of dataKeys) {
-            if (key === 'id') {
+            if (key === "id") {
                 continue;
             }
-            sqlUpdateKeys += ", `"+this.getSqlReadyName(key,"")+"` = ?";
+            sqlUpdateKeys += ", `" + this.getSqlReadyName(key, "") + "` = ?";
             sqlUpdateValues.push(this.getSqlReadyValue(data[key]));
         }
 
         sqlUpdateValues.push(this.getSqlReadyValue(data["id"]));
-        sqlUpdateKeys = sqlUpdateKeys.substring(1,sqlUpdateKeys.length);
+        sqlUpdateKeys = sqlUpdateKeys.substring(1, sqlUpdateKeys.length);
 
-        const query = "UPDATE `"+this.getSqlReadyName(entityName)+"` " +
-            "SET "+sqlUpdateKeys+" WHERE " +
-            "`"+this.getSqlReadyName(entityName)+"`.`id` = ?";
+        const query =
+            "UPDATE `" +
+            this.getSqlReadyName(entityName) +
+            "` " +
+            "SET " +
+            sqlUpdateKeys +
+            " WHERE " +
+            "`" +
+            this.getSqlReadyName(entityName) +
+            "`.`id` = ?";
 
-        const queryResult = await this.executeQuery(query,
+        const queryResult = await this.executeQuery(
+            query,
             this.getModuleNameFromEntityName(entityName),
-            sqlUpdateValues);
+            sqlUpdateValues
+        );
 
         return queryResult !== null;
     }
@@ -257,17 +284,16 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {number} id The primary key id of the relevant row
      * @returns {Promise<boolean>} Returns true if the delete was successful, false otherwise
      */
-    async delete(entityName = '',id = -1) {
-        if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
+    async delete(entityName = "", id = -1) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {
+            return false;
+        }
 
-        const query = "DELETE FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `id` = ?;";
+        const query = "DELETE FROM `" + this.getSqlReadyName(entityName) + "` " + "WHERE `id` = ?;";
 
         const sqlValues = [id];
 
-        const queryResult = await this.executeQuery(query,
-            this.getModuleNameFromEntityName(entityName),
-            sqlValues);
+        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
 
         return queryResult !== null;
     }
@@ -289,21 +315,30 @@ class DivbloxDataLayer extends divbloxObjectBase {
         entry["entryTimeStamp"] = new Date();
 
         const entryKeys = Object.keys(entry);
-        let sqlKeys = '';
-        let sqlPlaceholders = '';
+        let sqlKeys = "";
+        let sqlPlaceholders = "";
         let sqlValues = [];
 
         for (const key of entryKeys) {
-            sqlKeys += ", `"+this.getSqlReadyName(key)+"`";
+            sqlKeys += ", `" + this.getSqlReadyName(key) + "`";
             sqlPlaceholders += ", ?";
             sqlValues.push(this.getSqlReadyValue(entry[key]));
         }
-        const query = "INSERT INTO `"+this.getSqlReadyName('auditLogEntry')+"` " +
-            "(`id`"+sqlKeys+") VALUES (NULL"+sqlPlaceholders+");";
+        const query =
+            "INSERT INTO `" +
+            this.getSqlReadyName("auditLogEntry") +
+            "` " +
+            "(`id`" +
+            sqlKeys +
+            ") VALUES (NULL" +
+            sqlPlaceholders +
+            ");";
 
-        const queryResult = await this.executeQuery(query,
-            this.getModuleNameFromEntityName('auditLogEntry'),
-            sqlValues);
+        const queryResult = await this.executeQuery(
+            query,
+            this.getModuleNameFromEntityName("auditLogEntry"),
+            sqlValues
+        );
 
         return typeof queryResult["error"] === "undefined";
     }
@@ -315,18 +350,20 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} currentLastUpdatedValue The previously retrieved value for "last_updated"
      * @return {Promise<boolean>} True if a locking constraint should be in place, false otherwise
      */
-    async checkLockingConstraintActive(entityName = '', id = -1, currentLastUpdatedValue) {
-        if (!this.doPreDatabaseInteractionCheck(entityName)) {return false;}
+    async checkLockingConstraintActive(entityName = "", id = -1, currentLastUpdatedValue) {
+        if (!this.doPreDatabaseInteractionCheck(entityName)) {
+            return false;
+        }
 
-        if (!this.isLockingConstraintEnforced(entityName)) {return false;}
+        if (!this.isLockingConstraintEnforced(entityName)) {
+            return false;
+        }
 
-        const query = "SELECT `last_updated` FROM `"+this.getSqlReadyName(entityName)+"` " +
-            "WHERE `id` = ? LIMIT 1;";
+        const query =
+            "SELECT `last_updated` FROM `" + this.getSqlReadyName(entityName) + "` " + "WHERE `id` = ? LIMIT 1;";
         const sqlValues = [id];
 
-        const queryResult = await this.executeQuery(query,
-            this.getModuleNameFromEntityName(entityName),
-            sqlValues);
+        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
 
         if (queryResult.length === 0) {
             return false;
@@ -334,7 +371,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
         // If these values do not match, it means the database has changed since we last loaded the row. Therefor,
         // a locking constraint should be in place
-        const storedTimestamp = queryResult[0]['last_updated'].getTime();
+        const storedTimestamp = queryResult[0]["last_updated"].getTime();
         return storedTimestamp !== currentLastUpdatedValue;
     }
 
@@ -364,8 +401,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             return null;
         }
 
-        if ((typeof queryResult["affectedRows"] !== "undefined") &&
-            (queryResult["affectedRows"] < 1)) {
+        if (typeof queryResult["affectedRows"] !== "undefined" && queryResult["affectedRows"] < 1) {
             this.populateError("No rows were affected");
             return null;
         }
@@ -378,9 +414,9 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The name of the entity to check for
      * @returns {boolean} Returns false if the entity is not defined in the data model
      */
-    doPreDatabaseInteractionCheck(entityName = '') {
+    doPreDatabaseInteractionCheck(entityName = "") {
         if (!this.checkEntityExistsInDataModel(this.getSqlReadyName(entityName))) {
-            this.populateError("Entity '"+entityName+"' does not exist");
+            this.populateError("Entity '" + entityName + "' does not exist");
             return false;
         }
 
@@ -392,7 +428,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The name of the entity to validate
      * @returns {boolean} true if the validation passed, false if not
      */
-    checkEntityExistsInDataModel(entityName = '') {
+    checkEntityExistsInDataModel(entityName = "") {
         return this.dataModelEntities.indexOf(this.getSqlReadyName(entityName)) !== -1;
     }
 
@@ -402,8 +438,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} name
      * @returns {string}
      */
-    getSqlReadyName(name = '') {
-        return dxUtils.getCamelCaseSplittedToLowerCase(name,"_");
+    getSqlReadyName(name = "") {
+        return dxUtils.getCamelCaseSplittedToLowerCase(name, "_");
     }
 
     /**
@@ -411,7 +447,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} value The string to prepare to store in a sql database
      * @returns {string} The sql-ready string
      */
-    getSqlReadyValue(value = '') {
+    getSqlReadyValue(value = "") {
         //TODO: Implement this. For now, we simply return the given string
         return value;
     }
@@ -424,10 +460,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {boolean} isTableName Whether this name is a table name. If not, it is assumed to be a column name
      * @returns {string} The, either Pascal- or camelCase, string
      */
-    convertSqlNameToProperty(name = '',isTableName = false) {
-        return isTableName === true ?
-        dxUtils.convertLowerCaseToPascalCase(name,"_") :
-        dxUtils.convertLowerCaseToCamelCase(name,"_");
+    convertSqlNameToProperty(name = "", isTableName = false) {
+        return isTableName === true
+            ? dxUtils.convertLowerCaseToPascalCase(name, "_")
+            : dxUtils.convertLowerCaseToCamelCase(name, "_");
     }
 
     /**
@@ -439,7 +475,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
         let returnObject = {};
 
         for (const key of Object.keys(sqlObject)) {
-            returnObject[this.convertSqlNameToProperty(key,false)] = sqlObject[key];
+            returnObject[this.convertSqlNameToProperty(key, false)] = sqlObject[key];
         }
 
         return returnObject;
