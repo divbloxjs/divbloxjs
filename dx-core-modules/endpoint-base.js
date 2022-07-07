@@ -1,11 +1,10 @@
-const divbloxObjectBase = require('./object-base');
+const divbloxObjectBase = require("./object-base");
 
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
  * for divbloxjs projects
  */
 class DivbloxEndpointBase extends divbloxObjectBase {
-
     /**
      * Initializes the result and declares the available operations
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the app configuration
@@ -15,18 +14,16 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.endpointName = null;
         this.endpointDescription = "";
         this.result = {
-            "success":false,
-            "message":"none",
-            "cookie":null
+            success: false,
+            message: "none",
+            cookie: null,
         };
         this.declaredOperations = [];
         this.declaredSchemas = [];
-        const echoOperation = this.getOperationDefinition(
-            {
-                "operationName": "echo",
-                "allowedAccess": ["anonymous"]
-            }
-        );
+        const echoOperation = this.getOperationDefinition({
+            operationName: "echo",
+            allowedAccess: ["anonymous"],
+        });
 
         this.declareOperations([echoOperation]);
         this.currentRequest = {};
@@ -35,7 +32,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.currentGlobalIdentifierGroupings = [];
         this.disableSwaggerDocs = false;
 
-        if ((typeof this.dxInstance === "undefined") || (this.dxInstance === null)) {
+        if (typeof this.dxInstance === "undefined" || this.dxInstance === null) {
             throw new Error("Divblox instance was not provided");
         }
     }
@@ -73,29 +70,26 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * additionalRequestSchemas: {}}}
      */
     getOperationDefinition(definition) {
-        const requiredProperties = [
-            "operationName",
-            "allowedAccess",
-        ];
+        const requiredProperties = ["operationName", "allowedAccess"];
         for (const requiredProperty of requiredProperties) {
             if (typeof definition[requiredProperty] === "undefined") {
-                throw new Error(requiredProperty+" is a required property for DivbloxApiOperation");
+                throw new Error(requiredProperty + " is a required property for DivbloxApiOperation");
             }
         }
         let operationDefinition = {
-            "operationName": definition.operationName,
-            "operationSummary": "",
-            "operationDescription": "",
-            "allowedAccess": definition.allowedAccess,
-            "requestType": "GET",
-            "requiresAuthentication": true,
-            "parameters": [],
-            "requestSchema": {},
-            "responseSchema": this.getSchema({"message":"string"}),
-            "additionalRequestSchemas": {},
-            "additionalResponseSchemas": {},
-            "disableSwaggerDoc": false
-        }
+            operationName: definition.operationName,
+            operationSummary: "",
+            operationDescription: "",
+            allowedAccess: definition.allowedAccess,
+            requestType: "GET",
+            requiresAuthentication: true,
+            parameters: [],
+            requestSchema: {},
+            responseSchema: this.getSchema({ message: "string" }),
+            additionalRequestSchemas: {},
+            additionalResponseSchemas: {},
+            disableSwaggerDoc: false,
+        };
 
         for (const property of Object.keys(operationDefinition)) {
             if (typeof definition[property] === "undefined") {
@@ -130,8 +124,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     getSchema(properties) {
         let schema = {
-            "type": "object",
-            "properties": {}
+            type: "object",
+            properties: {},
         };
 
         for (const key of Object.keys(properties)) {
@@ -166,8 +160,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             }
 
             schema.properties[key] = {
-                "type": type,
-                "format": format
+                type: type,
+                format: format,
             };
         }
         return schema;
@@ -181,16 +175,16 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     getArraySchema(itemSchema, wrapperKey) {
         if (typeof wrapperKey !== "undefined") {
-            const returnSchema = {"properties":{}};
+            const returnSchema = { properties: {} };
             returnSchema.properties[wrapperKey] = {
-                "type": "array",
-                "items": itemSchema
+                type: "array",
+                items: itemSchema,
             };
             return returnSchema;
         }
         return {
-            "type": "array",
-            "items": itemSchema
+            type: "array",
+            items: itemSchema,
         };
     }
 
@@ -207,12 +201,12 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     getInputParameter(options = {}) {
         return {
-            "in": typeof options["type"] !== "undefined" ? options["type"] : "query",
-            "name": typeof options["name"] !== "undefined" ? options["name"] : "param",
-            "required": typeof options["required"] !== "undefined" ? options["required"] : false,
-            "description": typeof options["description"] !== "undefined" ? options["description"] : "",
-            "schema": typeof options["schema"] !== "undefined" ? options["schema"] : {},
-        }
+            in: typeof options["type"] !== "undefined" ? options["type"] : "query",
+            name: typeof options["name"] !== "undefined" ? options["name"] : "param",
+            required: typeof options["required"] !== "undefined" ? options["required"] : false,
+            description: typeof options["description"] !== "undefined" ? options["description"] : "",
+            schema: typeof options["schema"] !== "undefined" ? options["schema"] : {},
+        };
     }
 
     /**
@@ -249,14 +243,14 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {boolean} isHttpOnly True or false
      * @param {number} expiryInDays How many days from now should it expire
      */
-    setCookie(name = "cookie",data = "", isSecure = true, isHttpOnly = true, expiryInDays = 30) {
+    setCookie(name = "cookie", data = "", isSecure = true, isHttpOnly = true, expiryInDays = 30) {
         this.result.cookie = {
-            "name": name,
-            "data": data,
-            "secure": isSecure,
-            "httpOnly": isHttpOnly,
-            "maxAge": expiryInDays * 24 * 60 * 60 * 1000
-        }
+            name: name,
+            data: data,
+            secure: isSecure,
+            httpOnly: isHttpOnly,
+            maxAge: expiryInDays * 24 * 60 * 60 * 1000,
+        };
     }
 
     /**
@@ -264,10 +258,14 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {[{operationDefinition}]} operations An array of operation definitions as provided by getOperationDefinition()
      */
     declareOperations(operations = []) {
-        if (operations.length === 0) {return;}
+        if (operations.length === 0) {
+            return;
+        }
         for (const operation of operations) {
-            if ((typeof operation["operationName"] === "undefined") ||
-                (typeof operation["allowedAccess"] === "undefined")) {
+            if (
+                typeof operation["operationName"] === "undefined" ||
+                typeof operation["allowedAccess"] === "undefined"
+            ) {
                 continue;
             }
             this.declaredOperations.push(operation);
@@ -279,17 +277,14 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {string} operationName The name of the operation to remove
      * @param {string} requestType The request type to check on for operation uniqueness
      */
-    hideOperation(operationName = null, requestType = 'get') {
-        this.declaredOperations = this.declaredOperations.filter(
-            function(element) {
-
-                if (element.operationName.toLowerCase() === operationName.toLowerCase()) {
-                    return element.requestType.toLowerCase() !== requestType.toLowerCase();
-                }
-
-                return true;
+    hideOperation(operationName = null, requestType = "get") {
+        this.declaredOperations = this.declaredOperations.filter(function (element) {
+            if (element.operationName.toLowerCase() === operationName.toLowerCase()) {
+                return element.requestType.toLowerCase() !== requestType.toLowerCase();
             }
-        );
+
+            return true;
+        });
     }
 
     /**
@@ -311,7 +306,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {[string]} entities A list of entity names to declare
      */
     declareEntitySchemas(entities = []) {
-        if (entities.length === 0) {return;}
+        if (entities.length === 0) {
+            return;
+        }
         for (const entity of entities) {
             this.declaredSchemas.push(entity);
         }
@@ -324,20 +321,24 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {[]} globalIdentifierGroupings An array of groupings as received by the request
      * @return {boolean} True if access is allowed, false otherwise
      */
-    isAccessAllowed(operationName = '', requestType = 'get', globalIdentifierGroupings = []) {
+    isAccessAllowed(operationName = "", requestType = "get", globalIdentifierGroupings = []) {
         if (globalIdentifierGroupings.includes("super user")) {
             return true;
         }
 
         let allowedAccess = [];
         for (const operation of this.declaredOperations) {
-            if ((typeof operation.allowedAccess === "undefined") ||
-                (operation.allowedAccess.length === 0) ||
-                (operation.operationName !== operationName)) {
+            if (
+                typeof operation.allowedAccess === "undefined" ||
+                operation.allowedAccess.length === 0 ||
+                operation.operationName !== operationName
+            ) {
                 continue;
             }
-            if ((operation.operationName === operationName) &&
-                (operation.requestType.toLowerCase() === requestType.toLowerCase())) {
+            if (
+                operation.operationName === operationName &&
+                operation.requestType.toLowerCase() === requestType.toLowerCase()
+            ) {
                 allowedAccess = operation.allowedAccess;
             }
         }
@@ -359,8 +360,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @return {Promise<*>}
      */
     async executeOperation(operation, request) {
-        this.result = {"success":false,"message":"none"};
+        this.result = { success: false, message: "none" };
         this.currentRequest = request;
+
+        this.currentGlobalIdentifier = -1;
+        this.currentGlobalIdentifierGroupings = [];
 
         let providedIdentifierGroupings = ["anonymous"];
 
@@ -373,26 +377,24 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
         let jwtToken = null;
         if (typeof request["headers"] !== "undefined") {
-
             if (typeof request["headers"]["authorization"] !== "undefined") {
-                jwtToken = request["headers"]["authorization"].replace("Bearer ","");
-
+                jwtToken = request["headers"]["authorization"].replace("Bearer ", "");
             } else if (typeof request["headers"]["cookie"] !== "undefined") {
-
                 const cookies = request["headers"]["cookie"].split(";");
 
                 for (const cookie of cookies) {
                     const cookieDecoded = decodeURIComponent(cookie);
                     if (cookieDecoded.indexOf('jwt="') !== -1) {
-                        jwtToken = cookieDecoded.replace('jwt="',"");
-                        jwtToken = jwtToken.substring(0,jwtToken.length - 1);
+                        jwtToken = cookieDecoded.replace('jwt="', "");
+                        jwtToken = jwtToken.substring(0, jwtToken.length - 1);
                     }
                 }
             }
 
             if (jwtToken !== null) {
                 this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
-                this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+                this.currentGlobalIdentifierGroupings =
+                    this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
 
                 for (const grouping of this.currentGlobalIdentifierGroupings) {
                     providedIdentifierGroupings.push(grouping.toLowerCase());
@@ -411,10 +413,12 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             return false;
         }
 
-        switch(operation) {
-            case 'echo': await this.echo();
+        switch (operation) {
+            case "echo":
+                await this.echo();
                 break;
-            default : this.setResult(false, "Invalid operation provided");
+            default:
+                this.setResult(false, "Invalid operation provided");
         }
 
         return true;
@@ -426,7 +430,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     async presentDocumentation() {
         //TODO: Implement this
-        this.result["doc"] = 'TO BE COMPLETED';
+        this.result["doc"] = "TO BE COMPLETED";
         this.setResult(true, "Doc property populated");
     }
 
