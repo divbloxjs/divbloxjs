@@ -1632,10 +1632,12 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
-     * A wrapper function for emailing functionality. The idea is that the developer can implement this function in their
-     * project using an emailing library of their choice
-     * @param {*} options Any relevant options, e.g fromAddress, toAddress(es), messageHtml, etc as required by the
-     * implemented emailing library
+     * A wrapper for your email library of choice. The user needs to align these inputs to their sendEmail/sendMail function
+     * @param {string} options.fromAddress The email address to send from. This is optional. If not provided, will use the default smtp email
+     * @param {[]} options.toAddresses The email address(es) to send to. An array of email addresses
+     * @param {string} options.subject The subject of the email
+     * @param {string} options.messageHtml The html message body
+     * @param {*} options Any additional options that the user might need for their specific email implementation
      * @return {boolean} True if the email was sent, false otherwise with an error populated
      */
     async sendEmail(options = {}) {
