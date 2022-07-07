@@ -1,11 +1,10 @@
-const divbloxObjectBase = require('../dx-core-modules/object-base');
+const divbloxObjectBase = require("../dx-core-modules/object-base");
 
 /**
  * DivbloxObjectModelBase is the base object model class that can be used to interact with the database in an OOP manner.
  * Each entity in the data model can have its own specialization of this class to allow for specific functionality
  */
 class DivbloxObjectModelBase extends divbloxObjectBase {
-
     /**
      * Basic initialization for an object model class. Models for specific objects will override this class in
      * order to define their own properties and specializations
@@ -15,29 +14,28 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * @param {string} globalIdentifier Optional. The uniqueIdentifier token for a globalIdentifier object.
      * Used to determine current user information if it is required for audit purposes
      */
-    constructor(dxInstance = null, entityName = 'base', globalIdentifier = '') {
+    constructor(dxInstance = null, entityName = "base", globalIdentifier = "") {
         super();
         this.dxInstance = dxInstance;
 
-        this.entityName = 'base';
-        if ((typeof entityName !== "undefined") && (entityName.length > 0)) {
+        this.entityName = "base";
+        if (typeof entityName !== "undefined" && entityName.length > 0) {
             this.entityName = entityName;
         }
 
-        this.globalIdentifier = '';
-        if ((typeof globalIdentifier !== "undefined") && (globalIdentifier.length > 0)) {
+        this.globalIdentifier = "";
+        if (typeof globalIdentifier !== "undefined" && globalIdentifier.length > 0) {
             this.globalIdentifier = globalIdentifier;
         }
 
         this.modificationTypes = {
-            "create":"create",
-            "update":"update",
-            "delete":"delete"
-        }
+            create: "create",
+            update: "update",
+            delete: "delete",
+        };
 
         this.entitySchema = {
-            "id":
-                {"type": "int"}
+            id: { type: "int" },
         };
 
         this.reset();
@@ -47,8 +45,8 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * Called by the constructor to initialize the data for this object. Also called after the delete function succeeds
      */
     reset() {
-        this.data = {"id":-1};
-        this.lastLoadedData = {}
+        this.data = { id: -1 };
+        this.lastLoadedData = {};
     }
 
     /**
@@ -87,7 +85,7 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * @param {*} fieldValue The value to compare against
      * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    async loadByField(fieldName = 'id', fieldValue = -1) {
+    async loadByField(fieldName = "id", fieldValue = -1) {
         this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue);
         if (this.lastLoadedData !== null) {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
@@ -109,10 +107,10 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
      */
     async save(mustIgnoreLockingConstraints = false) {
-        if ((Object.keys(this.lastLoadedData).length === 0) || (this.lastLoadedData === null)) {
+        if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
             // This means we are creating a new entry for this entity
             for (const key of Object.keys(this.data)) {
-                if (["date","date-time"].includes(this.entitySchema[key]["format"])) {
+                if (["date", "date-time"].includes(this.entitySchema[key]["format"])) {
                     this.data[key] = new Date(this.data[key]);
                 }
             }
@@ -129,23 +127,27 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             return objId !== -1;
         }
 
-        let dataToSave = {"id":this.data.id};
+        let dataToSave = { id: this.data.id };
         for (const key of Object.keys(this.lastLoadedData)) {
-            if ((typeof this.data[key] === "undefined") ||
-                (key === "lastUpdated")) {
+            if (typeof this.data[key] === "undefined" || key === "lastUpdated") {
                 continue;
             }
 
             let inputData = this.data[key];
             let compareData = this.lastLoadedData[key];
 
-            if (["date","date-time"].includes(this.entitySchema[key]["format"])) {
-                inputData = new Date(this.data[key]).getTime();
-                compareData = this.lastLoadedData[key].getTime();
+            if (
+                typeof this.entitySchema[key] !== "undefined" &&
+                typeof this.entitySchema[key]["format"] !== "undefined"
+            ) {
+                if (["date", "date-time"].includes(this.entitySchema[key]["format"])) {
+                    inputData = new Date(this.data[key]).getTime();
+                    compareData = this.lastLoadedData[key].getTime();
+                }
             }
 
             if (inputData !== compareData) {
-                if (["date","date-time"].includes(this.entitySchema[key]["format"])) {
+                if (["date", "date-time"].includes(this.entitySchema[key]["format"])) {
                     dataToSave[key] = new Date(this.data[key]);
                 } else {
                     dataToSave[key] = this.data[key];
@@ -158,17 +160,17 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             return true;
         }
 
-        if ((typeof this.lastLoadedData["lastUpdated"] !== "undefined") &&
-            (!mustIgnoreLockingConstraints)) {
-
-            const isLockingConstraintActive =
-                await this.dxInstance.dataLayer.checkLockingConstraintActive(
-                    this.entityName,
-                    this.data.id,
-                    this.lastLoadedData["lastUpdated"].getTime());
+        if (typeof this.lastLoadedData["lastUpdated"] !== "undefined" && !mustIgnoreLockingConstraints) {
+            const isLockingConstraintActive = await this.dxInstance.dataLayer.checkLockingConstraintActive(
+                this.entityName,
+                this.data.id,
+                this.lastLoadedData["lastUpdated"].getTime()
+            );
 
             if (isLockingConstraintActive) {
-                this.populateError("A locking constraint is active for "+this.entityName+" with id: "+this.data.id);
+                this.populateError(
+                    "A locking constraint is active for " + this.entityName + " with id: " + this.data.id
+                );
                 return false;
             }
         }
@@ -208,11 +210,11 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
      */
     async addAuditLogEntry(modificationType = this.modificationTypes.update, entryDetail = {}) {
         const entry = {
-            "objectName": this.entityName,
-            "modificationType": modificationType,
-            "objectId": this.data.id,
-            "entryDetail":JSON.stringify(entryDetail),
-            "globalIdentifier": this.globalIdentifier
+            objectName: this.entityName,
+            modificationType: modificationType,
+            objectId: this.data.id,
+            entryDetail: JSON.stringify(entryDetail),
+            globalIdentifier: this.globalIdentifier,
         };
         const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry);
         if (!auditLogEntryResult) {
