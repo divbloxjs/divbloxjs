@@ -1,451 +1,230 @@
-const divbloxObjectBase = require("./object-base");
+const divbloxObjectBase = require("../dx-core-modules/object-base");
 
 /**
- * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
- * for divbloxjs projects
+ * DivbloxObjectModelBase is the base object model class that can be used to interact with the database in an OOP manner.
+ * Each entity in the data model can have its own specialization of this class to allow for specific functionality
  */
-class DivbloxEndpointBase extends divbloxObjectBase {
+class DivbloxObjectModelBase extends divbloxObjectBase {
     /**
-     * Initializes the result and declares the available operations
-     * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the app configuration
+     * Basic initialization for an object model class. Models for specific objects will override this class in
+     * order to define their own properties and specializations
+     * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer
+     * @param {string} entityName Optional. The name of the entity to deal with. This will only be used if this base class is
+     * used to instantiate an object. Otherwise, child classes will set their own entity name in their constructors
+     * @param {string} globalIdentifier Optional. The uniqueIdentifier token for a globalIdentifier object.
+     * Used to determine current user information if it is required for audit purposes
      */
-    constructor(dxInstance = null) {
+    constructor(dxInstance = null, entityName = "base", globalIdentifier = "") {
         super();
-        this.endpointName = null;
-        this.endpointDescription = "";
-        this.result = {
-            success: false,
-            message: "none",
-            cookie: null,
-        };
-        this.declaredOperations = [];
-        this.declaredSchemas = [];
-        const echoOperation = this.getOperationDefinition({
-            operationName: "echo",
-            allowedAccess: ["anonymous"],
-        });
-
-        this.declareOperations([echoOperation]);
-        this.currentRequest = {};
         this.dxInstance = dxInstance;
-        this.currentGlobalIdentifier = -1;
-        this.currentGlobalIdentifierGroupings = [];
-        this.disableSwaggerDocs = false;
 
-        if (typeof this.dxInstance === "undefined" || this.dxInstance === null) {
-            throw new Error("Divblox instance was not provided");
+        this.entityName = "base";
+        if (typeof entityName !== "undefined" && entityName.length > 0) {
+            this.entityName = entityName;
         }
-    }
 
-    /**
-     * Returns an operation definition that contains the information need to form a swagger documentation
-     * @param {string} definition.operationName Required. The name of the operation
-     * @param {[]} definition.allowedAccess Required. An array of Global Identifier Groupings that are allowed
-     * to access this operation
-     * @param {string} definition.operationDescription Optional. A description of what the operation does
-     * @param {string} definition.requestType Optional. Either GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE. Will
-     * default to GET if not supplied
-     * @param {*} definition.parameters Optional. Follows the openapi spec for the parameter object: https://swagger.io/specification/
-     * @param {*} definition.requestSchema Optional. A schema for what should be sent via the request body.
-     * Use this.getSchema() to provide a properly formatted schema
-     * @param {*} definition.additionalRequestSchemas Optional. Any additional request schemas that you want to specify that
-     * are not of media type "application/json". Specified as {"[mediaType]": {[schema]}}
-     * @param {*} definition.responseSchema Optional. A schema for what will be sent via the response.
-     * Use this.getSchema() to provide a properly formatted schema
-     * @param {*} definition.additionalResponseSchemas Optional. Any additional response schemas that you want to specify that
-     * are not of media type "application/json". Specified as {"[mediaType]": {[schema]}}
-     * @param {boolean} definition.disableSwaggerDoc If set to true, this operation will not be included in swagger UI
-     * @return {
-     * {allowedAccess: ([string]|*),
-     * responseSchema: {properties: {}},
-     * requestSchema: {},
-     * operationDescription: string,
-     * requestType: string,
-     * operationName: (string|*),
-     * additionalResponseSchemas: {},
-     * operationSummary: string,
-     * requiresAuthentication: boolean,
-     * parameters: *[],
-     * disableSwaggerDoc: boolean,
-     * additionalRequestSchemas: {}}}
-     */
-    getOperationDefinition(definition) {
-        const requiredProperties = ["operationName", "allowedAccess"];
-        for (const requiredProperty of requiredProperties) {
-            if (typeof definition[requiredProperty] === "undefined") {
-                throw new Error(requiredProperty + " is a required property for DivbloxApiOperation");
-            }
+        this.globalIdentifier = "";
+        if (typeof globalIdentifier !== "undefined" && globalIdentifier.length > 0) {
+            this.globalIdentifier = globalIdentifier;
         }
-        let operationDefinition = {
-            operationName: definition.operationName,
-            operationSummary: "",
-            operationDescription: "",
-            allowedAccess: definition.allowedAccess,
-            requestType: "GET",
-            requiresAuthentication: true,
-            parameters: [],
-            requestSchema: {},
-            responseSchema: this.getSchema({ message: "string" }),
-            additionalRequestSchemas: {},
-            additionalResponseSchemas: {},
-            disableSwaggerDoc: false,
+
+        this.modificationTypes = {
+            create: "create",
+            update: "update",
+            delete: "delete",
         };
 
-        for (const property of Object.keys(operationDefinition)) {
-            if (typeof definition[property] === "undefined") {
-                continue;
-            }
-
-            if (property === "responseSchema") {
-                if (typeof definition[property]["properties"] === "undefined") {
-                    continue;
-                }
-
-                operationDefinition[property] = definition[property];
-
-                continue;
-            }
-
-            operationDefinition[property] = definition[property];
-        }
-
-        if (definition.allowedAccess.includes("anonymous")) {
-            operationDefinition.requiresAuthentication = false;
-        }
-
-        return operationDefinition;
-    }
-
-    /**
-     * Formats the properties provided into a schema that is acceptable for openapi 3
-     * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
-     * the type of the property, e.g {"firstName":"string","age":"integer"}. For file names, use the type "file"
-     * @return {{properties: {}}}
-     */
-    getSchema(properties) {
-        let schema = {
-            type: "object",
-            properties: {},
+        this.entitySchema = {
+            id: { type: "int" },
         };
 
-        for (const key of Object.keys(properties)) {
-            let type = "string";
-            let format = "";
-
-            switch (properties[key]) {
-                case "date":
-                    format = "date";
-                    break;
-                case "datetime":
-                case "date-time":
-                    format = "date-time";
-                    break;
-                case "int":
-                case "integer":
-                    type = "number";
-                    format = "integer";
-                    break;
-                case "float":
-                    type = "number";
-                    format = "float";
-                    break;
-                case "double":
-                    type = "number";
-                    format = "double";
-                    break;
-                case "file":
-                    type = "string";
-                    format = "binary";
-                    break;
-            }
-
-            schema.properties[key] = {
-                type: type,
-                format: format,
-            };
-        }
-        return schema;
+        this.reset();
     }
 
     /**
-     * Formats the properties provided into a schema that is acceptable for openapi 3
-     * @param {{}} itemSchema Use this.getSchema() to provide a properly formatted schema
-     * @param {string} [wrapperKey] If provided, the schema is wrapped inside the key provided
-     * @return {{type: "array", items: {}}|{properties:{"wrapperkey":{type: "array", items: {}}}}}
+     * Called by the constructor to initialize the data for this object. Also called after the delete function succeeds
      */
-    getArraySchema(itemSchema, wrapperKey) {
-        if (typeof wrapperKey !== "undefined") {
-            const returnSchema = { properties: {} };
-            returnSchema.properties[wrapperKey] = {
-                type: "array",
-                items: itemSchema,
-            };
-            return returnSchema;
-        }
-        return {
-            type: "array",
-            items: itemSchema,
-        };
+    reset() {
+        this.data = { id: -1 };
+        this.lastLoadedData = {};
     }
 
     /**
-     *
-     * @param options The options to use to format this input parameter
-     * @param {string} options.name The name of the input parameter
-     * @param {string} options.description The description of the input parameter
-     * @param {boolean} options.required Is the input parameter required
-     * @param {"header|path|query"} options.type "header|path|query"
-     * @param {*} options.schema The schema for the input parameter.
-     * Use this.getSchema() to provide a properly formatted schema
-     * @return {{schema: *, in: (string|string), name: (string|string), description: (string|string), required: (boolean|boolean)}}
+     * Returns a schema for the current entity
+     * @return {*|{}}
      */
-    getInputParameter(options = {}) {
-        return {
-            in: typeof options["type"] !== "undefined" ? options["type"] : "query",
-            name: typeof options["name"] !== "undefined" ? options["name"] : "param",
-            required: typeof options["required"] !== "undefined" ? options["required"] : false,
-            description: typeof options["description"] !== "undefined" ? options["description"] : "",
-            schema: typeof options["schema"] !== "undefined" ? options["schema"] : {},
-        };
+    getEntitySchema() {
+        return this.entitySchema;
     }
 
     /**
-     * Sets the current result with a message
-     * @param {boolean} isSuccess
-     * @param {string} message A message to return
+     * Selects a row from the database for the table matching this entity and id and
+     * stores the data for this entity in the "this.data" object
+     * @param {number} id The primary key id of the relevant row
+     * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    setResult(isSuccess = false, message) {
-        this.result["success"] = isSuccess;
-
-        delete this.result["message"];
-        if (typeof message !== "undefined") {
-            this.result["message"] = message;
-        }
-    }
-
-    /**
-     * Appends the provided resultDetail to the result object
-     * @param {*} resultDetail An object containing additional result details
-     */
-    addResultDetail(resultDetail = {}) {
-        if (Object.keys(resultDetail).length > 0) {
-            for (const key of Object.keys(resultDetail)) {
-                this.result[key] = resultDetail[key];
-            }
-        }
-    }
-
-    /**
-     * Sets the cookie attribute in the result object to instruct the web service to send the cookie with the response
-     * @param {string} name The name of the cookie
-     * @param {string} data The data, in string format, that will be stored
-     * @param {boolean} isSecure True or false
-     * @param {boolean} isHttpOnly True or false
-     * @param {number} expiryInDays How many days from now should it expire
-     */
-    setCookie(name = "cookie", data = "", isSecure = true, isHttpOnly = true, expiryInDays = 30) {
-        this.result.cookie = {
-            name: name,
-            data: data,
-            secure: isSecure,
-            httpOnly: isHttpOnly,
-            maxAge: expiryInDays * 24 * 60 * 60 * 1000,
-        };
-    }
-
-    /**
-     * Declares the operations provided as available to the api endpoint
-     * @param {[{operationDefinition}]} operations An array of operation definitions as provided by getOperationDefinition()
-     */
-    declareOperations(operations = []) {
-        if (operations.length === 0) {
-            return;
-        }
-        for (const operation of operations) {
-            if (
-                typeof operation["operationName"] === "undefined" ||
-                typeof operation["allowedAccess"] === "undefined"
-            ) {
-                continue;
-            }
-            this.declaredOperations.push(operation);
-        }
-    }
-
-    /**
-     * Removes the given operation with the specified type from the declared operations array
-     * @param {string} operationName The name of the operation to remove
-     * @param {string} requestType The request type to check on for operation uniqueness
-     */
-    hideOperation(operationName = null, requestType = "get") {
-        this.declaredOperations = this.declaredOperations.filter(function (element) {
-            if (element.operationName.toLowerCase() === operationName.toLowerCase()) {
-                return element.requestType.toLowerCase() !== requestType.toLowerCase();
-            }
-
-            return true;
-        });
-    }
-
-    /**
-     * Returns the operation definition of the declared operation matching the name provided
-     * @param {string} operationName The name of the operation to find
-     * @return {null|*} Null if not found, operation definition if found
-     */
-    getDeclaredOperation(operationName) {
-        for (const operation of this.declaredOperations) {
-            if (operation.operationName === operationName) {
-                return operation;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Declares the entities that should be provided as schemas to the api endpoint
-     * @param {[string]} entities A list of entity names to declare
-     */
-    declareEntitySchemas(entities = []) {
-        if (entities.length === 0) {
-            return;
-        }
-        for (const entity of entities) {
-            this.declaredSchemas.push(entity);
-        }
-    }
-
-    /**
-     * Checks whether the provided groupings have access to the provided operation, as defined in the constructor
-     * @param {string} operationName The name of the operation to check
-     * @param {string} requestType The request method
-     * @param {[]} globalIdentifierGroupings An array of groupings as received by the request
-     * @return {boolean} True if access is allowed, false otherwise
-     */
-    isAccessAllowed(operationName = "", requestType = "get", globalIdentifierGroupings = []) {
-        if (globalIdentifierGroupings.includes("super user")) {
+    async load(id = -1) {
+        this.lastLoadedData = await this.dxInstance.read(this.entityName, id);
+        if (this.lastLoadedData !== null) {
+            this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
             return true;
         }
 
-        let allowedAccess = [];
-        for (const operation of this.declaredOperations) {
-            if (
-                typeof operation.allowedAccess === "undefined" ||
-                operation.allowedAccess.length === 0 ||
-                operation.operationName !== operationName
-            ) {
-                continue;
-            }
-            if (
-                operation.operationName === operationName &&
-                operation.requestType.toLowerCase() === requestType.toLowerCase()
-            ) {
-                allowedAccess = operation.allowedAccess;
-            }
-        }
+        this.populateError(this.dxInstance.getError());
 
-        for (const allowedGrouping of globalIdentifierGroupings) {
-            if (allowedAccess.includes(allowedGrouping)) {
-                return true;
-            }
-        }
+        this.reset();
+
         return false;
     }
 
-    //#region Operations implemented.
-
     /**
-     * A wrapper function that executes the given operation
-     * @param {string} operation The operation to execute
-     * @param {*} request The received request object
-     * @return {Promise<*>}
+     * Selects a row from the database for the table matching this entity and the fieldValue
+     * provided for the given fieldName and then stores the data for this entity in the
+     * "this.data" object
+     * @param {string} fieldName The name of the field or attribute to constrain on
+     * @param {*} fieldValue The value to compare against
+     * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    async executeOperation(operation, request) {
-        this.result = { success: false, message: "none" };
-        this.currentRequest = request;
-
-        this.currentGlobalIdentifier = -1;
-        this.currentGlobalIdentifierGroupings = [];
-
-        let providedIdentifierGroupings = ["anonymous"];
-
-        if (this.dxInstance === null) {
-            // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
-            // on a true response to know whether they can proceed.
-            // Since we do not have an instance of dx, we cannot decode the provided JWT, meaning auth failed
-            return false;
+    async loadByField(fieldName = "id", fieldValue = -1) {
+        this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue);
+        if (this.lastLoadedData !== null) {
+            this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
+            return true;
         }
 
-        let jwtToken = null;
-        if (typeof request["headers"] !== "undefined") {
-            if (typeof request["headers"]["authorization"] !== "undefined") {
-                jwtToken = request["headers"]["authorization"].replace("Bearer ", "");
-            } else if (typeof request["headers"]["cookie"] !== "undefined") {
-                const cookies = request["headers"]["cookie"].split(";");
+        this.populateError(this.dxInstance.getError());
 
-                for (const cookie of cookies) {
-                    const cookieDecoded = decodeURIComponent(cookie);
-                    if (cookieDecoded.indexOf('jwt="') !== -1) {
-                        jwtToken = cookieDecoded.replace('jwt="', "");
-                        jwtToken = jwtToken.substring(0, jwtToken.length - 1);
-                    }
+        this.reset();
+
+        return false;
+    }
+
+    /**
+     * Saves the current entity instance to the database. If the object does not yet exist in the database, an insert is
+     * performed. Otherwise an update is performed, whereby only the changed fields are updated.
+     * @param {boolean} mustIgnoreLockingConstraints If set to true, we will not check whether a locking constraint is
+     * in place (If this entity has locking constraint functionality enabled) and simply perform the update
+     * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
+     */
+    async save(mustIgnoreLockingConstraints = false) {
+        if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
+            // This means we are creating a new entry for this entity
+            for (const key of Object.keys(this.data)) {
+                if (["date", "date-time"].includes(this.entitySchema[key]["format"])) {
+                    this.data[key] = new Date(this.data[key]);
                 }
             }
 
-            if (jwtToken !== null) {
-                this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
-                this.currentGlobalIdentifierGroupings =
-                    this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+            const objId = await this.dxInstance.create(this.entityName, this.data);
 
-                for (const grouping of this.currentGlobalIdentifierGroupings) {
-                    providedIdentifierGroupings.push(grouping.toLowerCase());
-                }
+            if (objId !== -1) {
+                await this.load(objId);
+                await this.addAuditLogEntry(this.modificationTypes.create, this.data);
+            }
 
-                if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
-                    providedIdentifierGroupings.push("super user");
+            this.populateError(this.dxInstance.getError());
+
+            return objId !== -1;
+        }
+
+        let dataToSave = { id: this.data.id };
+        for (const key of Object.keys(this.lastLoadedData)) {
+            if (typeof this.data[key] === "undefined" || key === "lastUpdated") {
+                continue;
+            }
+
+            let inputData = this.data[key];
+            let compareData = this.lastLoadedData[key];
+            let inputDataFormat = null;
+
+            if (
+                typeof this.entitySchema[key] !== "undefined" &&
+                typeof this.entitySchema[key]["format"] !== "undefined"
+            ) {
+                inputDataFormat = this.entitySchema[key]["format"];
+            }
+
+            if (["date", "date-time"].includes(inputDataFormat)) {
+                inputData = new Date(this.data[key]).getTime();
+                compareData = this.lastLoadedData[key] !== null ? this.lastLoadedData[key].getTime() : null;
+            }
+
+            if (inputData !== compareData) {
+                if (["date", "date-time"].includes(inputDataFormat)) {
+                    dataToSave[key] = new Date(this.data[key]);
+                } else {
+                    dataToSave[key] = this.data[key];
                 }
             }
         }
 
-        if (!this.isAccessAllowed(operation, request.method, providedIdentifierGroupings)) {
-            this.setResult(false, "Not authorized");
-            // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
-            // on a true response to know whether they can proceed
-            return false;
+        if (Object.keys(dataToSave).length === 1) {
+            // There is nothing to update. Let's not even try.
+            return true;
         }
 
-        switch (operation) {
-            case "echo":
-                await this.echo();
-                break;
-            default:
-                this.setResult(false, "Invalid operation provided");
+        if (typeof this.lastLoadedData["lastUpdated"] !== "undefined" && !mustIgnoreLockingConstraints) {
+            const isLockingConstraintActive = await this.dxInstance.dataLayer.checkLockingConstraintActive(
+                this.entityName,
+                this.data.id,
+                this.lastLoadedData["lastUpdated"].getTime()
+            );
+
+            if (isLockingConstraintActive) {
+                this.populateError(
+                    "A locking constraint is active for " + this.entityName + " with id: " + this.data.id
+                );
+                return false;
+            }
+        }
+        const updateResult = await this.dxInstance.update(this.entityName, dataToSave);
+
+        if (updateResult) {
+            await this.addAuditLogEntry(this.modificationTypes.update, dataToSave);
+        } else {
+            this.populateError(this.dxInstance.getError());
         }
 
-        return true;
+        return updateResult;
     }
 
     /**
-     * Returns the html for the specific endpoint's documentation
-     * @return {Promise<void>}
+     * Remove this entity's instance from the database
+     * @return {Promise<boolean>} True if delete was successful
      */
-    async presentDocumentation() {
-        //TODO: Implement this
-        this.result["doc"] = "TO BE COMPLETED";
-        this.setResult(true, "Doc property populated");
+    async delete() {
+        const deleteResult = await this.dxInstance.delete(this.entityName, this.data.id);
+
+        if (deleteResult) {
+            await this.addAuditLogEntry(this.modificationTypes.delete);
+            this.reset();
+        } else {
+            this.populateError(this.dxInstance.getError());
+        }
+
+        return deleteResult;
     }
 
     /**
-     * A default operation that simply returns the current timestamp. Although this
-     * operation does not specifically need to be async, it is good practice to ensure
-     * all defined operations are async
-     * @return {Promise<*|{success: boolean, message: string}>}
+     * A wrapper function that calls the "addAuditLogEntry" method on DivbloxBase to add an audit log entry
+     * @param {string} modificationType "create"|"update"|"delete"
+     * @param {{}} entryDetail An object containing the details that were modified
+     * @return {Promise<boolean>} True if audit log was successfully stored, false otherwise
      */
-    async echo() {
-        this.result["currentTimestamp"] = Date.now();
-        this.result["request"] = this.currentRequest;
-        this.setResult(true, "Current timestamp populated");
+    async addAuditLogEntry(modificationType = this.modificationTypes.update, entryDetail = {}) {
+        const entry = {
+            objectName: this.entityName,
+            modificationType: modificationType,
+            objectId: this.data.id,
+            entryDetail: JSON.stringify(entryDetail),
+            globalIdentifier: this.globalIdentifier,
+        };
+        const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry);
+        if (!auditLogEntryResult) {
+            this.populateError(this.dxInstance.getError());
+        }
+        return auditLogEntryResult;
     }
-    //#endregion
 }
 
-module.exports = DivbloxEndpointBase;
+module.exports = DivbloxObjectModelBase;
