@@ -533,11 +533,16 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.use(cookieParser());
         expressInstance.use(fileUpload());
         expressInstance.use(express.static(path.join(path.resolve("./"), this.staticRoot)));
+        expressInstance.use(this.dxInstance.uploadServePath, express.static(this.dxInstance.getFileUploadPath()));
         expressInstance.set("views", [
             path.join(path.resolve("./"), this.viewsRoot),
             DIVBLOX_ROOT_DIR + "/dx-core-views",
         ]);
         expressInstance.set("view engine", "pug");
+
+        if (!fs.existsSync(this.dxInstance.getFileUploadPath())) {
+            fs.mkdirSync(this.dxInstance.getFileUploadPath());
+        }
     }
 
     /**

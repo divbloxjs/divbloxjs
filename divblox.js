@@ -127,6 +127,16 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("No web service configuration provided");
         }
 
+        this.serverBaseUrl = "http://localhost";
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["serverBaseUrl"] !== "undefined") {
+            this.serverBaseUrl = this.configObj["environmentArray"][process.env.NODE_ENV]["serverBaseUrl"];
+        }
+
+        this.uploadServePath = "/uploads";
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["uploadServePath"] !== "undefined") {
+            this.uploadServePath = this.configObj["environmentArray"][process.env.NODE_ENV]["uploadServePath"];
+        }
+
         this.databaseConnector = new divbloxDatabaseConnector(
             this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]
         );
@@ -1625,10 +1635,31 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
-     * @return {string} The text value of the default global identifier grouping for the project
+     * @return {string} The path from your project root where uploaded files will be stored
      */
     getFileUploadPath() {
-        return path.join(path.resolve("./", "/divblox-uploads"));
+        return path.join(path.resolve("./"), "/divblox-uploads");
+    }
+
+    /**
+     * Processes an uploaded file. Should be called during a file upload
+     * @param {*} localFileName The name of the uploaded file on the local server
+     * @returns {string|null} The final static file path of the file
+     */
+    async processUploadedFile(localFileName = "") {
+        // TODO: Override this function as needed when local file storage is not sufficient.
+        // This function is intended to be used when sending files to cloud storage services, but the implementation
+        // thereof is left to the developer.
+
+        if (!fs.existsSync(this.getFileUploadPath() + "/" + localFileName)) {
+            return null;
+        }
+
+        const newFileName = new Date().getTime().toString() + "_" + localFileName;
+        fs.renameSync(this.getFileUploadPath() + "/" + localFileName, this.getFileUploadPath() + "/" + newFileName);
+
+        // Let's just return a new static file path by default.
+        return this.serverBaseUrl + this.uploadServePath + "/" + newFileName;
     }
 
     /**
