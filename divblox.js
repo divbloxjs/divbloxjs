@@ -437,6 +437,11 @@ class DivbloxBase extends divbloxObjectBase {
                     ? []
                     : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"];
 
+            const webServerCorsOptions =
+                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsOptions"] === "undefined"
+                    ? {}
+                    : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsOptions"];
+
             const webServerUseHttps =
                 typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined"
                     ? false
@@ -449,6 +454,7 @@ class DivbloxBase extends divbloxObjectBase {
                 useHttps: webServerUseHttps,
                 serverHttps: webServerHttpsConfig,
                 webServerCorsAllowedList: webServerCorsAllowedList,
+                webServerCorsOptions: webServerCorsOptions,
                 ...this.configObj["webServiceConfig"],
             };
 

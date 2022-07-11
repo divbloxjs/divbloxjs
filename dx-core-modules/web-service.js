@@ -60,6 +60,8 @@ class DivbloxWebService extends divbloxObjectBase {
             typeof this.config["webServerCorsAllowedList"] !== "undefined"
                 ? this.config["webServerCorsAllowedList"]
                 : [];
+        this.corsOptions =
+            typeof this.config["webServerCorsOptions"] !== "undefined" ? this.config["webServerCorsOptions"] : {};
         this.useHttps = typeof this.config["useHttps"] !== "undefined" ? this.config.useHttps : false;
         this.serverHttpsConfig =
             typeof this.config["serverHttps"] !== "undefined"
@@ -512,21 +514,7 @@ class DivbloxWebService extends divbloxObjectBase {
         expressInstance.set("port", this.port);
         expressInstance.use(logger("dev"));
 
-        if (this.corsAllowedList.includes("*")) {
-            expressInstance.use(cors());
-        } else if (this.corsAllowedList.length > 0) {
-            const corsOptionsDelegate = (req, callback) => {
-                let corsOptions;
-                if (this.corsAllowedList.indexOf(req.header("Origin")) !== -1) {
-                    corsOptions = { origin: true, credentials: true }; // reflect (enable) the requested origin in the CORS response
-                } else {
-                    corsOptions = { origin: false }; // disable CORS for this request
-                }
-                callback(null, corsOptions); // callback expects two parameters: error and options
-            };
-
-            expressInstance.use(cors(corsOptionsDelegate));
-        }
+        this.setupExpressCors(expressInstance);
 
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
@@ -543,6 +531,23 @@ class DivbloxWebService extends divbloxObjectBase {
         if (!fs.existsSync(this.dxInstance.getFileUploadPath())) {
             fs.mkdirSync(this.dxInstance.getFileUploadPath());
         }
+    }
+
+    /**
+     * Initializes the cors configuration for expressjs, based on the provided configuration data
+     * @param expressInstance
+     */
+    setupExpressCors(expressInstance) {
+        const corsOptionsDelegate = (req, callback) => {
+            if (this.corsAllowedList.indexOf(req.header("Origin")) !== -1 || this.corsAllowedList.includes("*")) {
+                this.corsOptions.origin = true; // reflect (enable) the requested origin in the CORS response
+            } else {
+                this.corsOptions.origin = false; // disable CORS for this request
+            }
+            callback(null, this.corsOptions); // callback expects two parameters: error and options
+        };
+
+        expressInstance.use(cors(corsOptionsDelegate));
     }
 
     /**
