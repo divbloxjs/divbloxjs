@@ -191,7 +191,6 @@ class DivbloxWebService extends divbloxObjectBase {
                             typeof packageInstance.result["cookie"] !== "undefined" &&
                             packageInstance.result["cookie"] !== null
                         ) {
-                            console.dir(packageInstance.result["cookie"]);
                             const cookie = packageInstance.result["cookie"];
                             res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
                                 secure: cookie["secure"],
