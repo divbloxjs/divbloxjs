@@ -142,7 +142,7 @@ class DivbloxObjectModelBase extends divbloxObjectBase {
             ) {
                 if (["date", "date-time"].includes(this.entitySchema[key]["format"])) {
                     inputData = new Date(this.data[key]).getTime();
-                    compareData = this.lastLoadedData[key].getTime();
+                    compareData = this.lastLoadedData[key] !== null ? this.lastLoadedData[key].getTime() : null;
                 }
             }
 
