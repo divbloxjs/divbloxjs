@@ -236,6 +236,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Sets the result back to its initial state
+     */
+    resetResultDetail() {
+        this.result = {
+            success: false,
+            message: "none",
+            cookie: null,
+        };
+    }
+
+    /**
      * Sets the cookie attribute in the result object to instruct the web service to send the cookie with the response
      * @param {string} name The name of the cookie
      * @param {string} data The data, in string format, that will be stored
@@ -360,7 +371,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @return {Promise<*>}
      */
     async executeOperation(operation, request) {
-        this.result = { success: false, message: "none" };
+        this.resetResultDetail();
+
         this.currentRequest = request;
 
         this.currentGlobalIdentifier = -1;
@@ -386,7 +398,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                     const cookieDecoded = decodeURIComponent(cookie);
                     if (cookieDecoded.indexOf('jwt="') !== -1) {
                         jwtToken = cookieDecoded.replace('jwt="', "");
-                        jwtToken = jwtToken.substring(0, jwtToken.length - 1);
+                        jwtToken = jwtToken.substring(0, jwtToken.length - 1).trim();
                     }
                 }
             }
