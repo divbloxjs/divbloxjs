@@ -484,6 +484,8 @@ class DivbloxWebService extends divbloxObjectBase {
 
         const tokensToReplace = {
             Title: this.dxInstance.configObj.appName,
+            Version:
+                this.dxInstance.configObj.appVersion !== undefined ? this.dxInstance.configObj.appVersion : "1.0.0",
             Description: this.dxInstance.configObj.appName + " API documentation",
             Tags: JSON.stringify(tags),
             Paths: JSON.stringify(paths),
