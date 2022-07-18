@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "version": "1.0.0",
+    "version": "[Version]",
     "title": "[Title]",
     "description": "[Description]"
   },

@@ -111,6 +111,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
         if (definition.allowedAccess.includes("anonymous")) {
             operationDefinition.requiresAuthentication = false;
+        } else {
+            operationDefinition.operationDescription += "<br><br>Allowed access:<br>";
+            operationDefinition.operationDescription +=
+                "<strong>[" + definition.allowedAccess.join(", ") + "]</strong>";
         }
 
         return operationDefinition;
