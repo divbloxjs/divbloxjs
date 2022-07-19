@@ -212,6 +212,10 @@ class DivbloxBase extends divbloxObjectBase {
                             // This means we are specializing this package within a child package, so it should NOT be loaded
                         }
 
+                        if (typeof this.packageOptions[process.env.NODE_ENV][remotePackage] === "undefined") {
+                            this.packageOptions[process.env.NODE_ENV][remotePackage] = {};
+                        }
+
                         const packageDataModelDataStr = fs.readFileSync(
                             "node_modules/" + remotePackage + "/data-model.json",
                             "utf-8"
