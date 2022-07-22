@@ -154,7 +154,7 @@ class DivbloxBase extends divbloxObjectBase {
      * Also loads any package options defined in the file package-options.json, located in the config folder
      */
     initPackages() {
-        dxUtils.printSubHeadingMessage("Loading packages");
+        dxUtils.printSubHeadingMessage("Initializing packages");
         this.packages = {};
         this.packageOptions = {};
         this.packageOptions[process.env.NODE_ENV] = {};
@@ -164,136 +164,186 @@ class DivbloxBase extends divbloxObjectBase {
             this.packageOptions = JSON.parse(packageOptionsStr);
         }
 
-        if (typeof this.configObj["divbloxPackagesRootLocal"] !== "undefined") {
-            if (typeof this.configObj["divbloxPackages"] !== "undefined") {
-                if (
-                    typeof this.configObj["divbloxPackages"]["local"] !== "undefined" &&
-                    this.configObj["divbloxPackages"]["local"].length > 0
-                ) {
-                    for (const localPackage of this.configObj["divbloxPackages"]["local"]) {
-                        this.packages[localPackage] = {
-                            packageRoot: this.configObj["divbloxPackagesRootLocal"] + "/" + localPackage,
-                        };
+        if (typeof this.configObj["divbloxPackagesRootLocal"] === "undefined") {
+            dxUtils.printErrorMessage(
+                "No path configured for 'divbloxPackagesRootLocal'! Update config file with a property called" +
+                    +"'divbloxPackagesRootLocal' that defines where local divbloxjs packages are stored."
+            );
+            throw new Error("Configuration incomplete");
+        }
 
-                        if (typeof this.packageOptions[process.env.NODE_ENV][localPackage] === "undefined") {
-                            this.packageOptions[process.env.NODE_ENV][localPackage] = {};
-                        }
-
-                        const packageDataModelDataStr = fs.readFileSync(
-                            this.configObj["divbloxPackagesRootLocal"] + "/" + localPackage + "/data-model.json",
-                            "utf-8"
-                        );
-                        const packageDataModelObj = JSON.parse(packageDataModelDataStr);
-
-                        for (const entityName of Object.keys(packageDataModelObj)) {
-                            if (typeof this.dataModelObj[entityName] !== "undefined") {
-                                throw new Error(
-                                    "Tried to define entity '" + entityName + "' multiple times in the data model"
-                                );
-                            }
-
-                            this.dataModelObj[entityName] = packageDataModelObj[entityName];
-                        }
-                    }
-                }
-
-                if (
-                    typeof this.configObj["divbloxPackages"]["remote"] !== "undefined" &&
-                    this.configObj["divbloxPackages"]["remote"].length > 0
-                ) {
-                    for (const remotePackage of this.configObj["divbloxPackages"]["remote"]) {
-                        if (typeof this.packages[remotePackage] === "undefined") {
-                            this.packages[remotePackage] = { packageRoot: "node_modules/" + remotePackage };
-
-                            if (typeof this.packageOptions[process.env.NODE_ENV][remotePackage] === "undefined") {
-                                this.packageOptions[process.env.NODE_ENV][remotePackage] = {};
-                            }
-                        } else {
-                            // This means we are specializing this package within a child package, so it should NOT be loaded
-                        }
-
-                        if (typeof this.packageOptions[process.env.NODE_ENV][remotePackage] === "undefined") {
-                            this.packageOptions[process.env.NODE_ENV][remotePackage] = {};
-                        }
-
-                        const packageDataModelDataStr = fs.readFileSync(
-                            "node_modules/" + remotePackage + "/data-model.json",
-                            "utf-8"
-                        );
-                        const packageDataModelObj = JSON.parse(packageDataModelDataStr);
-
-                        for (const entityName of Object.keys(packageDataModelObj)) {
-                            if (typeof this.dataModelObj[entityName] !== "undefined") {
-                                // The entity is already defined, let's add any relevant attributes/relationships from the base package
-                                const entityObj = packageDataModelObj[entityName];
-
-                                // Let's ensure that this entity is placed inside a module
-                                if (typeof this.dataModelObj[entityName]["module"] === "undefined") {
-                                    this.dataModelObj[entityName]["module"] = entityObj["module"];
-                                }
-
-                                // Let's loop over the attributes and see if we need to add any that have not been defined by the child package
-                                const existingDataModelAttributes = Object.keys(
-                                    this.dataModelObj[entityName]["attributes"]
-                                );
-                                const attributesToAdd = Object.keys(entityObj["attributes"]).filter(
-                                    (x) => !existingDataModelAttributes.includes(x)
-                                );
-
-                                for (const attributeToAdd of attributesToAdd) {
-                                    this.dataModelObj[entityName]["attributes"][attributeToAdd] =
-                                        entityObj["attributes"][attributeToAdd];
-                                }
-
-                                // Let's add the base package's indexes to any existing ones
-                                if (typeof this.dataModelObj[entityName]["indexes"] === "undefined") {
-                                    this.dataModelObj[entityName]["indexes"] = [];
-                                }
-
-                                for (const indexToAdd of entityObj["indexes"]) {
-                                    this.dataModelObj[entityName]["indexes"].push(indexToAdd);
-                                }
-
-                                // Let's loop over the relationships and see if we need to add any that have not been defined by the child package
-                                if (typeof this.dataModelObj[entityName]["relationships"] === "undefined") {
-                                    this.dataModelObj[entityName]["relationships"] = {};
-                                }
-
-                                const existingDataModelRelationships = Object.keys(
-                                    this.dataModelObj[entityName]["relationships"]
-                                );
-                                const relationshipsToAdd = Object.keys(entityObj["relationships"]).filter(
-                                    (x) => !existingDataModelRelationships.includes(x)
-                                );
-
-                                for (const relationshipToAdd of relationshipsToAdd) {
-                                    this.dataModelObj[entityName]["relationships"][relationshipToAdd] =
-                                        entityObj["relationships"][relationshipToAdd];
-                                }
-
-                                // Let's loop over the relationships and see if we need to add any that have not been defined by the child package
-                                if (typeof this.dataModelObj[entityName]["options"] === "undefined") {
-                                    this.dataModelObj[entityName]["options"] = {};
-                                }
-                                const existingDataModelOptions = Object.keys(this.dataModelObj[entityName]["options"]);
-                                const optionsToAdd = Object.keys(entityObj["options"]).filter(
-                                    (x) => !existingDataModelOptions.includes(x)
-                                );
-
-                                for (const optionToAdd of optionsToAdd) {
-                                    this.dataModelObj[entityName]["options"][optionToAdd] =
-                                        entityObj["options"][optionToAdd];
-                                }
-                            } else {
-                                this.dataModelObj[entityName] = packageDataModelObj[entityName];
-                            }
-                        }
-                    }
-                }
-            }
+        if (
+            typeof this.configObj["divbloxPackages"] !== "undefined" &&
+            this.configObj["divbloxPackages"] !== null &&
+            Object.keys(this.configObj["divbloxPackages"]).length > 0
+        ) {
+            // Load remote packages before local ones to ensure proper inheritance
+            this.loadPackages(true);
+            this.loadPackages(false);
         }
 
         fs.writeFileSync(this.configRoot + "/package-options.json", JSON.stringify(this.packageOptions, null, 2));
+    }
+
+    /**
+     * Loads the defined packages' data models and sets their relevant root paths for later use
+     * @param {boolean} isRemote Whether to look for remote or local packges
+     * @returns {boolean} True when packages were loaded, false otherwise
+     */
+    loadPackages(isRemote = false) {
+        const packagesLocation = isRemote ? "remote" : "local";
+
+        dxUtils.printSubHeadingMessage("Loading " + packagesLocation + " packages");
+
+        if (
+            typeof this.configObj["divbloxPackages"][packagesLocation] === "undefined" ||
+            this.configObj["divbloxPackages"][packagesLocation].length < 1
+        ) {
+            dxUtils.printInfoMessage("No " + packagesLocation + " packages to load");
+            return false;
+        }
+
+        const packagesToLoad = this.configObj["divbloxPackages"][packagesLocation];
+
+        const duplicatePackages = packagesToLoad.filter((packageName, index) => {
+            return packagesToLoad.indexOf(packageName) !== index;
+        });
+
+        if (duplicatePackages.length > 0) {
+            dxUtils.printErrorMessage(
+                "Duplicate packages are not allowed.\n" +
+                    "The following packages have been defined multiple times: '" +
+                    duplicatePackages.join(",") +
+                    "'"
+            );
+            throw new Error("Configuration invalid");
+        }
+
+        for (const packageToLoad of packagesToLoad) {
+            // If a package is already defined, it means we are specializing this package within a child package,
+            // so its package root should not be redeclared.
+            const packageRoot = isRemote
+                ? "node_modules/" + packageToLoad
+                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad;
+
+            if (typeof this.packages[packageToLoad] === "undefined") {
+                this.packages[packageToLoad] = {
+                    packageRoot: packageRoot,
+                };
+            } else if (!isRemote) {
+                // This will ensure that the local package's root path is stored when it is intended as
+                // a specialization of the remote package with the same name
+                this.packages[packageToLoad] = {
+                    packageRoot: packageRoot,
+                };
+            }
+
+            if (typeof this.packageOptions[process.env.NODE_ENV][packageToLoad] === "undefined") {
+                this.packageOptions[process.env.NODE_ENV][packageToLoad] = {};
+            }
+
+            const packageDataModelPath = isRemote
+                ? "node_modules/" + packageToLoad + "/data-model.json"
+                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad + "/data-model.json";
+
+            const packageDataModelDataStr = fs.readFileSync(packageDataModelPath, "utf-8");
+
+            const packageDataModelObj = JSON.parse(packageDataModelDataStr);
+
+            for (const entityName of Object.keys(packageDataModelObj)) {
+                if (typeof this.dataModelObj[entityName] !== "undefined") {
+                    if (isRemote) {
+                        throw new Error(
+                            "Entity " +
+                                entityName +
+                                " already exist in the data model. " +
+                                "Tried to define entity '" +
+                                entityName +
+                                "' multiple times in the data model"
+                        );
+                    }
+
+                    // The entity is already defined, let's add any relevant attributes/relationships from the base package
+                    const entityObj = packageDataModelObj[entityName];
+
+                    // Let's ensure that this entity is placed inside a module
+                    if (typeof this.dataModelObj[entityName]["module"] === "undefined") {
+                        this.dataModelObj[entityName]["module"] = entityObj["module"];
+                    }
+
+                    // Let's loop over the attributes and see if we need to add any that have not been defined by the child package
+                    const existingDataModelAttributes = Object.keys(this.dataModelObj[entityName]["attributes"]);
+
+                    const duplicateAttributes = Object.keys(entityObj["attributes"]).filter((x) =>
+                        existingDataModelAttributes.includes(x)
+                    );
+
+                    if (duplicateAttributes.length > 0) {
+                        dxUtils.printErrorMessage(
+                            "Duplicate attributes for entities are not allowed.\n" +
+                                "The following attributes have been defined multiple times for entity '" +
+                                entityName +
+                                "': '" +
+                                duplicateAttributes.join(",") +
+                                "'"
+                        );
+                        throw new Error("Data model invalid");
+                    }
+
+                    const attributesToAdd = Object.keys(entityObj["attributes"]).filter(
+                        (x) => !existingDataModelAttributes.includes(x)
+                    );
+
+                    for (const attributeToAdd of attributesToAdd) {
+                        this.dataModelObj[entityName]["attributes"][attributeToAdd] =
+                            entityObj["attributes"][attributeToAdd];
+                    }
+
+                    // Let's add the local package's indexes to any existing ones
+                    if (typeof this.dataModelObj[entityName]["indexes"] === "undefined") {
+                        this.dataModelObj[entityName]["indexes"] = [];
+                    }
+
+                    for (const indexToAdd of entityObj["indexes"]) {
+                        this.dataModelObj[entityName]["indexes"].push(indexToAdd);
+                    }
+
+                    // Let's loop over the relationships and see if we need to add any that have not been defined by the remote package
+                    if (typeof this.dataModelObj[entityName]["relationships"] === "undefined") {
+                        this.dataModelObj[entityName]["relationships"] = {};
+                    }
+
+                    const existingDataModelRelationships = Object.keys(this.dataModelObj[entityName]["relationships"]);
+
+                    const relationshipsToAdd = Object.keys(entityObj["relationships"]).filter(
+                        (x) => !existingDataModelRelationships.includes(x)
+                    );
+
+                    for (const relationshipToAdd of relationshipsToAdd) {
+                        this.dataModelObj[entityName]["relationships"][relationshipToAdd] =
+                            entityObj["relationships"][relationshipToAdd];
+                    }
+
+                    // Let's loop over the options and see if we need to add any that have not been defined by the remote package
+                    if (typeof this.dataModelObj[entityName]["options"] === "undefined") {
+                        this.dataModelObj[entityName]["options"] = {};
+                    }
+
+                    const existingDataModelOptions = Object.keys(this.dataModelObj[entityName]["options"]);
+
+                    const optionsToAdd = Object.keys(entityObj["options"]).filter(
+                        (x) => !existingDataModelOptions.includes(x)
+                    );
+
+                    for (const optionToAdd of optionsToAdd) {
+                        this.dataModelObj[entityName]["options"][optionToAdd] = entityObj["options"][optionToAdd];
+                    }
+                } else {
+                    this.dataModelObj[entityName] = packageDataModelObj[entityName];
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -484,7 +534,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (Object.keys(this.packages).length === 0) {
             dxUtils.printWarningMessage("You currently have ZERO packages defined or installed.");
             dxUtils.printWarningMessage("To get started, either create your own package by running:");
-            dxUtils.printTerminalMessage("npx github:divbloxjs/divbloxjs-package-generator");
+            dxUtils.printTerminalMessage("npx divbloxjs-package-generator");
             dxUtils.printWarningMessage("Or install a remote package using:");
             dxUtils.printTerminalMessage("npm run register-package");
         }
@@ -636,7 +686,7 @@ class DivbloxBase extends divbloxObjectBase {
         let retrievedPackageName = null;
 
         for (const packageName of Object.keys(projectPackages["dependencies"])) {
-            if (projectPackages["dependencies"][packageName] === remotePath) {
+            if (projectPackages["dependencies"][packageName] === remotePath || packageName === remotePath) {
                 retrievedPackageName = packageName;
                 break;
             }
