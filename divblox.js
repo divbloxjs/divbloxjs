@@ -123,6 +123,12 @@ class DivbloxBase extends divbloxObjectBase {
         // This is used later to keep track of modules that are defined inside of packages but that are not properly configured for divbloxjs databases
         this.invalidModuleArray = [];
 
+        this.moduleMapping = {};
+
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"] !== "undefined") {
+            this.moduleMapping = this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"];
+        }
+
         process.env.TZ =
             typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined"
                 ? this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"]
@@ -374,13 +380,18 @@ class DivbloxBase extends divbloxObjectBase {
                         );
                         throw new Error("Invalid data model.");
                     }
-                    if (!this.moduleArray.includes(entityObj["module"])) {
+
+                    if (typeof this.moduleMapping[entityObj["module"]] !== "undefined") {
+                        entityObj["module"] = this.moduleMapping[entityObj["module"]];
+                    } else if (!this.moduleArray.includes(entityObj["module"])) {
                         this.invalidModuleArray.push(entityObj["module"]);
                     }
+
                     this.dataModelObj[entityName] = entityObj;
                 }
             }
         }
+
         return true;
     }
 
@@ -580,10 +591,6 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
-    /**
-     * Ensures that all provided module names for entities are valid
-     * @returns
-     */
     async processInvalidModuleMapping() {
         if (this.invalidModuleArray.length === 0) {
             return;
