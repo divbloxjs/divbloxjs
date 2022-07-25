@@ -118,6 +118,11 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("No databases configured for the environment: " + process.env.NODE_ENV);
         }
 
+        this.moduleArray = Object.keys(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
+
+        // This is used later to keep track of modules that are defined inside of packages but that are not properly configured for divbloxjs databases
+        this.invalidModuleArray = [];
+
         process.env.TZ =
             typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined"
                 ? this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"]
@@ -242,6 +247,23 @@ class DivbloxBase extends divbloxObjectBase {
                 this.packageOptions[process.env.NODE_ENV][packageToLoad] = {};
             }
 
+            const packageOptionsPath = packageRoot + "/options.json";
+            if (fs.existsSync(packageOptionsPath)) {
+                //This package has options defined. Let's update our defaults.
+
+                const localPackageOptionsStr = fs.readFileSync(packageOptionsPath, "utf-8");
+                const packageOptions = JSON.parse(localPackageOptionsStr);
+
+                for (const packageOption of Object.keys(packageOptions)) {
+                    if (
+                        typeof this.packageOptions[process.env.NODE_ENV][packageToLoad][packageOption] === "undefined"
+                    ) {
+                        this.packageOptions[process.env.NODE_ENV][packageToLoad][packageOption] =
+                            packageOptions[packageOption];
+                    }
+                }
+            }
+
             const packageDataModelPath = isRemote
                 ? "node_modules/" + packageToLoad + "/data-model.json"
                 : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad + "/data-model.json";
@@ -251,6 +273,8 @@ class DivbloxBase extends divbloxObjectBase {
             const packageDataModelObj = JSON.parse(packageDataModelDataStr);
 
             for (const entityName of Object.keys(packageDataModelObj)) {
+                const entityObj = packageDataModelObj[entityName];
+
                 if (typeof this.dataModelObj[entityName] !== "undefined") {
                     if (isRemote) {
                         throw new Error(
@@ -264,11 +288,14 @@ class DivbloxBase extends divbloxObjectBase {
                     }
 
                     // The entity is already defined, let's add any relevant attributes/relationships from the base package
-                    const entityObj = packageDataModelObj[entityName];
 
                     // Let's ensure that this entity is placed inside a module
                     if (typeof this.dataModelObj[entityName]["module"] === "undefined") {
-                        this.dataModelObj[entityName]["module"] = entityObj["module"];
+                        throw new Error(
+                            "No module was provided for entity '" +
+                                entityName +
+                                "'. Entities have to have be assigned to modules. Please check your data model."
+                        );
                     }
 
                     // Let's loop over the attributes and see if we need to add any that have not been defined by the child package
@@ -339,7 +366,18 @@ class DivbloxBase extends divbloxObjectBase {
                         this.dataModelObj[entityName]["options"][optionToAdd] = entityObj["options"][optionToAdd];
                     }
                 } else {
-                    this.dataModelObj[entityName] = packageDataModelObj[entityName];
+                    if (typeof entityObj["module"] === "undefined") {
+                        dxUtils.printErrorMessage(
+                            "No module was provided for entity '" +
+                                entityName +
+                                "'. Entities have to have be assigned to modules. Please check your data model."
+                        );
+                        throw new Error("Invalid data model.");
+                    }
+                    if (!this.moduleArray.includes(entityObj["module"])) {
+                        this.invalidModuleArray.push(entityObj["module"]);
+                    }
+                    this.dataModelObj[entityName] = entityObj;
                 }
             }
         }
@@ -406,6 +444,8 @@ class DivbloxBase extends divbloxObjectBase {
      */
     async startDx(mustSkipDatabaseSync = false) {
         if (!mustSkipDatabaseSync) {
+            await this.processInvalidModuleMapping();
+
             try {
                 await this.databaseConnector.checkDBConnection();
             } catch (error) {
@@ -540,6 +580,43 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Ensures that all provided module names for entities are valid
+     * @returns
+     */
+    async processInvalidModuleMapping() {
+        if (this.invalidModuleArray.length === 0) {
+            return;
+        }
+
+        dxUtils.printSubHeadingMessage("Validating modules");
+
+        const availableModulesStr = this.moduleArray.join(", ");
+
+        dxUtils.printInfoMessage("The following modules are configured:\n [" + availableModulesStr + "]");
+
+        for (const moduleName of this.invalidModuleArray) {
+            dxUtils.printWarningMessage(
+                "Module '" + moduleName + "' is not configured.\n " + "Would you like to map it to an existing module?"
+            );
+            const mappedName = await dxUtils.getCommandLineInput(" (Type an existing module name to map it): ");
+
+            if (!this.moduleArray.includes(mappedName)) {
+                dxUtils.printErrorMessage(
+                    "Module " +
+                        moduleName +
+                        " has not been mapped or configured. Please configure it in your divbloxjs config file to proceed."
+                );
+                process.exit(1);
+            } else {
+                dxUtils.printInfoMessage(
+                    "Module name '" + moduleName + "' will be mapped to module '" + mappedName + "'"
+                );
+                this.updateModuleMapping(moduleName, mappedName);
+            }
+        }
+    }
+
     //#endregion
 
     //#region Helper functions
@@ -550,6 +627,20 @@ class DivbloxBase extends divbloxObjectBase {
      */
     updateDataModelState(dataModelState) {
         this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
+    }
+
+    /**
+     * Update the current configuration with a new module mapping
+     * @param {*} invalidModule The name of the module that must be mapped to an valid module
+     * @param {*} mappedToModule A name of a valid module
+     */
+    updateModuleMapping(invalidModule, mappedToModule) {
+        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"] === "undefined") {
+            this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"] = {};
+        }
+
+        this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"][invalidModule] = mappedToModule;
         fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
     }
 
@@ -580,7 +671,7 @@ class DivbloxBase extends divbloxObjectBase {
             //This means we need to attempt to install the package first
             dxUtils.printInfoMessage("Installing " + remotePath + "...");
 
-            const createResult = await dxUtils.executeCommand("npm install --save " + remotePath);
+            const createResult = await dxUtils.executeCommand("npm i " + remotePath);
             if (typeof createResult === "undefined" || createResult === null) {
                 dxUtils.printErrorMessage("Could not install " + remotePath + ". Please try again.");
                 return;
@@ -591,6 +682,11 @@ class DivbloxBase extends divbloxObjectBase {
             } else {
                 dxUtils.printErrorMessage(remotePath + " install failed: " + createResult.stderr);
             }
+        } else {
+            dxUtils.printErrorMessage(
+                "Remote package '" + registerPackageName + "' is already installed and registered!"
+            );
+            return;
         }
 
         registerPackageName = this.getPackageNameFromConfig(remotePath);
@@ -598,11 +694,6 @@ class DivbloxBase extends divbloxObjectBase {
         if (registerPackageName === null) {
             //This means something went wrong installing the package. We must stop
             dxUtils.printErrorMessage("Cannot register dx package. Installation failed!");
-            return;
-        }
-
-        if (this.configObj["divbloxPackages"]["remote"].includes(registerPackageName)) {
-            dxUtils.printErrorMessage("Remote package '" + registerPackageName + "' is already registered!");
             return;
         }
 
