@@ -232,7 +232,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         for (const packageToLoad of packagesToLoad) {
             // If a package is already defined, it means we are specializing this package within a child package,
-            // so its package root should not be redeclared.
+            // so its package root should be redeclared.
             const packageRoot = isRemote
                 ? "node_modules/" + packageToLoad
                 : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad;
@@ -591,6 +591,10 @@ class DivbloxBase extends divbloxObjectBase {
         }
     }
 
+    /**
+     * Iterates over the invalidModuleArray to force the user to map invalid module names to existing ones
+     * @returns {void}
+     */
     async processInvalidModuleMapping() {
         if (this.invalidModuleArray.length === 0) {
             return;
@@ -606,7 +610,7 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printWarningMessage(
                 "Module '" + moduleName + "' is not configured.\n " + "Would you like to map it to an existing module?"
             );
-            const mappedName = await dxUtils.getCommandLineInput(" (Type an existing module name to map it): ");
+            const mappedName = await dxUtils.getCommandLineInput(" (Type an existing module name to map it to): ");
 
             if (!this.moduleArray.includes(mappedName)) {
                 dxUtils.printErrorMessage(
