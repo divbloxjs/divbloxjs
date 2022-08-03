@@ -385,8 +385,13 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @returns {Promise<*|null>} Returns the database query result if successful, or NULL if not
      */
     async executeQuery(query, moduleName, values) {
-        if (typeof query === undefined) {
+        if (typeof query === "undefined") {
             this.populateError("No query provided");
+            return null;
+        }
+
+        if (typeof moduleName === "undefined") {
+            this.populateError("No module provided");
             return null;
         }
 
@@ -503,7 +508,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @returns {[{}]} An array of js objects
      */
     transformSqlObjectArraytoJsArray(sqlObjectArray = []) {
-        returnArray = [];
+        let returnArray = [];
         for (const sqlObject of sqlObjectArray) {
             returnArray.push(this.transformSqlObjectToJs(sqlObject));
         }
