@@ -9,7 +9,7 @@ class DivbloxGlobalBase {
     constructor() {
         this.errorInfo = [];
     }
-    
+
     /**
      * Whenever Divblox encounters an error, the errorInfo array should be populated with details about the error. This
      * function simply returns that errorInfo array for debugging purposes
@@ -18,7 +18,7 @@ class DivbloxGlobalBase {
     getError() {
         return this.errorInfo;
     }
-    
+
     /**
      * Pushes a new error object/array/string into the error array
      * @param {{}|[]|string} errorToPush An object, array or string containing error information
@@ -29,6 +29,7 @@ class DivbloxGlobalBase {
         if (mustClean) {
             this.errorInfo = [];
         }
+
         if (!addAtStart) {
             this.errorInfo.push(errorToPush);
         } else {

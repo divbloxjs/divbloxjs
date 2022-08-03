@@ -1,18 +1,17 @@
-const divbloxObjectBase = require('./object-base');
-const jwt = require('jsonwebtoken');
+const divbloxObjectBase = require("./object-base");
+const jwt = require("jsonwebtoken");
 
 /**
  * DivbloxJwtWrapperBase provides a base class that implements the bare essentials for JWT integration with divbloxjs.
  * This base class currently implements the jsonwebtoken library, but we can easily drop in another library if required
  */
 class DivbloxJwtWrapperBase extends divbloxObjectBase {
-
     /**
      * Instantiates the object and sets the given secret for future use
      * @param {string} jwtSecret The secret that is used to signing and verifying the JWT token
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the app configuration
      */
-    constructor(jwtSecret = 'secret', dxInstance = null) {
+    constructor(jwtSecret = "secret", dxInstance = null) {
         super();
         this.jwtSecret = jwtSecret;
         this.dxInstance = dxInstance;
@@ -27,21 +26,25 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
      *
      * @param {string} globalIdentifier The unique identifier that is used to add globalIdentifierGroupings to the token
      * payload
+     * @param {{}} additionalPayload Any additional payload that you want to add
      * @param {number|string|null} expiresIn Eg: 60, "2 days", "10h", "7d" expressed in seconds or a string describing a
      * time span: https://github.com/vercel/ms. If null is provided, the token will have no expiry.
      */
-    async issueJwt(globalIdentifier, expiresIn = null) {
+    async issueJwt(globalIdentifier, additionalPayload = {}, expiresIn = null) {
         const globalIdentifierObj = await this.dxInstance.getGlobalIdentifier(globalIdentifier);
         const isSuperUser = globalIdentifierObj === null ? false : globalIdentifierObj["isSuperUser"];
 
         let payload = {
-            "globalIdentifier": globalIdentifier,
-            "globalIdentifierGroupings": await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier),
-            "isSuperUser": isSuperUser};
-        const expiresInFinal = expiresIn === null ? this.jwtExpiryInHours+"h" : expiresIn;
+            globalIdentifier: globalIdentifier,
+            globalIdentifierGroupings: await this.dxInstance.getGlobalIdentifierGroupingsReadable(globalIdentifier),
+            isSuperUser: isSuperUser,
+            ...additionalPayload,
+        };
+
+        const expiresInFinal = expiresIn === null ? this.jwtExpiryInHours + "h" : expiresIn;
         const options = {
-            "issuer": this.dxInstance.appName,
-            "expiresIn": expiresInFinal
+            issuer: this.dxInstance.appName,
+            expiresIn: expiresInFinal,
         };
 
         return jwt.sign(payload, this.jwtSecret, options);
@@ -55,7 +58,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
     verifyJwt(token) {
         try {
             const decoded = jwt.verify(token, this.jwtSecret);
-        } catch(err) {
+        } catch (err) {
             // err
             this.populateError(err);
             return false;
