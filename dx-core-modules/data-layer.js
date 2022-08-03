@@ -428,6 +428,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
         if (queryResult !== null) {
             return this.transformSqlObjectArraytoJsArray(queryResult);
         }
+
+        return null;
     }
 
     /**
