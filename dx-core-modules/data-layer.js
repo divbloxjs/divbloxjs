@@ -14,6 +14,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      */
     constructor(databaseConnector = null, dataModel = {}) {
         super();
+
         this.databaseConnector = databaseConnector;
         this.dataModel = dataModel;
         this.dataModelNormalized = {};
@@ -410,6 +411,21 @@ class DivbloxDataLayer extends divbloxObjectBase {
     }
 
     /**
+     * A wrapper function for executeQuery that always returns an array of js objects
+     * @param {string} query The query to be performed
+     * @param {string} moduleName The name of the module that determines the database where the query needs to be performed
+     * @param {[]} values Any values to insert into placeholders in sql. If not provided, it is assumed that the query
+     * can execute as is
+     * @returns {Promise<*|null|[]>} Returns an array of js objects if successful, or NULL if not
+     */
+    async getArrayFromDatabase(query, moduleName, values) {
+        const queryResult = await this.executeQuery(query, moduleName, values);
+        if (queryResult !== null) {
+            return this.transformSqlObjectArraytoJsArray(queryResult);
+        }
+    }
+
+    /**
      * Checks whether the given entityName exists in the data model and populates the errorInfo array if not.
      * @param {string} entityName The name of the entity to check for
      * @returns {boolean} Returns false if the entity is not defined in the data model
@@ -479,6 +495,20 @@ class DivbloxDataLayer extends divbloxObjectBase {
         }
 
         return returnObject;
+    }
+
+    /**
+     * A wrapper for transformSqlObjectToJs that takes a sql query result that is an array and converts it to an array of js objects
+     * @param {} sqlObjectArray The array of objects to convert
+     * @returns {[{}]} An array of js objects
+     */
+    transformSqlObjectArraytoJsArray(sqlObjectArray = []) {
+        returnArray = [];
+        for (const sqlObject of sqlObjectArray) {
+            returnArray.push(this.transformSqlObjectToJs(sqlObject));
+        }
+
+        return returnArray;
     }
 }
 

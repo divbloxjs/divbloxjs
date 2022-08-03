@@ -483,7 +483,7 @@ class DivbloxBase extends divbloxObjectBase {
                     dxUtils.printErrorMessage(
                         "You can run the application generator again to generate the " + "default model:"
                     );
-                    dxUtils.printTerminalMessage("npx github:divbloxjs/divbloxjs-application-generator");
+                    dxUtils.printTerminalMessage("npx divbloxjs-create-app");
                     return;
                 }
 
@@ -492,32 +492,11 @@ class DivbloxBase extends divbloxObjectBase {
                 this.updateDataModelState(this.dataModelState);
 
                 await this.syncDatabase(false);
-
-                // We always want to generate ORM classes here since there were probably changes to the data model.
-                await this.generateOrmBaseClasses();
             } else if (
                 this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp
             ) {
                 await this.syncDatabase(false);
-
-                // We always want to generate ORM classes here since there were probably changes to the data model.
-                await this.generateOrmBaseClasses();
             }
-
-            if (!(await this.checkOrmBaseClassesComplete())) {
-                await this.generateOrmBaseClasses();
-            }
-
-            if (!(await this.ensureGlobalSuperUserPresent())) {
-                dxUtils.printErrorMessage(this.getError());
-                process.exit(1);
-                return;
-            }
-
-            await this.createGlobalIdentifierGrouping(
-                this.getDefaultGlobalIdentifierGrouping(),
-                "The default globalIdentifierGrouping"
-            );
 
             // Let's just wait 2s for the console to make sense
             await dxUtils.sleep(2000);
@@ -526,6 +505,21 @@ class DivbloxBase extends divbloxObjectBase {
 
             await dxUtils.sleep(1000);
         }
+
+        if (!(await this.checkOrmBaseClassesComplete())) {
+            await this.generateOrmBaseClasses();
+        }
+
+        if (!(await this.ensureGlobalSuperUserPresent())) {
+            dxUtils.printErrorMessage(this.getError());
+            process.exit(1);
+            return;
+        }
+
+        await this.createGlobalIdentifierGrouping(
+            this.getDefaultGlobalIdentifierGrouping(),
+            "The default globalIdentifierGrouping"
+        );
 
         //It is important that this is called before starting the webserver, otherwise the schemas will not be available
         this.dataModelSchema = require("./dx-orm/generated/schemas/data-model-schema.js");
