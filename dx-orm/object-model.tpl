@@ -1,5 +1,6 @@
 const modelBase = require('divbloxjs/dx-orm/object-model-base');
 const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted]-schema');
+const dxQ = require("divbloxjs/dx-orm/query-model-base");
 
 const entityModel = {};
 for (const attribute of Object.keys(entitySchema)) {
@@ -30,6 +31,16 @@ class [EntityNamePascalCase] extends modelBase {
     reset() {
         super.reset();
         [EntityData]
+    }
+
+    /**
+     * Performs a SELECT query on the database with the provided clauses
+     * @param {[]|null} fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param  {...any} clauses Any clauses that must be added to the query, e.g equal, notEqual, like, etc
+     * @returns {[]} An array of [EntityNameCamelCase] objects
+     */
+    async findArray(fields = [], ...clauses) {
+        return await dxQ.findArray(this.dxInstance, this.entityName, fields, clauses);
     }
 }
 
