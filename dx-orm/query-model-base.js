@@ -43,9 +43,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     }
 
     static equal(field = null, value = null) {
-        return (
-            DivbloxQueryModelBase.getSqlReadyName(field) + " = '" + DivbloxQueryModelBase.getSqlReadyName(value) + "'"
-        );
+        return this.getSqlReadyName(field) + " = '" + this.getSqlReadyName(value) + "'";
     }
 
     static andCondition(...clauses) {
