@@ -1,21 +1,19 @@
 const divbloxObjectBase = require("../dx-core-modules/object-base");
 const dxUtils = require("dx-utilities");
 
+/**
+ * DivbloxQueryModelBase forms the base of divbloxjs' ORM query methodology.
+ * It provides an easy way to perform SELECT statements for ORM entities with an intuitive query builder
+ */
 class DivbloxQueryModelBase extends divbloxObjectBase {
-    /*static clause = {
-            equal: "=",
-            notEqual: "!=",
-            like: "LIKE",
-            greaterThan: ">",
-            greaterOrEqual: ">=",
-            lessThan: "<",
-            lessThanOrEqual: "<="
-        }*/
     static condition = {
         and: "AND",
         or: "OR",
     };
 
+    /**
+     * This class is static and cannot be instantiated
+     */
     constructor() {
         if (this instanceof DivbloxQueryModelBase) {
             throw Error("Static class DivbloxQueryModelBase cannot be instantiated.");
@@ -42,18 +40,118 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         return value;
     }
 
+    /**
+     * Provides the sql code for an EQUALS clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name = 'John'
+     */
     static equal(field = null, value = null) {
         return this.getSqlReadyName(field) + " = '" + this.getSqlReadyName(value) + "'";
     }
 
+    /**
+     * Provides the sql code for a NOT EQUALS clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name != 'John'
+     */
+    static notEqual(field = null, value = null) {
+        return this.getSqlReadyName(field) + " != '" + this.getSqlReadyName(value) + "'";
+    }
+
+    /**
+     * Provides the sql code for a NULL check clause
+     * @param {*} field The field to check on
+     * @returns A sql valid string, e.g name IS NULL
+     */
+    static isNull(field = null) {
+        return this.getSqlReadyName(field) + " IS NULL";
+    }
+
+    /**
+     * Provides the sql code for a NOT NULL check clause
+     * @param {*} field The field to check on
+     * @returns A sql valid string, e.g name IS NOT NULL
+     */
+    static isNotNull(field = null) {
+        return this.getSqlReadyName(field) + " IS NOT NULL";
+    }
+
+    /**
+     * Provides the sql code for a LIKE clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name LIKE 'John'
+     */
+    static like(field = null, value = null) {
+        return this.getSqlReadyName(field) + " LIKE '" + this.getSqlReadyName(value) + "'";
+    }
+
+    /**
+     * Provides the sql code for a GREATER THAN clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name > 'John'
+     */
+    static greaterThan(field = null, value = null) {
+        return this.getSqlReadyName(field) + " > '" + this.getSqlReadyName(value) + "'";
+    }
+
+    /**
+     * Provides the sql code for a GREATER OR EQUAL clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name >= 'John'
+     */
+    static greaterOrEqual(field = null, value = null) {
+        return this.getSqlReadyName(field) + " >= '" + this.getSqlReadyName(value) + "'";
+    }
+
+    /**
+     * Provides the sql code for a LESS THAN clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name < 'John'
+     */
+    static lessThan(field = null, value = null) {
+        return this.getSqlReadyName(field) + " < '" + this.getSqlReadyName(value) + "'";
+    }
+
+    /**
+     * Provides the sql code for a LESS OR EQUAL clause
+     * @param {*} field The field to check on
+     * @param {*} value The value to check on
+     * @returns A sql valid string, e.g name <= 'John'
+     */
+    static lessThanOrEqual(field = null, value = null) {
+        return this.getSqlReadyName(field) + " <= '" + this.getSqlReadyName(value) + "'";
+    }
+
+    /**
+     * Provides the sql code that wraps clauses into an AND condition
+     * @param  {...any} clauses The clauses to wrap, e.g equal, notEqual, like, etc
+     * @returns A sql valid string, e.g (name <= 'John' AND name != 'Doe')
+     */
     static andCondition(...clauses) {
         return this.buildCondition(this.condition.and, clauses);
     }
 
+    /**
+     * Provides the sql code that wraps clauses into an OR condition
+     * @param  {...any} clauses The clauses to wrap, e.g equal, notEqual, like, etc
+     * @returns A sql valid string, e.g (name <= 'John' OR name != 'Doe')
+     */
     static orCondition(...clauses) {
         return this.buildCondition(this.condition.or, clauses);
     }
 
+    /**
+     * Used by the andCondition and orCondition functions
+     * @param {*} condition The type of condition (AND / OR)
+     * @param {*} clauses The clauses to wrap
+     * @returns A sql valid string, e.g (name <= 'John' OR name != 'Doe')
+     */
     static buildCondition(condition = this.condition.and, clauses = []) {
         let queryComponent = "(";
         let hasStarted = false;
@@ -69,6 +167,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         return queryComponent;
     }
 
+    /**
+     * Provides the final sql query that will be executed
+     * @param {*} clauses All the valid clauses that will form part of the query
+     * @returns A sql valid query, e.g (name <= 'John' OR name != 'Doe')
+     */
     static buildQueryConditions(clauses = []) {
         let queryComponent = "";
 
@@ -79,6 +182,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         return queryComponent;
     }
 
+    /**
+     * Performs a SELECT query on the database with the provided clauses
+     * @param {*} dxInstance An instance of divbloxjs that provides access to the data layer
+     * @param {*} entityName The name of the entity to query on
+     * @param {[]|null} fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param  {...any} clauses Any clauses that must be added to the query, e.g equal, notEqual, like, etc
+     * @returns
+     */
     static async findArray(dxInstance, entityName = "base", fields = [], ...clauses) {
         if (typeof dxInstance === "undefined") {
             return null;
@@ -100,12 +211,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         }
         query += " FROM " + this.getSqlReadyName(entity) + " WHERE " + this.buildQueryConditions(clauses);
 
+        // TODO: Debug purposes. Remove
         console.log(query);
 
         const queryResult = await dxInstance.dataLayer.getArrayFromDatabase(
             query,
             dxInstance.dataLayer.getModuleNameFromEntityName(entity)
         );
+
         return queryResult;
     }
 }
