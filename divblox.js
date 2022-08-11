@@ -504,6 +504,8 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printSubHeadingMessage("Finishing divbloxjs startup");
 
             await dxUtils.sleep(1000);
+
+            await this.generateOrmBaseClasses();
         }
 
         if (!(await this.checkOrmBaseClassesComplete())) {

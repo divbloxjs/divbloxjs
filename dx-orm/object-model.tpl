@@ -1,6 +1,11 @@
 const modelBase = require('divbloxjs/dx-orm/object-model-base');
 const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted]-schema');
 
+const entityModel = {};
+for (const attribute of Object.keys(entitySchema)) {
+    entityModel[attribute] = attribute;
+}
+
 /**
  * An object model class used to describe the entity [EntityNameCamelCase] in an OOP manner
  */
@@ -27,4 +32,6 @@ class [EntityNamePascalCase] extends modelBase {
         [EntityData]
     }
 }
+
 module.exports = [EntityNamePascalCase];
+module.exports.model = entityModel;
