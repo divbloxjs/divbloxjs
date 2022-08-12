@@ -912,7 +912,7 @@ class DivbloxBase extends divbloxObjectBase {
                 },
             };
             let entityModel = {
-                id: "id",
+                id: this.dataLayer.getSqlReadyName(entityNameCamelCase) + ".id",
             };
 
             const attributes = this.dataModelObj[entityName]["attributes"];
@@ -966,7 +966,10 @@ class DivbloxBase extends divbloxObjectBase {
                     type: entityAttributeType,
                 };
 
-                entityModel[attributeName] = attributeName;
+                entityModel[attributeName] =
+                    this.dataLayer.getSqlReadyName(entityNameCamelCase) +
+                    "." +
+                    this.dataLayer.getSqlReadyName(attributeName);
 
                 switch (attributes[attributeName]["type"]) {
                     case "date":
@@ -1037,7 +1040,10 @@ class DivbloxBase extends divbloxObjectBase {
                         format: "int32",
                     };
 
-                    entityModel[finalRelationshipName] = finalRelationshipName;
+                    entityModel[finalRelationshipName] =
+                        this.dataLayer.getSqlReadyName(entityNameCamelCase) +
+                        "." +
+                        this.dataLayer.getSqlReadyName(finalRelationshipName);
 
                     linkedEntityRequires +=
                         "const " +
@@ -1069,6 +1075,8 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             schemaComplete[entityName] = entitySchemaData;
+
+            entityModel.__self = entityNameCamelCase;
 
             const tokensToReplace = {
                 EntityNamePascalCase: entityNamePascalCase,

@@ -6,6 +6,11 @@ const dxUtils = require("dx-utilities");
  * It provides an easy way to perform SELECT statements for ORM entities with an intuitive query builder
  */
 class DivbloxQueryModelBase extends divbloxObjectBase {
+    /**
+     * Debug mode prints out every query to the terminal
+     */
+    static enableDebugMode = false;
+
     static operators = {
         and: "AND",
         or: "OR",
@@ -363,10 +368,12 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: []|null}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: []}]}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
-     * @param {[]|null} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
+     * otherwise all fields will be returned if an entity is provided
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns
      */
@@ -396,7 +403,34 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             query = query.substring(0, query.length - 2);
         }
 
+        let innerJoinSql = "";
+
+        if (Array.isArray(options.linkedEntities) && options.linkedEntities.length > 0) {
+            for (const linkedEntity of options.linkedEntities) {
+                if (Array.isArray(linkedEntity.fields) && linkedEntity.fields.length > 0) {
+                    innerJoinSql +=
+                        " INNER JOIN " +
+                        this.getSqlReadyName(linkedEntity.entityName) +
+                        " ON " +
+                        linkedEntity.relationshipName +
+                        " = " +
+                        this.getSqlReadyName(linkedEntity.entityName) +
+                        ".id";
+
+                    query += ", ";
+
+                    for (const fieldName of linkedEntity.fields) {
+                        query += this.getSqlReadyName(fieldName) + ", ";
+                    }
+
+                    query = query.substring(0, query.length - 2);
+                }
+            }
+        }
+
         query += " FROM " + this.getSqlReadyName(entity);
+
+        query += innerJoinSql;
 
         const queryConditions = this.buildQueryConditions(clauses[0]);
 
@@ -408,10 +442,15 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
         query += queryAdditionalClauses;
 
-        // TODO: Debug purposes. Remove
-        console.log(query);
-
         const queryResult = await dataLayer.getArrayFromDatabase(query, dataLayer.getModuleNameFromEntityName(entity));
+
+        if (this.enableDebugMode) {
+            dxUtils.printSubHeadingMessage("\nDivbloxQueryModelBase debug output");
+            dxUtils.printInfoMessage("SQL Query: \n\n" + query);
+            if (queryResult === null) {
+                dxUtils.printErrorMessage(JSON.stringify(dataLayer.getError(), null, 2));
+            }
+        }
 
         return queryResult;
     }
