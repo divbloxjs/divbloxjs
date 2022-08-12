@@ -911,6 +911,9 @@ class DivbloxBase extends divbloxObjectBase {
                     format: "int32",
                 },
             };
+            let entityModel = {
+                id: "id",
+            };
 
             const attributes = this.dataModelObj[entityName]["attributes"];
             const relationships = this.dataModelObj[entityName]["relationships"];
@@ -963,6 +966,8 @@ class DivbloxBase extends divbloxObjectBase {
                     type: entityAttributeType,
                 };
 
+                entityModel[attributeName] = attributeName;
+
                 switch (attributes[attributeName]["type"]) {
                     case "date":
                         entitySchemaData[attributeName]["format"] = "date";
@@ -997,9 +1002,30 @@ class DivbloxBase extends divbloxObjectBase {
                         : attributes[attributeName]["default"].toString();
             }
 
+            let linkedEntityRequires = "";
+            let linkedEntityGetters = "";
+
+            let fileContentObjectModelGettersStr = fs.readFileSync(
+                DIVBLOX_ROOT_DIR + "/dx-orm/object-model-getters.tpl",
+                "utf-8"
+            );
+
             for (const relationshipName of Object.keys(relationships)) {
                 for (const relationshipUniqueName of relationships[relationshipName]) {
-                    const finalRelationshipName = relationshipName + "_" + relationshipUniqueName;
+                    const sqlReadyRelationshipName = this.dataLayer.getSqlReadyName(relationshipName);
+                    const sqlReadyRelationshipUniqueName = this.dataLayer.getSqlReadyName(relationshipUniqueName);
+                    const relationshipNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
+                        sqlReadyRelationshipName,
+                        "_"
+                    );
+                    const lowerCaseSplitterRelationshipName = dxUtils.getCamelCaseSplittedToLowerCase(
+                        relationshipName,
+                        "-"
+                    );
+
+                    const finalRelationshipName = this.dataLayer.convertSqlNameToProperty(
+                        sqlReadyRelationshipName + "_" + sqlReadyRelationshipUniqueName
+                    );
 
                     if (entityData.length > 0) {
                         entityData += "\n        ";
@@ -1010,6 +1036,35 @@ class DivbloxBase extends divbloxObjectBase {
                         type: "integer",
                         format: "int32",
                     };
+
+                    entityModel[finalRelationshipName] = finalRelationshipName;
+
+                    linkedEntityRequires +=
+                        "const " +
+                        relationshipNamePascalCase +
+                        "Controller" +
+                        ' = require("divbloxjs/dx-orm/generated/' +
+                        lowerCaseSplitterRelationshipName +
+                        '");\n';
+
+                    linkedEntityGetters += fileContentObjectModelGettersStr;
+
+                    const tokensToReplace = {
+                        RelationshipNameCamelCase: relationshipName,
+                        FinalRelationshipName: finalRelationshipName,
+                        RelationshipNamePascalCase: relationshipNamePascalCase,
+                        EntityNameCamelCase: entityNameCamelCase,
+                    };
+
+                    for (const token of Object.keys(tokensToReplace)) {
+                        const search = "[" + token + "]";
+                        let done = false;
+                        while (!done) {
+                            done = linkedEntityGetters.indexOf(search) === -1;
+                            //TODO: This should be done with the replaceAll function
+                            linkedEntityGetters = linkedEntityGetters.replace(search, tokensToReplace[token]);
+                        }
+                    }
                 }
             }
 
@@ -1021,6 +1076,9 @@ class DivbloxBase extends divbloxObjectBase {
                 EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
                 EntityData: entityData,
                 EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
+                EntityModel: JSON.stringify(entityModel, null, 2),
+                linkedEntityRequires: linkedEntityRequires,
+                linkedEntityGetters: linkedEntityGetters,
             };
 
             let fileContentObjectModelStr = fs.readFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/object-model.tpl", "utf-8");

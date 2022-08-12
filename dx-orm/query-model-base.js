@@ -184,16 +184,23 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {*} dxInstance An instance of divbloxjs that provides access to the data layer
-     * @param {*} entityName The name of the entity to query on
-     * @param {[]|null} fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
-     * @param  {...any} clauses Any clauses that must be added to the query, e.g equal, notEqual, like, etc
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: []|null}} options The options parameter
+     * @param {DivbloxBase} options.dxInstance An instance of Divblox
+     * @param {string} options.entityName The name of the entity
+     * @param {[]|null} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param {...any} clauses Any clauses that must be added to the query, e.g equal, notEqual, like, etc
      * @returns
      */
-    static async findArray(dxInstance, entityName = "base", fields = [], ...clauses) {
+    static async findArray(options = {}, ...clauses) {
+        const dxInstance = options.dxInstance;
+        const entityName = options.entityName;
+        const fields = options.fields;
+
         if (typeof dxInstance === "undefined") {
             return null;
         }
+
+        const dataLayer = dxInstance.dataLayer;
 
         let entity = "base";
         if (typeof entityName !== "undefined" && entityName.length > 0) {
@@ -214,10 +221,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         // TODO: Debug purposes. Remove
         console.log(query);
 
-        const queryResult = await dxInstance.dataLayer.getArrayFromDatabase(
-            query,
-            dxInstance.dataLayer.getModuleNameFromEntityName(entity)
-        );
+        const queryResult = await dataLayer.getArrayFromDatabase(query, dataLayer.getModuleNameFromEntityName(entity));
 
         return queryResult;
     }
