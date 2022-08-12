@@ -1,6 +1,6 @@
 {
     "name": "divbloxjs",
-    "version": "1.0.26",
+    "version": "1.0.27",
     "description": "The divblox node.js backend",
     "main": "divblox.js",
     "scripts": {
