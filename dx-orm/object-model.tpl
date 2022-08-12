@@ -35,9 +35,9 @@ class [EntityNamePascalCase] extends modelBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param options The options parameter
+     * @param {{fields: []|null}} options The options parameter
      * @param {[]|null} options.fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
-     * @param  {...any} clauses Any clauses that must be added to the query, e.g equal, notEqual, like, etc
+     * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {[]} An array of [EntityNameCamelCase] objects
      */
     async findArray(options = {}, ...clauses) {
