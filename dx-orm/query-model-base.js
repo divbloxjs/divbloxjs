@@ -216,7 +216,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             }
             query = query.substring(0, query.length - 2);
         }
-        query += " FROM " + this.getSqlReadyName(entity) + " WHERE " + this.buildQueryConditions(clauses);
+
+        query += " FROM " + this.getSqlReadyName(entity);
+
+        const queryConditions = this.buildQueryConditions(clauses);
+
+        if (queryConditions.length > 0) {
+            query += " WHERE " + queryConditions;
+        }
 
         // TODO: Debug purposes. Remove
         console.log(query);
