@@ -1,10 +1,10 @@
-const divbloxObjectBase = require("../dx-core-modules/object-base");
+const DivbloxObjectBase = require("../dx-core-modules/object-base");
 
 /**
  * DivbloxObjectModelBase is the base object model class that can be used to interact with the database in an OOP manner.
  * Each entity in the data model can have its own specialization of this class to allow for specific functionality
  */
-class DivbloxObjectModelBase extends divbloxObjectBase {
+class DivbloxObjectModelBase extends DivbloxObjectBase {
     /**
      * Basic initialization for an object model class. Models for specific objects will override this class in
      * order to define their own properties and specializations

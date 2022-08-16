@@ -1,11 +1,11 @@
-const modelBase = require('divbloxjs/dx-orm/object-model-base');
+const ModelBase = require('divbloxjs/dx-orm/object-model-base');
 const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted]-schema');
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
 [linkedEntityRequires]
 /**
  * An object model class used to describe the entity [EntityNameCamelCase] in an OOP manner
  */
-class [EntityNamePascalCase]Model extends modelBase {
+class [EntityNamePascalCase]ModelBase extends ModelBase {
 
     // [EntityNamePascalCase] Model Specification
     [EntityModelSpec]
@@ -49,4 +49,4 @@ class [EntityNamePascalCase]Model extends modelBase {
     }
 }
 
-module.exports = [EntityNamePascalCase]Model;
+module.exports = [EntityNamePascalCase]ModelBase;
