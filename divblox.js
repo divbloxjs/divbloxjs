@@ -915,6 +915,8 @@ class DivbloxBase extends divbloxObjectBase {
                 id: this.dataLayer.getSqlReadyName(entityNameCamelCase) + ".id",
             };
 
+            let entityModelSpec = 'static id = "' + this.dataLayer.getSqlReadyName(entityNameCamelCase) + '.id";\n';
+
             const attributes = this.dataModelObj[entityName]["attributes"];
             const relationships = this.dataModelObj[entityName]["relationships"];
 
@@ -970,6 +972,15 @@ class DivbloxBase extends divbloxObjectBase {
                     this.dataLayer.getSqlReadyName(entityNameCamelCase) +
                     "." +
                     this.dataLayer.getSqlReadyName(attributeName);
+
+                entityModelSpec +=
+                    "    static " +
+                    attributeName +
+                    ' = "' +
+                    this.dataLayer.getSqlReadyName(entityNameCamelCase) +
+                    "." +
+                    this.dataLayer.getSqlReadyName(attributeName) +
+                    '";\n';
 
                 switch (attributes[attributeName]["type"]) {
                     case "date":
@@ -1045,10 +1056,19 @@ class DivbloxBase extends divbloxObjectBase {
                         "." +
                         this.dataLayer.getSqlReadyName(finalRelationshipName);
 
+                    entityModelSpec +=
+                        "    static " +
+                        finalRelationshipName +
+                        ' = "' +
+                        this.dataLayer.getSqlReadyName(entityNameCamelCase) +
+                        "." +
+                        this.dataLayer.getSqlReadyName(finalRelationshipName) +
+                        '";\n';
+
                     linkedEntityRequires +=
                         "const " +
                         relationshipNamePascalCase +
-                        "Controller" +
+                        " " +
                         ' = require("divbloxjs/dx-orm/generated/' +
                         lowerCaseSplitterRelationshipName +
                         '");\n';
@@ -1078,6 +1098,8 @@ class DivbloxBase extends divbloxObjectBase {
 
             entityModel.__self = entityNameCamelCase;
 
+            entityModelSpec += "    static __self" + ' = "' + entityNameCamelCase + '";\n';
+
             const tokensToReplace = {
                 EntityNamePascalCase: entityNamePascalCase,
                 EntityNameCamelCase: entityNameCamelCase,
@@ -1085,6 +1107,7 @@ class DivbloxBase extends divbloxObjectBase {
                 EntityData: entityData,
                 EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
                 EntityModel: JSON.stringify(entityModel, null, 2),
+                EntityModelSpec: entityModelSpec,
                 linkedEntityRequires: linkedEntityRequires,
                 linkedEntityGetters: linkedEntityGetters,
             };

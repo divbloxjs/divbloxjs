@@ -2,14 +2,13 @@ const modelBase = require('divbloxjs/dx-orm/object-model-base');
 const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted]-schema');
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
 [linkedEntityRequires]
-
-const entityModel = [EntityModel];
-
 /**
  * An object model class used to describe the entity [EntityNameCamelCase] in an OOP manner
  */
-class [EntityNamePascalCase] extends modelBase {
+class [EntityNamePascalCase]Model extends modelBase {
 
+    // [EntityNamePascalCase] Model Specification
+    [EntityModelSpec]
     /**
      * Basic initialization for the [EntityNameCamelCase] object model class.
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer
@@ -32,11 +31,13 @@ class [EntityNamePascalCase] extends modelBase {
     }
 
     [linkedEntityGetters]
-
+    
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{fields: []|null}} options The options parameter
+     * @param {{fields: []|null, linkedEntities: [{entityName: string, relationshipName: string, fields: []}]}} options The options parameter
      * @param {[]|null} options.fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
+     * otherwise all fields will be returned if an entity is provided
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {[]} An array of [EntityNameCamelCase] objects
      */
@@ -48,5 +49,4 @@ class [EntityNamePascalCase] extends modelBase {
     }
 }
 
-module.exports = [EntityNamePascalCase];
-module.exports.model = entityModel;
+module.exports = [EntityNamePascalCase]Model;
