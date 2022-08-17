@@ -965,11 +965,6 @@ class DivbloxBase extends divbloxObjectBase {
                     type: entityAttributeType,
                 };
 
-                entityModel[attributeName] =
-                    this.dataLayer.getSqlReadyName(entityNameCamelCase) +
-                    "." +
-                    this.dataLayer.getSqlReadyName(attributeName);
-
                 entityModelSpec +=
                     "    static " +
                     attributeName +
@@ -1047,11 +1042,6 @@ class DivbloxBase extends divbloxObjectBase {
                         type: "integer",
                         format: "int32",
                     };
-
-                    entityModel[finalRelationshipName] =
-                        this.dataLayer.getSqlReadyName(entityNameCamelCase) +
-                        "." +
-                        this.dataLayer.getSqlReadyName(finalRelationshipName);
 
                     entityModelSpec +=
                         "    static " +
