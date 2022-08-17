@@ -1240,15 +1240,16 @@ class DivbloxBase extends divbloxObjectBase {
      * Attempts to insert a new row in the data base for the table matching the entityName
      * @param {string} entityName The name of the table to insert a row for
      * @param {*} data The relevant key/value data pairs for this entry
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<number|*>}
      */
-    async create(entityName = "", data = {}) {
+    async create(entityName = "", data = {}, transaction) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return -1;
         }
 
-        const objId = await this.dataLayer.create(entityName, data);
+        const objId = await this.dataLayer.create(entityName, data, transaction);
         if (objId === -1) {
             this.populateError(this.dataLayer.getError(), true, true);
         }
@@ -1260,15 +1261,16 @@ class DivbloxBase extends divbloxObjectBase {
      * Selects a row from the database for the table matching entityName and id
      * @param {string} entityName The name of the table to select from
      * @param {number} id The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<*>}
      */
-    async read(entityName = "", id = -1) {
+    async read(entityName = "", id = -1, transaction) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return null;
         }
 
-        const dataObj = await this.dataLayer.read(entityName, id);
+        const dataObj = await this.dataLayer.read(entityName, id, transaction);
         if (dataObj === null) {
             this.populateError(this.dataLayer.getError(), true, true);
         }
@@ -1281,15 +1283,16 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} entityName The entity type to load for (The table to perform a select query on)
      * @param {string} fieldName The primary key id of the relevant row
      * @param {string|number} fieldValue The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async readByField(entityName = "", fieldName = "id", fieldValue = -1) {
+    async readByField(entityName = "", fieldName = "id", fieldValue = -1, transaction) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return null;
         }
 
-        const dataObj = await this.dataLayer.readByField(entityName, fieldName, fieldValue);
+        const dataObj = await this.dataLayer.readByField(entityName, fieldName, fieldValue, transaction);
         if (dataObj === null) {
             this.populateError(this.dataLayer.getError(), true, true);
         }
@@ -1301,15 +1304,16 @@ class DivbloxBase extends divbloxObjectBase {
      * Attempts to modify a row in the database for the table matching the entityName
      * @param {string} entityName The name of the table to update a row for
      * @param {*} data The relevant key/value data pairs for this entry. Only the provided keys will be updated
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<number|*>}
      */
-    async update(entityName = "", data = {}) {
+    async update(entityName = "", data = {}, transaction) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
 
-        if (!(await this.dataLayer.update(entityName, data))) {
+        if (!(await this.dataLayer.update(entityName, data, transaction))) {
             this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
@@ -1321,15 +1325,16 @@ class DivbloxBase extends divbloxObjectBase {
      * Attempts to delete a row in the database for the table matching the entityName
      * @param {string} entityName The name of the table to delete a row for
      * @param {number} id The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>}
      */
-    async delete(entityName = "", id = -1) {
+    async delete(entityName = "", id = -1, transaction) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
 
-        if (!(await this.dataLayer.delete(entityName, id))) {
+        if (!(await this.dataLayer.delete(entityName, id, transaction))) {
             this.populateError(this.dataLayer.getError(), true, true);
             return false;
         }
@@ -1346,15 +1351,16 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {string} entry.entryDetail The details of the entry (What was changed)
      * @param {string} entry.globalIdentifier Optional. The uniqueIdentifier for a globalIdentifier that can be used to trace
      * the user/process that triggered the modification
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @return {Promise<boolean>}
      */
-    async addAuditLogEntry(entry = {}) {
+    async addAuditLogEntry(entry = {}, transaction) {
         if (!this.isInitFinished) {
             this.populateError("Divblox initialization not finished");
             return false;
         }
 
-        if (!(await this.dataLayer.addAuditLogEntry(entry))) {
+        if (!(await this.dataLayer.addAuditLogEntry(entry, transaction))) {
             this.populateError(this.dataLayer.getError());
             return false;
         }

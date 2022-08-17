@@ -59,7 +59,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name = 'John'
      */
     static equal(field = null, value = null) {
-        return this.getSqlReadyName(field) + " = '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " = ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " = '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -69,7 +73,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name != 'John'
      */
     static notEqual(field = null, value = null) {
-        return this.getSqlReadyName(field) + " != '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " != ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " != '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -78,7 +86,10 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name IS NULL
      */
     static isNull(field = null) {
-        return this.getSqlReadyName(field) + " IS NULL";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " IS NULL",
+        };
+        //return this.getSqlReadyName(field) + " IS NULL";
     }
 
     /**
@@ -87,7 +98,10 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name IS NOT NULL
      */
     static isNotNull(field = null) {
-        return this.getSqlReadyName(field) + " IS NOT NULL";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " IS NOT NULL",
+        };
+        //return this.getSqlReadyName(field) + " IS NOT NULL";
     }
 
     /**
@@ -97,7 +111,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name LIKE 'John'
      */
     static like(field = null, value = null) {
-        return this.getSqlReadyName(field) + " LIKE '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " LIKE ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " LIKE '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -107,7 +125,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name LIKE 'John'
      */
     static notLike(field = null, value = null) {
-        return this.getSqlReadyName(field) + " NOT LIKE '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " NOT LIKE ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " NOT LIKE '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -117,14 +139,20 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name LIKE 'John'
      */
     static in(field = null, values = []) {
-        let comparisonStr = "";
-        for (const value of values) {
-            comparisonStr += "'" + this.getSqlReadyValue(value) + "',";
+        let tokenStr = "";
+
+        for (let i = 0; i < values.length; i++) {
+            tokenStr += "?,";
         }
 
-        comparisonStr = comparisonStr.substring(0, comparisonStr.length - 1);
+        tokenStr = tokenStr.substring(0, tokenStr.length - 1);
 
-        return this.getSqlReadyName(field) + " IN (" + comparisonStr + ")";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " IN (" + tokenStr + ")",
+            values: values,
+        };
+
+        //return this.getSqlReadyName(field) + " IN (" + comparisonStr + ")";
     }
 
     /**
@@ -134,14 +162,20 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name LIKE 'John'
      */
     static notIn(field = null, values = []) {
-        let comparisonStr = "";
-        for (const value of values) {
-            comparisonStr += "'" + this.getSqlReadyValue(value) + "',";
+        let tokenStr = "";
+
+        for (let i = 0; i < values.length; i++) {
+            tokenStr += "?,";
         }
 
-        comparisonStr = comparisonStr.substring(0, comparisonStr.length - 1);
+        tokenStr = tokenStr.substring(0, tokenStr.length - 1);
 
-        return this.getSqlReadyName(field) + " NOT IN (" + comparisonStr + ")";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " NOT IN (" + tokenStr + ")",
+            values: values,
+        };
+
+        //return this.getSqlReadyName(field) + " NOT IN (" + comparisonStr + ")";
     }
 
     /**
@@ -151,7 +185,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name > 'John'
      */
     static greaterThan(field = null, value = null) {
-        return this.getSqlReadyName(field) + " > '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " > ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " > '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -161,7 +199,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name >= 'John'
      */
     static greaterOrEqual(field = null, value = null) {
-        return this.getSqlReadyName(field) + " >= '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " >= ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " >= '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -171,7 +213,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name < 'John'
      */
     static lessThan(field = null, value = null) {
-        return this.getSqlReadyName(field) + " < '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " < ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " < '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -181,7 +227,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g name <= 'John'
      */
     static lessThanOrEqual(field = null, value = null) {
-        return this.getSqlReadyName(field) + " <= '" + this.getSqlReadyValue(value) + "'";
+        return {
+            preparedStatement: this.getSqlReadyName(field) + " <= ?",
+            values: [this.getSqlReadyValue(value)],
+        };
+        //return this.getSqlReadyName(field) + " <= '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -280,16 +330,25 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     static buildCondition(operator = "AND", clauses = []) {
         let queryComponent = "(";
         let hasStarted = false;
+        let localValues = [];
+
         for (const clause of clauses) {
             if (hasStarted) {
                 queryComponent += " " + operator + " ";
             } else {
                 hasStarted = true;
             }
-            queryComponent += clause;
+
+            queryComponent += clause.preparedStatement;
+            localValues.push(...clause.values);
         }
+
         queryComponent += ")";
-        return queryComponent;
+
+        return {
+            preparedStatement: queryComponent,
+            values: localValues,
+        };
     }
 
     /**
@@ -298,22 +357,37 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid WHERE clause, e.g (name <= 'John' OR name != 'Doe')
      */
     static buildQueryConditions(clauses = []) {
-        let queryComponent = "";
+        let queryComponent = {
+            preparedStatement: "",
+            values: [],
+        };
 
         for (const clause of clauses) {
             let isAdditionalClause = false;
-            for (const additionalClause of Object.values(this.clauses)) {
-                if (clause.indexOf(additionalClause) !== -1) {
-                    // This means that it should not for part of the WHERE clause
-                    isAdditionalClause = true;
-                    break;
+            let preparedStatement = "";
+
+            if (typeof clause !== "object") {
+                preparedStatement = clause;
+
+                for (const additionalClause of Object.values(this.clauses)) {
+                    if (clause.indexOf(additionalClause) !== -1) {
+                        // This means that it should not for part of the WHERE clause
+                        isAdditionalClause = true;
+                        break;
+                    }
+                }
+            } else {
+                preparedStatement = clause.preparedStatement;
+            }
+
+            if (!isAdditionalClause) {
+                queryComponent.preparedStatement += preparedStatement;
+                if (typeof clause.values !== "undefined") {
+                    queryComponent.values.push(...clause.values);
                 }
             }
-            if (!isAdditionalClause) {
-                queryComponent += clause;
-            }
         }
-
+        console.log("QC: ", queryComponent);
         return queryComponent;
     }
 
@@ -331,9 +405,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         let limit = null;
 
         for (const clause of clauses) {
+            if (typeof clause === "object") {
+                continue;
+            }
+
             if (clause.indexOf(this.clauses.orderBy) !== -1) {
                 orderByClauses.push(clause);
             }
+
             if (clause.indexOf(this.clauses.groupBy) !== -1) {
                 groupByClauses.push(clause);
             }
@@ -368,12 +447,13 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: []}]}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: []}], transaction: {}|null}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
      * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
+     * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns
      */
@@ -381,6 +461,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         const dxInstance = options.dxInstance;
         const entityName = options.entityName;
         const fields = options.fields;
+        const transaction = options.transaction;
 
         if (typeof dxInstance === "undefined") {
             return null;
@@ -432,21 +513,28 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
         query += innerJoinSql;
 
-        const queryConditions = this.buildQueryConditions(clauses[0]);
+        const { preparedStatement, values } = this.buildQueryConditions(clauses[0]);
 
-        if (queryConditions.length > 0) {
-            query += " WHERE " + queryConditions;
+        if (preparedStatement.length > 0) {
+            query += " WHERE " + preparedStatement;
         }
 
         const queryAdditionalClauses = this.buildQueryAddtionalClauses(clauses[0]);
 
         query += queryAdditionalClauses;
 
-        const queryResult = await dataLayer.getArrayFromDatabase(query, dataLayer.getModuleNameFromEntityName(entity));
+        const queryResult = await dataLayer.getArrayFromDatabase(
+            query,
+            dataLayer.getModuleNameFromEntityName(entity),
+            values,
+            transaction
+        );
 
         if (this.enableDebugMode) {
             dxUtils.printSubHeadingMessage("\nDivbloxQueryModelBase debug output");
-            dxUtils.printInfoMessage("SQL Query: \n\n" + query);
+            dxUtils.printInfoMessage("SQL prepared statement: \n\n" + query);
+            dxUtils.printInfoMessage("\nSQL query values: " + JSON.stringify(values));
+
             if (queryResult === null) {
                 dxUtils.printErrorMessage(JSON.stringify(dataLayer.getError(), null, 2));
             }

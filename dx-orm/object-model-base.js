@@ -61,10 +61,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * Selects a row from the database for the table matching this entity and id and
      * stores the data for this entity in the "this.data" object
      * @param {number} id The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    async load(id = -1) {
-        this.lastLoadedData = await this.dxInstance.read(this.entityName, id);
+    async load(id = -1, transaction) {
+        this.lastLoadedData = await this.dxInstance.read(this.entityName, id, transaction);
         if (this.lastLoadedData !== null) {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
             return true;
@@ -83,10 +84,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * "this.data" object
      * @param {string} fieldName The name of the field or attribute to constrain on
      * @param {*} fieldValue The value to compare against
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    async loadByField(fieldName = "id", fieldValue = -1) {
-        this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue);
+    async loadByField(fieldName = "id", fieldValue = -1, transaction) {
+        this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue, transaction);
         if (this.lastLoadedData !== null) {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
             return true;
@@ -104,9 +106,10 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * performed. Otherwise an update is performed, whereby only the changed fields are updated.
      * @param {boolean} mustIgnoreLockingConstraints If set to true, we will not check whether a locking constraint is
      * in place (If this entity has locking constraint functionality enabled) and simply perform the update
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
      */
-    async save(mustIgnoreLockingConstraints = false) {
+    async save(mustIgnoreLockingConstraints = false, transaction) {
         if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
             // This means we are creating a new entry for this entity
             for (const key of Object.keys(this.data)) {
@@ -115,11 +118,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
                 }
             }
 
-            const objId = await this.dxInstance.create(this.entityName, this.data);
+            const objId = await this.dxInstance.create(this.entityName, this.data, transaction);
 
             if (objId !== -1) {
-                await this.load(objId);
-                await this.addAuditLogEntry(this.modificationTypes.create, this.data);
+                await this.load(objId, transaction);
+                await this.addAuditLogEntry(this.modificationTypes.create, this.data, transaction);
             }
 
             this.populateError(this.dxInstance.getError());
@@ -164,7 +167,8 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             const isLockingConstraintActive = await this.dxInstance.dataLayer.checkLockingConstraintActive(
                 this.entityName,
                 this.data.id,
-                this.lastLoadedData["lastUpdated"].getTime()
+                this.lastLoadedData["lastUpdated"].getTime(),
+                transaction
             );
 
             if (isLockingConstraintActive) {
@@ -174,10 +178,10 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
                 return false;
             }
         }
-        const updateResult = await this.dxInstance.update(this.entityName, dataToSave);
+        const updateResult = await this.dxInstance.update(this.entityName, dataToSave, transaction);
 
         if (updateResult) {
-            await this.addAuditLogEntry(this.modificationTypes.update, dataToSave);
+            await this.addAuditLogEntry(this.modificationTypes.update, dataToSave, transaction);
         } else {
             this.populateError(this.dxInstance.getError());
         }
@@ -187,13 +191,14 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
     /**
      * Remove this entity's instance from the database
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @return {Promise<boolean>} True if delete was successful
      */
-    async delete() {
-        const deleteResult = await this.dxInstance.delete(this.entityName, this.data.id);
+    async delete(transaction) {
+        const deleteResult = await this.dxInstance.delete(this.entityName, this.data.id, transaction);
 
         if (deleteResult) {
-            await this.addAuditLogEntry(this.modificationTypes.delete);
+            await this.addAuditLogEntry(this.modificationTypes.delete, transaction);
             this.reset();
         } else {
             this.populateError(this.dxInstance.getError());
@@ -206,9 +211,10 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * A wrapper function that calls the "addAuditLogEntry" method on DivbloxBase to add an audit log entry
      * @param {string} modificationType "create"|"update"|"delete"
      * @param {{}} entryDetail An object containing the details that were modified
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @return {Promise<boolean>} True if audit log was successfully stored, false otherwise
      */
-    async addAuditLogEntry(modificationType = this.modificationTypes.update, entryDetail = {}) {
+    async addAuditLogEntry(modificationType = this.modificationTypes.update, entryDetail = {}, transaction) {
         const entry = {
             objectName: this.entityName,
             modificationType: modificationType,
@@ -216,7 +222,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             entryDetail: JSON.stringify(entryDetail),
             globalIdentifier: this.globalIdentifier,
         };
-        const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry);
+        const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry, transaction);
         if (!auditLogEntryResult) {
             this.populateError(this.dxInstance.getError());
         }
