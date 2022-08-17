@@ -133,9 +133,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * Responsible for performing an insert query on the database for the relevant entity
      * @param {string} entityName The entity to create (Name of the row to perform an insert for)
      * @param {*} data An object who's properties determines the fields to set values for when inserting
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<number|*>} Returns the primary key id of the inserted item or -1
      */
-    async create(entityName = "", data = {}) {
+    async create(entityName = "", data = {}, transaction) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {
             return -1;
         }
@@ -166,7 +167,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
             sqlPlaceholders +
             ");";
 
-        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
+        const queryResult = await this.executeQuery(
+            query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues,
+            transaction
+        );
 
         if (queryResult === null) {
             return -1;
@@ -179,9 +185,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * Loads the data for a specific entity from the database
      * @param {string} entityName The entity type to load for (The table to perform a select query on)
      * @param {number} id The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async read(entityName = "", id = -1) {
+    async read(entityName = "", id = -1, transaction) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {
             return null;
         }
@@ -189,7 +196,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const query = "SELECT * FROM `" + this.getSqlReadyName(entityName) + "` " + "WHERE `id` = ? LIMIT 1;";
         const sqlValues = [id];
 
-        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
+        const queryResult = await this.executeQuery(
+            query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues,
+            transaction
+        );
 
         if (queryResult === null || queryResult.length === 0) {
             return null;
@@ -203,9 +215,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The entity type to load for (The table to perform a select query on)
      * @param {string} fieldName The primary key id of the relevant row
      * @param {string|number} fieldValue The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<null|*>} An object with the entity's data represented or NULL
      */
-    async readByField(entityName = "", fieldName = "id", fieldValue = -1) {
+    async readByField(entityName = "", fieldName = "id", fieldValue = -1, transaction) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {
             return null;
         }
@@ -219,7 +232,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
             "` = ? LIMIT 1;";
         const sqlValues = [fieldValue];
 
-        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
+        const queryResult = await this.executeQuery(
+            query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues,
+            transaction
+        );
 
         if (queryResult === null || queryResult.length === 0) {
             return null;
@@ -232,9 +250,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * Performs an update query on the database for the relevant entity
      * @param {string} entityName The entity type to perform the update for (The table to perform a update query on)
      * @param {*} data The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} Returns true if the update was successful, false otherwise
      */
-    async update(entityName = "", data = {}) {
+    async update(entityName = "", data = {}, transaction) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {
             return false;
         }
@@ -273,7 +292,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.executeQuery(
             query,
             this.getModuleNameFromEntityName(entityName),
-            sqlUpdateValues
+            sqlUpdateValues,
+            transaction
         );
 
         return queryResult !== null;
@@ -283,9 +303,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * Removes a specific entity from the database
      * @param {string} entityName The entity type to remove (The table to perform a delete query on)
      * @param {number} id The primary key id of the relevant row
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} Returns true if the delete was successful, false otherwise
      */
-    async delete(entityName = "", id = -1) {
+    async delete(entityName = "", id = -1, transaction) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {
             return false;
         }
@@ -294,7 +315,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
         const sqlValues = [id];
 
-        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
+        const queryResult = await this.executeQuery(
+            query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues,
+            transaction
+        );
 
         return queryResult !== null;
     }
@@ -307,9 +333,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {number} entry.objectId The database primary key id of the entity that was affected
      * @param {string} entry.entryDetail The details of the entry (What was changed)
      * @param {string} entry.globalIdentifier A unique identifier for the user/process that triggered the modification
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @return {Promise<boolean>} True if audit log entry was successfully added, false if not.
      */
-    async addAuditLogEntry(entry = {}) {
+    async addAuditLogEntry(entry = {}, transaction) {
         if (!this.isEntityAudited(entry["objectName"])) {
             return;
         }
@@ -338,7 +365,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.executeQuery(
             query,
             this.getModuleNameFromEntityName("auditLogEntry"),
-            sqlValues
+            sqlValues,
+            transaction
         );
 
         return typeof queryResult["error"] === "undefined";
@@ -349,9 +377,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} entityName The entity type to load for (The table to perform a select query on)
      * @param {number} id The primary key id of the relevant row
      * @param {string} currentLastUpdatedValue The previously retrieved value for "last_updated"
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @return {Promise<boolean>} True if a locking constraint should be in place, false otherwise
      */
-    async checkLockingConstraintActive(entityName = "", id = -1, currentLastUpdatedValue) {
+    async checkLockingConstraintActive(entityName = "", id = -1, currentLastUpdatedValue, transaction) {
         if (!this.doPreDatabaseInteractionCheck(entityName)) {
             return false;
         }
@@ -364,7 +393,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
             "SELECT `last_updated` FROM `" + this.getSqlReadyName(entityName) + "` " + "WHERE `id` = ? LIMIT 1;";
         const sqlValues = [id];
 
-        const queryResult = await this.executeQuery(query, this.getModuleNameFromEntityName(entityName), sqlValues);
+        const queryResult = await this.executeQuery(
+            query,
+            this.getModuleNameFromEntityName(entityName),
+            sqlValues,
+            transaction
+        );
 
         if (queryResult.length === 0) {
             return false;
@@ -382,9 +416,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} moduleName The name of the module that determines the database where the query needs to be performed
      * @param {[]} values Any values to insert into placeholders in sql. If not provided, it is assumed that the query
      * can execute as is
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<*|null>} Returns the database query result if successful, or NULL if not
      */
-    async executeQuery(query, moduleName, values) {
+    async executeQuery(query, moduleName, values, transaction) {
         if (typeof query === "undefined") {
             this.populateError("No query provided");
             return null;
@@ -395,7 +430,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             return null;
         }
 
-        const queryResult = await this.databaseConnector.queryDB(query, moduleName, values);
+        const queryResult = await this.databaseConnector.queryDB(query, moduleName, values, transaction);
 
         if (queryResult === null) {
             this.populateError(this.databaseConnector.getError(), false, true);
@@ -421,10 +456,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @param {string} moduleName The name of the module that determines the database where the query needs to be performed
      * @param {[]} values Any values to insert into placeholders in sql. If not provided, it is assumed that the query
      * can execute as is
+     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<*|null|[]>} Returns an array of js objects if successful, or NULL if not
      */
-    async getArrayFromDatabase(query, moduleName, values) {
-        const queryResult = await this.executeQuery(query, moduleName, values);
+    async getArrayFromDatabase(query, moduleName, values, transaction) {
+        const queryResult = await this.executeQuery(query, moduleName, values, transaction);
         if (queryResult !== null) {
             return this.transformSqlObjectArraytoJsArray(queryResult);
         }
