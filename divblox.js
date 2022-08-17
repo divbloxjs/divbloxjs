@@ -911,9 +911,6 @@ class DivbloxBase extends divbloxObjectBase {
                     format: "int32",
                 },
             };
-            let entityModel = {
-                id: this.dataLayer.getSqlReadyName(entityNameCamelCase) + ".id",
-            };
 
             let entityModelSpec = 'static id = "' + this.dataLayer.getSqlReadyName(entityNameCamelCase) + '.id";\n';
 
@@ -1096,9 +1093,9 @@ class DivbloxBase extends divbloxObjectBase {
 
             schemaComplete[entityName] = entitySchemaData;
 
-            entityModel.__self = entityNameCamelCase;
-
-            entityModelSpec += "    static __self" + ' = "' + entityNameCamelCase + '";\n';
+            entityModelSpec += "    static __entityName" + ' = "' + entityNameCamelCase + '";\n';
+            entityModelSpec +=
+                "    static __moduleName" + ' = "' + this.dataLayer.getModuleNameFromEntityName(entityName) + '";\n';
 
             const tokensToReplace = {
                 EntityNamePascalCase: entityNamePascalCase,
@@ -1106,7 +1103,6 @@ class DivbloxBase extends divbloxObjectBase {
                 EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
                 EntityData: entityData,
                 EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
-                EntityModel: JSON.stringify(entityModel, null, 2),
                 EntityModelSpec: entityModelSpec,
                 linkedEntityRequires: linkedEntityRequires,
                 linkedEntityGetters: linkedEntityGetters,
