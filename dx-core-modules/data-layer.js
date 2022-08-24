@@ -412,7 +412,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * Performs a specified query on the relevant database, based on the provide module name
-     * @param {string} query The query to be performed
+     * @param {string|{sql: string, nestTables: string|boolean}} query The query to execute. Can also pass an options object as per nodejs-mysql
      * @param {string} moduleName The name of the module that determines the database where the query needs to be performed
      * @param {[]} values Any values to insert into placeholders in sql. If not provided, it is assumed that the query
      * can execute as is
@@ -452,7 +452,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * A wrapper function for executeQuery that always returns an array of js objects
-     * @param {string} query The query to be performed
+     * @param {string|{sql: string, nestTables: string|boolean}} query The query to execute. Can also pass an options object as per nodejs-mysql
      * @param {string} moduleName The name of the module that determines the database where the query needs to be performed
      * @param {[]} values Any values to insert into placeholders in sql. If not provided, it is assumed that the query
      * can execute as is

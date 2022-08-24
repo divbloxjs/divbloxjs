@@ -387,7 +387,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                 }
             }
         }
-        console.log("QC: ", queryComponent);
+
         return queryComponent;
     }
 

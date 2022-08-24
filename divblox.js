@@ -1017,6 +1017,9 @@ class DivbloxBase extends divbloxObjectBase {
             );
 
             for (const relationshipName of Object.keys(relationships)) {
+                let linkedEntityRequiresForRelationship = "";
+                let linkedEntityGettersForRelationship = "";
+
                 for (const relationshipUniqueName of relationships[relationshipName]) {
                     const sqlReadyRelationshipName = this.dataLayer.getSqlReadyName(relationshipName);
                     const sqlReadyRelationshipUniqueName = this.dataLayer.getSqlReadyName(relationshipUniqueName);
@@ -1052,15 +1055,19 @@ class DivbloxBase extends divbloxObjectBase {
                         this.dataLayer.getSqlReadyName(finalRelationshipName) +
                         '";\n';
 
-                    linkedEntityRequires +=
-                        "const " +
-                        relationshipNamePascalCase +
-                        " " +
-                        ' = require("divbloxjs/dx-orm/generated/' +
-                        lowerCaseSplitterRelationshipName +
-                        '");\n';
+                    if (linkedEntityRequiresForRelationship === "") {
+                        linkedEntityRequiresForRelationship +=
+                            "const " +
+                            relationshipNamePascalCase +
+                            " " +
+                            ' = require("divbloxjs/dx-orm/generated/' +
+                            lowerCaseSplitterRelationshipName +
+                            '");\n';
+                    }
 
-                    linkedEntityGetters += fileContentObjectModelGettersStr;
+                    if (linkedEntityGettersForRelationship === "") {
+                        linkedEntityGettersForRelationship = fileContentObjectModelGettersStr;
+                    }
 
                     const tokensToReplace = {
                         RelationshipNameCamelCase: relationshipName,
@@ -1073,12 +1080,18 @@ class DivbloxBase extends divbloxObjectBase {
                         const search = "[" + token + "]";
                         let done = false;
                         while (!done) {
-                            done = linkedEntityGetters.indexOf(search) === -1;
+                            done = linkedEntityGettersForRelationship.indexOf(search) === -1;
                             //TODO: This should be done with the replaceAll function
-                            linkedEntityGetters = linkedEntityGetters.replace(search, tokensToReplace[token]);
+                            linkedEntityGettersForRelationship = linkedEntityGettersForRelationship.replace(
+                                search,
+                                tokensToReplace[token]
+                            );
                         }
                     }
                 }
+
+                linkedEntityRequires += linkedEntityRequiresForRelationship;
+                linkedEntityGetters += linkedEntityGettersForRelationship;
             }
 
             schemaComplete[entityName] = entitySchemaData;
