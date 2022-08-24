@@ -485,10 +485,23 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         }
 
         let innerJoinSql = "";
+        let linkedEntityNames = [];
 
         if (Array.isArray(options.linkedEntities) && options.linkedEntities.length > 0) {
             for (const linkedEntity of options.linkedEntities) {
                 if (Array.isArray(linkedEntity.fields) && linkedEntity.fields.length > 0) {
+                    if (linkedEntityNames.includes(linkedEntity.entityName)) {
+                        dxUtils.printErrorMessage(
+                            "findArray() does not support multiple INNER JOIN on the same foreign table.' " +
+                                linkedEntity.entityName +
+                                "' is defined more than once. To achieve this functionality, please create" +
+                                " a custom query."
+                        );
+                        throw new Error("Fatal error in findArray()");
+                    }
+
+                    linkedEntityNames.push(linkedEntity.entityName);
+
                     innerJoinSql +=
                         " INNER JOIN " +
                         this.getSqlReadyName(linkedEntity.entityName) +
@@ -524,7 +537,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         query += queryAdditionalClauses;
 
         const queryResult = await dataLayer.getArrayFromDatabase(
-            query,
+            { sql: query, nestTables: true },
             dataLayer.getModuleNameFromEntityName(entity),
             values,
             transaction
