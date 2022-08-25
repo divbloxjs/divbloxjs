@@ -40,7 +40,7 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
      * otherwise all fields will be returned if an entity is provided
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
-     * @returns {[]} An array of [EntityNameCamelCase] objects
+     * @returns {Promise<[]>} An array of [EntityNameCamelCase] objects
      */
     async findArray(options = {}, ...clauses) {
         let finalOptions = {dxInstance: this.dxInstance,
