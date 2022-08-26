@@ -536,7 +536,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             query += " WHERE " + preparedStatement;
         }
 
-        const queryAdditionalClauses = this.buildQueryAddtionalClauses(clauses[0]);
+        const queryAdditionalClauses = this.buildQueryAdditionalClauses(clauses[0]);
 
         query += queryAdditionalClauses;
 
