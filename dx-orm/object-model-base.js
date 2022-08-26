@@ -51,10 +51,20 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
     /**
      * Returns a schema for the current entity
+     * @param {boolean} mustSimplify If true, returns a simplified version of the entity schema
      * @return {*|{}}
      */
-    getEntitySchema() {
-        return this.entitySchema;
+    getEntitySchema(mustSimplify = false) {
+        if (!mustSimplify) {
+            return this.entitySchema;
+        }
+
+        const simplifiedSchema = {};
+        for (const [key, value] of Object.entries(this.entitySchema)) {
+            simplifiedSchema[key] = value.type;
+        }
+
+        return simplifiedSchema;
     }
 
     /**
