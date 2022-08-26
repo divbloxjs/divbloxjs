@@ -53,18 +53,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     }
 
     /**
-     * Provides sql code for a base to chain WHERE clauses. To be used as the initial condition in a chain or
-     * dxQ.andCondition() and dxQ.orCondition()
-     * @returns {{preparedStatement: string, values: *[]}}
-     */
-    static all() {
-        return {
-            preparedStatement: "1 = 1",
-            values: [],
-        };
-    }
-
-    /**
      * Provides the sql code for an EQUALS operator
      * @param {*} field The field to check on
      * @param {*} value The value to check on
@@ -345,6 +333,10 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         let localValues = [];
 
         for (const clause of clauses) {
+            if (clause === null) {
+                continue;
+            }
+
             if (hasStarted) {
                 queryComponent += " " + operator + " ";
             } else {
