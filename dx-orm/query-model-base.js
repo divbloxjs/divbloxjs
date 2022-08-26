@@ -333,6 +333,10 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         let localValues = [];
 
         for (const clause of clauses) {
+            if (clause === null) {
+                continue;
+            }
+
             if (hasStarted) {
                 queryComponent += " " + operator + " ";
             } else {
