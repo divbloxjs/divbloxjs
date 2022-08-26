@@ -400,7 +400,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @param {*} clauses All the valid clauses that will form part of the query
      * @returns Valid additional sql clauses (e.g ORDER BY 'abc' DESC)
      */
-    static buildQueryAddtionalClauses(clauses = []) {
+    static buildQueryAdditionalClauses(clauses = []) {
         let queryComponent = "";
 
         let orderByClauses = [];
