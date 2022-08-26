@@ -161,6 +161,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                     type = "string";
                     format = "binary";
                     break;
+                case "boolean":
+                    type = "boolean";
+                    break;
             }
 
             schema.properties[key] = {
