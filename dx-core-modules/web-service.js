@@ -160,6 +160,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 delete packageInstance.result["success"];
 
+                res.header("x-powered-by", "divbloxjs");
                 res.send(packageInstance.result);
             });
 
@@ -203,6 +204,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                         delete packageInstance.result["success"];
 
+                        res.header("x-powered-by", "divbloxjs");
                         res.send(packageInstance.result);
                     });
 
@@ -244,6 +246,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                                 delete packageInstance.result["success"];
 
+                                res.header("x-powered-by", "divbloxjs");
                                 res.send(packageInstance.result);
                             });
 
