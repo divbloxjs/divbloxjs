@@ -13,9 +13,14 @@ class DivbloxGlobalBase {
     /**
      * Whenever Divblox encounters an error, the errorInfo array should be populated with details about the error. This
      * function simply returns that errorInfo array for debugging purposes
+     * @param {boolean} lastErrorOnly If set to true this will only return the latest error
      * @returns {[]}
      */
-    getError() {
+    getError(lastErrorOnly = false) {
+        if (lastErrorOnly && this.errorInfo.length > 0) {
+            return [this.errorInfo[this.errorInfo.length - 1]];
+        }
+
         return this.errorInfo;
     }
 

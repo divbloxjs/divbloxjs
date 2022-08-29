@@ -81,7 +81,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             return true;
         }
 
-        this.populateError(this.dxInstance.getError());
+        this.populateError("Object not found for id = " + id, true, true);
 
         this.reset();
 
@@ -104,7 +104,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             return true;
         }
 
-        this.populateError(this.dxInstance.getError());
+        this.populateError("Object not found for " + fieldName + " = " + fieldValue, true, true);
 
         this.reset();
 
@@ -135,7 +135,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
                 await this.addAuditLogEntry(this.modificationTypes.create, this.data, transaction);
             }
 
-            this.populateError(this.dxInstance.getError());
+            this.populateError(this.dxInstance.getError(true), true, true);
 
             return objId !== -1;
         }
@@ -193,7 +193,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         if (updateResult) {
             await this.addAuditLogEntry(this.modificationTypes.update, dataToSave, transaction);
         } else {
-            this.populateError(this.dxInstance.getError());
+            this.populateError(this.dxInstance.getError(true), true, true);
         }
 
         return updateResult;
@@ -211,7 +211,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             await this.addAuditLogEntry(this.modificationTypes.delete, transaction);
             this.reset();
         } else {
-            this.populateError(this.dxInstance.getError());
+            this.populateError(this.dxInstance.getError(true), true, true);
         }
 
         return deleteResult;
@@ -234,7 +234,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         };
         const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry, transaction);
         if (!auditLogEntryResult) {
-            this.populateError(this.dxInstance.getError());
+            this.populateError(this.dxInstance.getError(true), true, true);
         }
         return auditLogEntryResult;
     }
