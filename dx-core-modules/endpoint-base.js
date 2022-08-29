@@ -16,6 +16,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result = {
             success: false,
             message: "none",
+            unauthorized: false,
             cookie: null,
         };
         this.declaredOperations = [];
@@ -231,6 +232,20 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Sets the current result to false and forces a 401 http error code
+     * @param {string} message An optional message to return
+     */
+    setResultNotAuthorized(message) {
+        this.result["success"] = false;
+        this.result["unauthorized"] = true;
+
+        delete this.result["message"];
+        if (typeof message !== "undefined") {
+            this.result["message"] = message;
+        }
+    }
+
+    /**
      * Appends the provided resultDetail to the result object
      * @param {*} resultDetail An object containing additional result details
      */
@@ -249,6 +264,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result = {
             success: false,
             message: "none",
+            unauthorized: false,
             cookie: null,
         };
     }

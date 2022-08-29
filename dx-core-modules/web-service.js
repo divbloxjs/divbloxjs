@@ -183,7 +183,10 @@ class DivbloxWebService extends divbloxObjectBase {
                         if (packageInstance.result["success"] !== true) {
                             res.status(400);
 
-                            if (packageInstance.result["message"] === "Not authorized") {
+                            if (
+                                packageInstance.result["message"] === "Not authorized" ||
+                                packageInstance.result["unauthorized"] === true
+                            ) {
                                 res.status(401);
                             }
                         }
@@ -228,7 +231,10 @@ class DivbloxWebService extends divbloxObjectBase {
                                 if (packageInstance.result["success"] !== true) {
                                     res.status(400);
 
-                                    if (packageInstance.result["message"] === "Not authorized") {
+                                    if (
+                                        packageInstance.result["message"] === "Not authorized" ||
+                                        packageInstance.result["unauthorized"] === true
+                                    ) {
                                         res.status(401);
                                     }
                                 }
