@@ -442,7 +442,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
 
         if (!this.isAccessAllowed(operation, request.method, providedIdentifierGroupings)) {
-            this.setResult(false, "Not authorized");
+            this.setResultNotAuthorized("Not authorized");
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
             // on a true response to know whether they can proceed
             return false;
