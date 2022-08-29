@@ -534,7 +534,16 @@ class DivbloxDataLayer extends divbloxObjectBase {
         let returnObject = {};
 
         for (const key of Object.keys(sqlObject)) {
-            returnObject[this.convertSqlNameToProperty(key, false)] = sqlObject[key];
+            let value = sqlObject[key];
+
+            if (typeof sqlObject[key] === "object" && sqlObject[key] !== null) {
+                value = {};
+                for (const subKey of Object.keys(sqlObject[key])) {
+                    value[this.convertSqlNameToProperty(subKey, false)] = sqlObject[key][subKey];
+                }
+            }
+
+            returnObject[this.convertSqlNameToProperty(key, false)] = value;
         }
 
         return returnObject;
