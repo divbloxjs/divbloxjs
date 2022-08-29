@@ -13,15 +13,29 @@ class DivbloxGlobalBase {
     /**
      * Whenever Divblox encounters an error, the errorInfo array should be populated with details about the error. This
      * function simply returns that errorInfo array for debugging purposes
-     * @param {boolean} lastErrorOnly If set to true this will only return the latest error
      * @returns {[]}
      */
-    getError(lastErrorOnly = false) {
-        if (lastErrorOnly && this.errorInfo.length > 0) {
-            return [this.errorInfo[this.errorInfo.length - 1]];
+    getError() {
+        return this.errorInfo;
+    }
+
+    /**
+     * Returns the latest error that was pushed, as an error object
+     * @returns {error: {}|string} The latest error
+     */
+    getLastError() {
+        const lastError = { error: null };
+
+        if (this.errorInfo.length > 0) {
+            const lastErrorDetail = this.errorInfo[this.errorInfo.length - 1];
+            lastError.error = lastErrorDetail;
+
+            if (typeof lastErrorDetail === "object" && lastErrorDetail.error !== undefined) {
+                lastError.error = lastErrorDetail.error;
+            }
         }
 
-        return this.errorInfo;
+        return lastError;
     }
 
     /**
@@ -36,7 +50,11 @@ class DivbloxGlobalBase {
         }
 
         if (!addAtStart) {
-            this.errorInfo.push(errorToPush);
+            if (Array.isArray(errorToPush)) {
+                this.errorInfo.push(...errorToPush);
+            } else {
+                this.errorInfo.push(errorToPush);
+            }
         } else {
             this.errorInfo.unshift(errorToPush);
         }

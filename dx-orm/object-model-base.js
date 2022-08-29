@@ -135,7 +135,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
                 await this.addAuditLogEntry(this.modificationTypes.create, this.data, transaction);
             }
 
-            this.populateError(this.dxInstance.getError(true), true, true);
+            this.populateError(this.dxInstance.getLastError());
 
             return objId !== -1;
         }
@@ -193,7 +193,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         if (updateResult) {
             await this.addAuditLogEntry(this.modificationTypes.update, dataToSave, transaction);
         } else {
-            this.populateError(this.dxInstance.getError(true), true, true);
+            this.populateError(this.dxInstance.getLastError());
         }
 
         return updateResult;
@@ -211,7 +211,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             await this.addAuditLogEntry(this.modificationTypes.delete, transaction);
             this.reset();
         } else {
-            this.populateError(this.dxInstance.getError(true), true, true);
+            this.populateError(this.dxInstance.getLastError());
         }
 
         return deleteResult;
@@ -234,7 +234,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         };
         const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry, transaction);
         if (!auditLogEntryResult) {
-            this.populateError(this.dxInstance.getError(true), true, true);
+            this.populateError(this.dxInstance.getLastError());
         }
         return auditLogEntryResult;
     }
