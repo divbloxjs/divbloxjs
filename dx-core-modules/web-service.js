@@ -154,11 +154,11 @@ class DivbloxWebService extends divbloxObjectBase {
                         httpOnly: cookie["httpOnly"],
                         maxAge: cookie["maxAge"],
                     });
-
-                    delete packageInstance.result["cookie"];
                 }
 
                 delete packageInstance.result["success"];
+                delete packageInstance.result["cookie"];
+                delete packageInstance.result["unauthorized"];
 
                 res.header("x-powered-by", "divbloxjs");
                 res.send(packageInstance.result);
@@ -201,11 +201,11 @@ class DivbloxWebService extends divbloxObjectBase {
                                 httpOnly: cookie["httpOnly"],
                                 maxAge: cookie["maxAge"],
                             });
-
-                            delete packageInstance.result["cookie"];
                         }
 
                         delete packageInstance.result["success"];
+                        delete packageInstance.result["cookie"];
+                        delete packageInstance.result["unauthorized"];
 
                         res.header("x-powered-by", "divbloxjs");
                         res.send(packageInstance.result);
@@ -246,11 +246,11 @@ class DivbloxWebService extends divbloxObjectBase {
                                         httpOnly: cookie["httpOnly"],
                                         maxAge: cookie["maxAge"],
                                     });
-
-                                    delete packageInstance.result["cookie"];
                                 }
 
                                 delete packageInstance.result["success"];
+                                delete packageInstance.result["cookie"];
+                                delete packageInstance.result["unauthorized"];
 
                                 res.header("x-powered-by", "divbloxjs");
                                 res.send(packageInstance.result);
