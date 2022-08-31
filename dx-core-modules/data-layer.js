@@ -1,6 +1,7 @@
 const dxUtils = require("dx-utilities");
 const divbloxObjectBase = require("./object-base");
 const dxDbSync = require("dx-db-sync");
+const DivbloxDatabaseConnector = require("dx-db-connector");
 
 /**
  * The DivbloxDataLayer is responsible for managing the interaction of logic of your app with the database, honouring
@@ -9,8 +10,8 @@ const dxDbSync = require("dx-db-sync");
 class DivbloxDataLayer extends divbloxObjectBase {
     /**
      * Configures the various modules and entities that are available for database interaction
-     * @param {*} databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
-     * @param {*} dataModel An object that represents the various entities and their attributes in the data structure
+     * @param {DivbloxDatabaseConnector} databaseConnector An instance of DivbloxDatabaseConnector that facilitates communication with a database
+     * @param {{}} dataModel An object that represents the various entities and their attributes in the data structure
      */
     constructor(databaseConnector = null, dataModel = {}) {
         super();
@@ -536,7 +537,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
         for (const key of Object.keys(sqlObject)) {
             let value = sqlObject[key];
 
-            if (typeof sqlObject[key] === "object" && sqlObject[key] !== null) {
+            if (typeof sqlObject[key] === "object" && sqlObject[key] !== null && !(sqlObject[key] instanceof Date)) {
                 value = {};
                 for (const subKey of Object.keys(sqlObject[key])) {
                     value[this.convertSqlNameToProperty(subKey, false)] = sqlObject[key][subKey];
