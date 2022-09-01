@@ -1,4 +1,5 @@
 const divbloxObjectBase = require("./object-base");
+const DivbloxBase = require("../divblox");
 const jwt = require("jsonwebtoken");
 
 /**
