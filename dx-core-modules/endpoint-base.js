@@ -1,5 +1,5 @@
 const divbloxObjectBase = require("./object-base");
-
+const DivbloxBase = require("../divblox");
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
  * for divbloxjs projects

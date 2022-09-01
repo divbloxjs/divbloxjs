@@ -1,5 +1,6 @@
 const dxUtils = require("dx-utilities");
 const divbloxObjectBase = require("./object-base");
+const DivbloxBase = require("../divblox");
 const createError = require("http-errors");
 const express = require("express");
 const cors = require("cors");
