@@ -1,4 +1,5 @@
 const DivbloxObjectBase = require("../dx-core-modules/object-base");
+const DivbloxBase = require("../divblox");
 
 /**
  * DivbloxObjectModelBase is the base object model class that can be used to interact with the database in an OOP manner.
@@ -71,10 +72,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * Selects a row from the database for the table matching this entity and id and
      * stores the data for this entity in the "this.data" object
      * @param {number} id The primary key id of the relevant row
-     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} additionalParams An optional object containing any additional parameters that you might want to access in an overriding function
      * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    async load(id = -1, transaction) {
+    async load(id = -1, transaction = null, additionalParams = {}) {
         this.lastLoadedData = await this.dxInstance.read(this.entityName, id, transaction);
         if (this.lastLoadedData !== null) {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
@@ -94,10 +96,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * "this.data" object
      * @param {string} fieldName The name of the field or attribute to constrain on
      * @param {*} fieldValue The value to compare against
-     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} additionalParams An optional object containing any additional parameters that you might want to access in an overriding function
      * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
-    async loadByField(fieldName = "id", fieldValue = -1, transaction) {
+    async loadByField(fieldName = "id", fieldValue = -1, transaction = null, additionalParams = {}) {
         this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue, transaction);
         if (this.lastLoadedData !== null) {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
@@ -116,10 +119,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * performed. Otherwise an update is performed, whereby only the changed fields are updated.
      * @param {boolean} mustIgnoreLockingConstraints If set to true, we will not check whether a locking constraint is
      * in place (If this entity has locking constraint functionality enabled) and simply perform the update
-     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} additionalParams An optional object containing any additional parameters that you might want to access in an overriding function
      * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
      */
-    async save(mustIgnoreLockingConstraints = false, transaction) {
+    async save(mustIgnoreLockingConstraints = false, transaction = null, additionalParams = {}) {
         if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
             // This means we are creating a new entry for this entity
             for (const key of Object.keys(this.data)) {
@@ -201,10 +205,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
     /**
      * Remove this entity's instance from the database
-     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} additionalParams An optional object containing any additional parameters that you might want to access in an overriding function
      * @return {Promise<boolean>} True if delete was successful
      */
-    async delete(transaction) {
+    async delete(transaction = null, additionalParams = {}) {
         const deleteResult = await this.dxInstance.delete(this.entityName, this.data.id, transaction);
 
         if (deleteResult) {
@@ -221,10 +226,16 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * A wrapper function that calls the "addAuditLogEntry" method on DivbloxBase to add an audit log entry
      * @param {string} modificationType "create"|"update"|"delete"
      * @param {{}} entryDetail An object containing the details that were modified
-     * @param {{}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} additionalParams An optional object containing any additional parameters that you might want to access in an overriding function
      * @return {Promise<boolean>} True if audit log was successfully stored, false otherwise
      */
-    async addAuditLogEntry(modificationType = this.modificationTypes.update, entryDetail = {}, transaction) {
+    async addAuditLogEntry(
+        modificationType = this.modificationTypes.update,
+        entryDetail = {},
+        transaction = null,
+        additionalParams = {}
+    ) {
         const entry = {
             objectName: this.entityName,
             modificationType: modificationType,

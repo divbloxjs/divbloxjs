@@ -16,6 +16,6 @@
             return [RelationshipNameCamelCase];
         }
 
-        this.populateError("No [RelationshipNameCamelCase] is linked to this [EntityNameCamelCase] via the relationship [FinalRelationshipName]", true, true);
+        this.populateError("No [RelationshipNameCamelCase] is linked to this [EntityNameCamelCase] via the relationship "+relationshipName, true, true);
         return null;
     }
