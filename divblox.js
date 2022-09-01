@@ -37,11 +37,11 @@ class DivbloxBase extends divbloxObjectBase {
      * Constructs the Divblox instance with the options provided
      * @param options The configuration and data model options to initialize with
      * @param {string} options.configPath The path to the dxconfig.json file that defines the environment related variables
-     * @param {*} options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
+     * @param {DivbloxDataLayer} options.dataLayerImplementationClass An optional class implementation for the Divblox Data Layer. This
      * is useful when you want to override the default Divblox data layer behaviour
-     * @param {*} options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
+     * @param {DivbloxWebService} options.webServiceImplementationClass An optional class implementation for the Divblox Web Service. This
      * is useful when you want to override the default Divblox Web Service behaviour
-     * @param {*} options.jwtWrapperImplementationClass An optional class implementation for the Divblox JWT Wrapper. This
+     * @param {DivbloxJwtWrapper} options.jwtWrapperImplementationClass An optional class implementation for the Divblox JWT Wrapper. This
      * is useful when you want to override the default Divblox JWT Wrapper behaviour
      * @param {boolean} options.disableWebServer If set to true this skips any setup of a webserver to allow for using
      * divbloxjs simply as a console-driven tool. Note that if you instantiate with this all packages that provide web
@@ -443,6 +443,38 @@ class DivbloxBase extends divbloxObjectBase {
             this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"],
             this
         );
+    }
+
+    /**
+     *
+     * @returns {DivbloxDataLayer} An instance of the current data layer class
+     */
+    getDataLayer() {
+        return this.dataLayer;
+    }
+
+    /**
+     *
+     * @returns {divbloxDatabaseConnector} An instance of the current database connector that manages connections and queries to the database
+     */
+    getDatabaseConnector() {
+        return this.databaseConnector;
+    }
+
+    /**
+     *
+     * @returns {DivbloxJwtWrapper} An instance of the JWT wrapper class that is responsible for managing JWTs
+     */
+    getJwtWrapper() {
+        return this.jwtWrapper;
+    }
+
+    /**
+     *
+     * @returns {DivbloxWebService} An instance of the web service class that handles the configuration for express
+     */
+    getWebService() {
+        return this.webService;
     }
 
     /**
