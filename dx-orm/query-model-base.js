@@ -559,6 +559,40 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
         return queryResult;
     }
+
+    /**
+     * Performs a SELECT query on the database with the provided clauses and returns a single entry
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: []}], transaction: {}|null}} options The options parameter
+     * @param {DivbloxBase} options.dxInstance An instance of Divblox
+     * @param {string} options.entityName The name of the entity
+     * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
+     * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
+     * otherwise all fields will be returned if an entity is provided
+     * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
+     * @returns {{}} Single object of data based on specified query
+     */
+    static async findSingle(options = {}, ...clauses) {
+        clauses[0].forEach((clause, index) => {
+            if (typeof clause === "string" && clause.includes("LIMIT")) {
+                clauses[0].splice(index, 1);
+            }
+        })
+
+        clauses[0].push(this.limit(1));
+
+        const resultArray = await this.findArray(options, ...clauses);
+
+        if (resultArray === null) {
+            return null;
+        }
+
+        if (resultArray.length > 0) {
+            return resultArray[0];
+        }
+
+        return null;
+    }
 }
 
 module.exports = DivbloxQueryModelBase;
