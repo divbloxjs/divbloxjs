@@ -451,7 +451,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: []}], transaction: {}|null}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
      * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
@@ -488,7 +488,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             query = query.substring(0, query.length - 2);
         }
 
-        let innerJoinSql = "";
+        let joinSql = "";
         let linkedEntityNames = [];
 
         if (Array.isArray(options.linkedEntities) && options.linkedEntities.length > 0) {
@@ -496,18 +496,21 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                 if (Array.isArray(linkedEntity.fields) && linkedEntity.fields.length > 0) {
                     if (linkedEntityNames.includes(linkedEntity.entityName)) {
                         dxUtils.printErrorMessage(
-                            "findArray() does not support multiple INNER JOIN on the same foreign table.' " +
-                                linkedEntity.entityName +
-                                "' is defined more than once. To achieve this functionality, please create" +
-                                " a custom query."
+                            "findArray() does not support multiple JOINs on the same foreign table.' " +
+                            linkedEntity.entityName +
+                            "' is defined more than once. To achieve this functionality, please create" +
+                            " a custom query."
                         );
                         throw new Error("Fatal error in findArray()");
                     }
 
                     linkedEntityNames.push(linkedEntity.entityName);
+                    if (typeof linkedEntity.joinType === "undefined") {
+                        linkedEntity.joinType = "INNER";
+                    }
 
-                    innerJoinSql +=
-                        " INNER JOIN " +
+                    joinSql +=
+                        " " + linkedEntity.joinType + " JOIN " +
                         this.getSqlReadyName(linkedEntity.entityName) +
                         " ON " +
                         linkedEntity.relationshipName +
@@ -528,7 +531,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
         query += " FROM " + this.getSqlReadyName(entity);
 
-        query += innerJoinSql;
+        query += joinSql;
 
         const { preparedStatement, values } = this.buildQueryConditions(clauses[0]);
 
@@ -562,7 +565,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses and returns a single entry
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: []}], transaction: {}|null}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
      * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
