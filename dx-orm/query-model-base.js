@@ -457,15 +457,17 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
+     * @param {boolean} options.returnCountOnly If set to true, this function will perform a COUNT rather than a SELECT query
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
-     * @returns
+     * @returns {Promise<[]|number>} An array of objects or the result size if options.returnCountOnly was passed as true
      */
     static async findArray(options = {}, ...clauses) {
         const dxInstance = options.dxInstance;
         const entityName = options.entityName;
         const fields = options.fields;
         const transaction = options.transaction;
+        const returnCountOnly = options.returnCountOnly ? options.returnCountOnly : false;
 
         if (typeof dxInstance === "undefined") {
             return null;
@@ -479,13 +481,18 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         }
 
         let query = "SELECT ";
-        if (!Array.isArray(fields) || fields.length < 1) {
-            query += "*";
+
+        if (returnCountOnly) {
+            query += "COUNT (*) AS COUNT";
         } else {
-            for (const fieldName of fields) {
-                query += this.getSqlReadyName(fieldName) + ", ";
+            if (!Array.isArray(fields) || fields.length < 1) {
+                query += "*";
+            } else {
+                for (const fieldName of fields) {
+                    query += this.getSqlReadyName(fieldName) + ", ";
+                }
+                query = query.substring(0, query.length - 2);
             }
-            query = query.substring(0, query.length - 2);
         }
 
         let joinSql = "";
@@ -497,9 +504,9 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                     if (linkedEntityNames.includes(linkedEntity.entityName)) {
                         dxUtils.printErrorMessage(
                             "findArray() does not support multiple JOINs on the same foreign table.' " +
-                            linkedEntity.entityName +
-                            "' is defined more than once. To achieve this functionality, please create" +
-                            " a custom query."
+                                linkedEntity.entityName +
+                                "' is defined more than once. To achieve this functionality, please create" +
+                                " a custom query."
                         );
                         throw new Error("Fatal error in findArray()");
                     }
@@ -510,7 +517,9 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                     }
 
                     joinSql +=
-                        " " + linkedEntity.joinType + " JOIN " +
+                        " " +
+                        linkedEntity.joinType +
+                        " JOIN " +
                         this.getSqlReadyName(linkedEntity.entityName) +
                         " ON " +
                         linkedEntity.relationshipName +
@@ -520,8 +529,10 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
                     query += ", ";
 
-                    for (const fieldName of linkedEntity.fields) {
-                        query += this.getSqlReadyName(fieldName) + ", ";
+                    if (!returnCountOnly) {
+                        for (const fieldName of linkedEntity.fields) {
+                            query += this.getSqlReadyName(fieldName) + ", ";
+                        }
                     }
 
                     query = query.substring(0, query.length - 2);
@@ -543,12 +554,26 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
         query += queryAdditionalClauses;
 
-        const queryResult = await dataLayer.getArrayFromDatabase(
-            { sql: query, nestTables: true },
-            dataLayer.getModuleNameFromEntityName(entity),
-            values,
-            transaction
-        );
+        let queryResult = null;
+        if (!returnCountOnly) {
+            queryResult = await dataLayer.getArrayFromDatabase(
+                { sql: query, nestTables: true },
+                dataLayer.getModuleNameFromEntityName(entity),
+                values,
+                transaction
+            );
+        } else {
+            queryResult = await dataLayer.executeQuery(
+                { sql: query },
+                dataLayer.getModuleNameFromEntityName(entity),
+                values,
+                transaction
+            );
+
+            if (queryResult !== null) {
+                queryResult = queryResult[0]["COUNT"];
+            }
+        }
 
         if (this.enableDebugMode) {
             dxUtils.printSubHeadingMessage("\nDivbloxQueryModelBase debug output");
@@ -573,14 +598,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * otherwise all fields will be returned if an entity is provided
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
-     * @returns {{}} Single object of data based on specified query
+     * @returns {Promise<{}>} Single object of data based on specified query
      */
     static async findSingle(options = {}, ...clauses) {
         clauses[0].forEach((clause, index) => {
             if (typeof clause === "string" && clause.includes("LIMIT")) {
                 clauses[0].splice(index, 1);
             }
-        })
+        });
 
         clauses[0].push(this.limit(1));
 
@@ -595,6 +620,22 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         }
 
         return null;
+    }
+
+    /**
+     * Performs a COUNT() query on the database with the provided clauses and returns a number
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {DivbloxBase} options.dxInstance An instance of Divblox
+     * @param {string} options.entityName The name of the entity
+     * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
+     * otherwise all fields will be returned if an entity is provided
+     * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
+     * @returns {Promise<number>} The result size
+     */
+    static async findCount(options = {}, ...clauses) {
+        options.returnCountOnly = true;
+        return await this.findArray(options, ...clauses);
     }
 }
 
