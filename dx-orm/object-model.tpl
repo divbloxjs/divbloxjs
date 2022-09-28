@@ -39,9 +39,10 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
      * @param {[]|null} options.fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
+     * @param {boolean} options.returnCountOnly If set to true, this function will perform a COUNT rather than a SELECT query
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
-     * @returns {Promise<[]>} An array of [EntityNameCamelCase] objects
+     * @returns {Promise<[]|number>} An array of [EntityNameCamelCase] objects or the result size if options.returnCountOnly was passed as true
      */
     async findArray(options = {}, ...clauses) {
         let finalOptions = {dxInstance: this.dxInstance,
@@ -65,6 +66,23 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
                             entityName: this.entityName,
                             ...options}
         return await dxQ.findSingle(finalOptions, clauses);
+    }
+
+    /**
+     * Performs a COUNT() query on the database with the provided clauses and returns a number
+     * @param {{linkedEntities: [{entityName: string, relationshipName: string,  joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
+     * otherwise all fields will be returned if an entity is provided
+     * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
+     * @returns {Promise<number>} The result size
+     */
+    async findCount(options = {}, ...clauses) {
+        let finalOptions = {dxInstance: this.dxInstance,
+                            entityName: this.entityName,
+                            returnCountOnly: true,
+                            ...options}
+        return await dxQ.findCount(finalOptions, clauses);
     }
 }
 
