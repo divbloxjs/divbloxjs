@@ -135,13 +135,16 @@ class DivbloxWebService extends divbloxObjectBase {
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
             const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint"));
-            const packageInstance = new packageEndpoint(this.dxInstance);
+            const packageConfigInstance = new packageEndpoint(this.dxInstance);
 
-            instantiatedPackages[packageName] = packageInstance;
+            instantiatedPackages[packageName] = packageConfigInstance;
 
-            const endpointName = packageInstance.endpointName === null ? packageName : packageInstance.endpointName;
+            const endpointName =
+                packageConfigInstance.endpointName === null ? packageName : packageConfigInstance.endpointName;
 
             router.all("/" + endpointName, async (req, res, next) => {
+                const packageInstance = new packageEndpoint(this.dxInstance);
+
                 await packageInstance.executeOperation(null, {
                     headers: req.headers,
                     body: req.body,
@@ -167,12 +170,14 @@ class DivbloxWebService extends divbloxObjectBase {
 
             let handledPaths = [];
 
-            for (const operation of packageInstance.declaredOperations) {
+            for (const operation of packageConfigInstance.declaredOperations) {
                 const operationName = operation.operationName;
                 const finalPath = "/" + endpointName + "/" + operationName;
 
                 if (!handledPaths.includes(finalPath)) {
                     router.all(finalPath, async (req, res, next) => {
+                        const packageInstance = new packageEndpoint(this.dxInstance);
+
                         await packageInstance.executeOperation(operationName, {
                             headers: req.headers,
                             body: req.body,
