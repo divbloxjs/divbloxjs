@@ -451,7 +451,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null, logQuery: boolean}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
      * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
@@ -459,6 +459,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * otherwise all fields will be returned if an entity is provided
      * @param {boolean} options.returnCountOnly If set to true, this function will perform a COUNT rather than a SELECT query
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} options.logQuery An optional parameter specifying whether to log the resulting SQL query and it's values
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {Promise<[]|number>} An array of objects or the result size if options.returnCountOnly was passed as true
      */
@@ -468,6 +469,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         const fields = options.fields;
         const transaction = options.transaction;
         const returnCountOnly = options.returnCountOnly ? options.returnCountOnly : false;
+        const logQuery = options.logQuery ? options.logQuery : false;
 
         if (typeof dxInstance === "undefined") {
             return null;
@@ -516,6 +518,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                         linkedEntity.joinType = "INNER";
                     }
 
+                    let linkedAttributeName = this.getSqlReadyName(linkedEntity.entityName) + ".id";
+                    if (linkedEntity.hasOwnProperty("linkedAttributeName")) {
+                        linkedAttributeName = linkedEntity.linkedAttributeName;
+                    }
+
                     joinSql +=
                         " " +
                         linkedEntity.joinType +
@@ -524,8 +531,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                         " ON " +
                         linkedEntity.relationshipName +
                         " = " +
-                        this.getSqlReadyName(linkedEntity.entityName) +
-                        ".id";
+                        this.getSqlReadyName(linkedAttributeName);
 
                     query += ", ";
 
@@ -575,7 +581,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             }
         }
 
-        if (this.enableDebugMode) {
+        if (this.enableDebugMode || logQuery) {
             dxUtils.printSubHeadingMessage("\nDivbloxQueryModelBase debug output");
             dxUtils.printInfoMessage("SQL prepared statement: \n\n" + query);
             dxUtils.printInfoMessage("\nSQL query values: " + JSON.stringify(values));
@@ -590,13 +596,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses and returns a single entry
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null, logQuery: boolean}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
      * @param {[]} options.fields The fields to be returned for the current entity. If an array is provided, those fields will be returned, otherwise all fields will be returned
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} options.logQuery An optional parameter specifying whether to log the resulting SQL query and it's values
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {Promise<{}>} Single object of data based on specified query
      */
@@ -624,12 +631,13 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
     /**
      * Performs a COUNT() query on the database with the provided clauses and returns a number
-     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {{dxInstance: DivbloxBase, entityName: string, fields: [], linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null, logQuery: boolean}} options The options parameter
      * @param {DivbloxBase} options.dxInstance An instance of Divblox
      * @param {string} options.entityName The name of the entity
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} options.logQuery An optional parameter specifying whether to log the resulting SQL query and it's values
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {Promise<number>} The result size
      */
