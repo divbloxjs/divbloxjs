@@ -93,6 +93,8 @@ class DivbloxBase extends divbloxObjectBase {
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
         this.configObj = JSON.parse(configDataStr);
 
+        console.log(this.configObj);
+
         this.appName = typeof this.configObj["appName"] !== "undefined" ? this.configObj["appName"] : "Divblox";
 
         if (typeof process.env.NODE_ENV === "undefined" && typeof this.configObj.environment === "undefined") {
@@ -410,7 +412,9 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.dataLayer = new DivbloxDataLayer(this.databaseConnector, this.dataModelObj);
         const currentDataModelHash = this.dataLayer.getDataModelHash();
-        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] === "undefined") {
+        const dynamicConfig = this.getDynamicConfig();
+
+        if (typeof dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] === "undefined") {
             this.dataModelState = {
                 currentDataModelHash: currentDataModelHash,
                 lastDataModelChangeTimestamp: Date.now(),
@@ -418,7 +422,7 @@ class DivbloxBase extends divbloxObjectBase {
             };
             this.updateDataModelState(this.dataModelState);
         } else {
-            this.dataModelState = this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"];
+            this.dataModelState = dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"];
         }
     }
 
@@ -661,12 +665,30 @@ class DivbloxBase extends divbloxObjectBase {
     //#region Helper functions
 
     /**
+     *
+     * @returns An object containing the app's dynamic config which is used by Divblox to manage states
+     */
+    getDynamicConfig() {
+        if (fs.existsSync(this.configRoot + "/dynamic-config.json")) {
+            const dynamicConfigStr = fs.readFileSync(this.configRoot + "/dynamic-config.json", "utf-8");
+            return JSON.parse(dynamicConfigStr);
+        }
+        return {};
+    }
+    /**
      * Updates the current data model state in the dxconfig.json file with the provided data
      * @param dataModelState The new data model state to store
      */
     updateDataModelState(dataModelState) {
-        this.configObj["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
+        let dynamicConfig = this.getDynamicConfig();
+        if (dynamicConfig["environmentArray"] === undefined) {
+            dynamicConfig["environmentArray"] = {};
+        }
+        if (dynamicConfig["environmentArray"][process.env.NODE_ENV] === undefined) {
+            dynamicConfig["environmentArray"][process.env.NODE_ENV] = {};
+        }
+        dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
+        fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
     }
 
     /**
@@ -680,7 +702,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"][invalidModule] = mappedToModule;
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
     }
 
     /**
@@ -737,7 +759,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         this.configObj["divbloxPackages"]["remote"].push(registerPackageName);
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
 
         dxUtils.printSuccessMessage(registerPackageName + " successfully registered!");
     }
@@ -794,7 +816,7 @@ class DivbloxBase extends divbloxObjectBase {
             });
         }
 
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 2));
+        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
 
         dxUtils.printSuccessMessage(packageName + " successfully deregistered!");
     }
