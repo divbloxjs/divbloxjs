@@ -480,13 +480,14 @@ class DivbloxBase extends divbloxObjectBase {
     /**
      * Starts the Divblox instance using the provided configuration and data model data. This validates the data model
      * and also starts the Divblox web service
-     * @param {boolean} mustSkipDatabaseSync If true, divbloxjs will not even check if it should synchronize the data
+     * @param {boolean} startSilent If true, divbloxjs will not even check if it should synchronize the data
+     * @param {boolean} skipUserPrompts If true, divbloxjs will auto-respond to all user prompts during initialisation
      * model with the database. This is useful when running divbloxjs with a process manager like pm2 to ensure
      * uninterrupted restarts of the divbloxjs process
      * @returns {Promise<void>}
      */
-    async startDx(mustSkipDatabaseSync = false) {
-        if (!mustSkipDatabaseSync) {
+    async startDx(startSilent = false, skipUserPrompts = false) {
+        if (!startSilent) {
             await this.processInvalidModuleMapping();
 
             try {
@@ -523,11 +524,11 @@ class DivbloxBase extends divbloxObjectBase {
                 this.dataModelState.currentDataModelHash = this.dataLayer.getDataModelHash();
                 this.updateDataModelState(this.dataModelState);
 
-                await this.syncDatabase(false);
+                await this.syncDatabase(skipUserPrompts, false);
             } else if (
                 this.dataModelState.lastDataModelSyncTimestamp < this.dataModelState.lastDataModelChangeTimestamp
             ) {
-                await this.syncDatabase(false);
+                await this.syncDatabase(skipUserPrompts, false);
             }
 
             // Let's just wait 2s for the console to make sense
@@ -843,15 +844,19 @@ class DivbloxBase extends divbloxObjectBase {
     /**
      * Performs a synchronization of the provided data model with the configured database(s) to ensure that the actual
      * underlying database(s) reflect(s) what is defined in the data model
+     * @param {boolean} skipUserPrompts If set to true, all user prompts will be accepted as default
      * @param {boolean} handleErrorSilently If set to true, the function will not throw an exception when it fails
      * to sync
      * @returns {Promise<void>}
      */
-    async syncDatabase(handleErrorSilently = false) {
-        const syncStr = await dxUtils.getCommandLineInput("Synchronize data model with database now? [y/n]");
+    async syncDatabase(skipUserPrompts = false, handleErrorSilently = false) {
+        let syncStr = "y";
+        if (!skipUserPrompts) {
+            syncStr = await dxUtils.getCommandLineInput("Synchronize data model with database now? [y/n]");
+        }
 
         if (syncStr.toLowerCase() === "y") {
-            if (!(await this.dataLayer.syncDatabase())) {
+            if (!(await this.dataLayer.syncDatabase(skipUserPrompts))) {
                 if (handleErrorSilently) {
                     console.error("Error synchronizing data model: " + JSON.stringify(this.getError(), null, 2));
                 } else {
