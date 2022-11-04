@@ -93,8 +93,6 @@ class DivbloxBase extends divbloxObjectBase {
         const configDataStr = fs.readFileSync(this.configPath, "utf-8");
         this.configObj = JSON.parse(configDataStr);
 
-        console.log(this.configObj);
-
         this.appName = typeof this.configObj["appName"] !== "undefined" ? this.configObj["appName"] : "Divblox";
 
         if (typeof process.env.NODE_ENV === "undefined" && typeof this.configObj.environment === "undefined") {
@@ -121,15 +119,6 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         this.moduleArray = Object.keys(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
-
-        // This is used later to keep track of modules that are defined inside of packages but that are not properly configured for divbloxjs databases
-        this.invalidModuleArray = [];
-
-        this.moduleMapping = {};
-
-        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"] !== "undefined") {
-            this.moduleMapping = this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"];
-        }
 
         process.env.TZ =
             typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined"
@@ -172,6 +161,12 @@ class DivbloxBase extends divbloxObjectBase {
         this.packageOptions = {};
         this.packageOptions[process.env.NODE_ENV] = {};
 
+        // This is used later to keep track of modules that are defined inside of packages but that are not properly configured for divbloxjs databases
+        this.invalidModuleArray = [];
+
+        const dynamicConfig = this.getDynamicConfig();
+        this.moduleMapping = dynamicConfig["environmentArray"][process.env.NODE_ENV]["moduleMapping"];
+
         if (fs.existsSync(this.configRoot + "/package-options.json")) {
             const packageOptionsStr = fs.readFileSync(this.configRoot + "/package-options.json", "utf-8");
             this.packageOptions = JSON.parse(packageOptionsStr);
@@ -185,17 +180,66 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("Configuration incomplete");
         }
 
-        if (
-            typeof this.configObj["divbloxPackages"] !== "undefined" &&
-            this.configObj["divbloxPackages"] !== null &&
-            Object.keys(this.configObj["divbloxPackages"]).length > 0
-        ) {
-            // Load remote packages before local ones to ensure proper inheritance
-            this.loadPackages(true);
-            this.loadPackages(false);
-        }
+        // Load remote packages before local ones to ensure proper inheritance
+        this.loadPackages(true);
+        this.loadPackages(false);
 
         fs.writeFileSync(this.configRoot + "/package-options.json", JSON.stringify(this.packageOptions, null, 2));
+    }
+
+    /**
+     *
+     * @returns An object containing the available packages that Divblox should load
+     */
+    getPackagesConfig() {
+        const dynamicConfig = this.getDynamicConfig();
+        const definedPackages = { local: [], remote: [] };
+        let packagesToMigrate = null;
+
+        if (this.configObj["divbloxPackages"] !== undefined) {
+            // This means our main config file contains package definitions that need to be moved to the dynamic config.
+            packagesToMigrate = this.configObj["divbloxPackages"];
+
+            delete this.configObj["divbloxPackages"];
+            fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
+        }
+
+        if (typeof dynamicConfig["divbloxPackages"] === "undefined" || dynamicConfig["divbloxPackages"] === null) {
+            if (packagesToMigrate !== null) {
+                dynamicConfig["divbloxPackages"] = packagesToMigrate;
+
+                fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
+                return packagesToMigrate;
+            }
+
+            return definedPackages;
+        }
+
+        if (dynamicConfig["divbloxPackages"].hasOwnProperty("local")) {
+            definedPackages.local = dynamicConfig["divbloxPackages"]["local"];
+        }
+
+        if (dynamicConfig["divbloxPackages"].hasOwnProperty("remote")) {
+            definedPackages.remote = dynamicConfig["divbloxPackages"]["remote"];
+        }
+
+        if (packagesToMigrate !== null) {
+            if (packagesToMigrate["local"] !== undefined && packagesToMigrate["local"].length > 0) {
+                for (const packageName of packagesToMigrate["local"]) {
+                    definedPackages.local.push(packageName);
+                }
+            }
+
+            if (packagesToMigrate["remote"] !== undefined && packagesToMigrate["remote"].length > 0) {
+                for (const packageName of packagesToMigrate["remote"]) {
+                    definedPackages.remote.push(packageName);
+                }
+            }
+
+            fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
+        }
+
+        return definedPackages;
     }
 
     /**
@@ -208,15 +252,14 @@ class DivbloxBase extends divbloxObjectBase {
 
         dxUtils.printSubHeadingMessage("Loading " + packagesLocation + " packages");
 
-        if (
-            typeof this.configObj["divbloxPackages"][packagesLocation] === "undefined" ||
-            this.configObj["divbloxPackages"][packagesLocation].length < 1
-        ) {
+        const definedPackages = this.getPackagesConfig();
+
+        if (definedPackages[packagesLocation].length < 1) {
             dxUtils.printInfoMessage("No " + packagesLocation + " packages to load");
             return false;
         }
 
-        const packagesToLoad = this.configObj["divbloxPackages"][packagesLocation];
+        const packagesToLoad = definedPackages[packagesLocation];
 
         const duplicatePackages = packagesToLoad.filter((packageName, index) => {
             return packagesToLoad.indexOf(packageName) !== index;
@@ -249,6 +292,10 @@ class DivbloxBase extends divbloxObjectBase {
                 this.packages[packageToLoad] = {
                     packageRoot: packageRoot,
                 };
+            }
+
+            if (typeof this.packageOptions[process.env.NODE_ENV] === "undefined") {
+                this.packageOptions[process.env.NODE_ENV] = {};
             }
 
             if (typeof this.packageOptions[process.env.NODE_ENV][packageToLoad] === "undefined") {
@@ -414,7 +461,7 @@ class DivbloxBase extends divbloxObjectBase {
         const currentDataModelHash = this.dataLayer.getDataModelHash();
         const dynamicConfig = this.getDynamicConfig();
 
-        if (typeof dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] === "undefined") {
+        if (dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] === null) {
             this.dataModelState = {
                 currentDataModelHash: currentDataModelHash,
                 lastDataModelChangeTimestamp: Date.now(),
@@ -669,24 +716,39 @@ class DivbloxBase extends divbloxObjectBase {
      * @returns An object containing the app's dynamic config which is used by Divblox to manage states
      */
     getDynamicConfig() {
+        let dynamicConfig = {};
+
         if (fs.existsSync(this.configRoot + "/dynamic-config.json")) {
             const dynamicConfigStr = fs.readFileSync(this.configRoot + "/dynamic-config.json", "utf-8");
-            return JSON.parse(dynamicConfigStr);
+            dynamicConfig = JSON.parse(dynamicConfigStr);
         }
-        return {};
+
+        if (dynamicConfig["environmentArray"] === undefined) {
+            dynamicConfig["environmentArray"] = {};
+        }
+
+        if (dynamicConfig["environmentArray"][process.env.NODE_ENV] === undefined) {
+            dynamicConfig["environmentArray"][process.env.NODE_ENV] = {};
+        }
+
+        if (dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] === undefined) {
+            dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] = null;
+        }
+
+        if (dynamicConfig["environmentArray"][process.env.NODE_ENV]["moduleMapping"] === undefined) {
+            dynamicConfig["environmentArray"][process.env.NODE_ENV]["moduleMapping"] = {};
+        }
+
+        return dynamicConfig;
     }
+
     /**
      * Updates the current data model state in the dxconfig.json file with the provided data
      * @param dataModelState The new data model state to store
      */
     updateDataModelState(dataModelState) {
         let dynamicConfig = this.getDynamicConfig();
-        if (dynamicConfig["environmentArray"] === undefined) {
-            dynamicConfig["environmentArray"] = {};
-        }
-        if (dynamicConfig["environmentArray"][process.env.NODE_ENV] === undefined) {
-            dynamicConfig["environmentArray"][process.env.NODE_ENV] = {};
-        }
+
         dynamicConfig["environmentArray"][process.env.NODE_ENV]["dataModelState"] = dataModelState;
         fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
     }
@@ -697,16 +759,14 @@ class DivbloxBase extends divbloxObjectBase {
      * @param {*} mappedToModule A name of a valid module
      */
     updateModuleMapping(invalidModule, mappedToModule) {
-        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"] === "undefined") {
-            this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"] = {};
-        }
+        let dynamicConfig = this.getDynamicConfig();
 
         this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"][invalidModule] = mappedToModule;
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
+        fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
     }
 
     /**
-     * Registers the remote package name in the dxconfig.json file in order for it to be available at runtime
+     * Registers the remote package name in the dynamic-config.json file in order for it to be available at runtime
      * @param {string} remotePath The remote path of the package as it is defined in your project's package.json file
      */
     async registerRemotePackage(remotePath) {
@@ -758,8 +818,13 @@ class DivbloxBase extends divbloxObjectBase {
             return;
         }
 
-        this.configObj["divbloxPackages"]["remote"].push(registerPackageName);
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
+        const dynamicConfig = this.getDynamicConfig();
+        const definedPackages = this.getPackagesConfig();
+
+        definedPackages["remote"].push(registerPackageName);
+        dynamicConfig["divbloxPackages"] = definedPackages;
+
+        fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
 
         dxUtils.printSuccessMessage(registerPackageName + " successfully registered!");
     }
@@ -778,7 +843,10 @@ class DivbloxBase extends divbloxObjectBase {
             return;
         }
 
-        if (this.configObj["divbloxPackages"]["remote"].includes(packageName)) {
+        const dynamicConfig = this.getDynamicConfig();
+        const definedPackages = this.getPackagesConfig();
+
+        if (definedPackages["remote"].includes(packageName)) {
             const projectPackagesStr = fs.readFileSync("./package.json", "utf-8");
             const projectPackages = JSON.parse(projectPackagesStr);
 
@@ -801,22 +869,20 @@ class DivbloxBase extends divbloxObjectBase {
                 dxUtils.printErrorMessage(packageName + " remove failed: " + removeResult.stderr);
             }
 
-            this.configObj["divbloxPackages"]["remote"] = this.configObj["divbloxPackages"]["remote"].filter(function (
-                element
-            ) {
+            definedPackages["remote"] = definedPackages["remote"].filter(function (element) {
                 return element !== packageName;
             });
         }
 
-        if (this.configObj["divbloxPackages"]["local"].includes(packageName)) {
-            this.configObj["divbloxPackages"]["local"] = this.configObj["divbloxPackages"]["local"].filter(function (
-                element
-            ) {
+        if (definedPackages["local"].includes(packageName)) {
+            definedPackages["local"] = definedPackages["local"].filter(function (element) {
                 return element !== packageName;
             });
         }
 
-        fs.writeFileSync(this.configPath, JSON.stringify(this.configObj, null, 4));
+        dynamicConfig["divbloxPackages"] = definedPackages;
+
+        fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
 
         dxUtils.printSuccessMessage(packageName + " successfully deregistered!");
     }
