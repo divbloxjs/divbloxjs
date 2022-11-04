@@ -35,12 +35,13 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
     
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{fields: []|null, linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {{fields: []|null, linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null, logQuery: boolean}} options The options parameter
      * @param {[]|null} options.fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
      * @param {boolean} options.returnCountOnly If set to true, this function will perform a COUNT rather than a SELECT query
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} options.logQuery An optional parameter specifying whether to log the resulting SQL query and it's values
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {Promise<[]|number>} An array of [EntityNameCamelCase] objects or the result size if options.returnCountOnly was passed as true
      */
@@ -53,11 +54,12 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
 
     /**
      * Performs a SELECT query on the database with the provided clauses
-     * @param {{fields: []|null, linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {{fields: []|null, linkedEntities: [{entityName: string, relationshipName: string, fields: [], joinType: string}], transaction: {}|null, logQuery: boolean}} options The options parameter
      * @param {[]|null} options.fields The fields to be returned. If an array is provided, those fields will be returned, otherwise all fields will be returned
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} options.logQuery An optional parameter specifying whether to log the resulting SQL query and it's values
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {Promise<{}>} A single [EntityNameCamelCase] object
      */
@@ -70,10 +72,11 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
 
     /**
      * Performs a COUNT() query on the database with the provided clauses and returns a number
-     * @param {{linkedEntities: [{entityName: string, relationshipName: string,  joinType: string}], transaction: {}|null}} options The options parameter
+     * @param {{linkedEntities: [{entityName: string, relationshipName: string,  joinType: string}], transaction: {}|null, logQuery: boolean}} options The options parameter
      * @param {[]} options.linkedEntities The fields to be returned for the specified linked entities via their relationshipNames. If an array is provided, those fields specified per entity will be returned,
      * otherwise all fields will be returned if an entity is provided
      * @param {{}} options.transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}} options.logQuery An optional parameter specifying whether to log the resulting SQL query and it's values
      * @param {...any} clauses Any clauses (conditions and order by or group by clauses) that must be added to the query, e.g equal, notEqual, like, etc
      * @returns {Promise<number>} The result size
      */
