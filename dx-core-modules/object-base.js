@@ -21,7 +21,7 @@ class DivbloxGlobalBase {
 
     /**
      * Returns the latest error that was pushed, as an error object
-     * @returns {error: {}|string} The latest error
+     * @returns {{error: {}|null}} The latest error
      */
     getLastError() {
         const lastError = { error: null };

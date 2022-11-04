@@ -75,11 +75,12 @@ class DivbloxDataLayer extends divbloxObjectBase {
 
     /**
      * Synchronises the database to be inline with the data model
+     * @param {boolean} skipUserPrompts If true, auto-accepts all user prompts to default values
      * @returns {Promise<boolean>} Return false if synchronization failed, true otherwise
      */
-    async syncDatabase() {
+    async syncDatabase(skipUserPrompts = false) {
         const dbSync = new dxDbSync(this.dataModel, null, this.databaseConnector, "lowercase");
-        return await dbSync.syncDatabase();
+        return await dbSync.syncDatabase(skipUserPrompts);
     }
 
     /**

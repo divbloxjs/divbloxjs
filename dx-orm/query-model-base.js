@@ -88,6 +88,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     static isNull(field = null) {
         return {
             preparedStatement: this.getSqlReadyName(field) + " IS NULL",
+            values: []
         };
         //return this.getSqlReadyName(field) + " IS NULL";
     }
@@ -100,6 +101,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     static isNotNull(field = null) {
         return {
             preparedStatement: this.getSqlReadyName(field) + " IS NOT NULL",
+            values: []
         };
         //return this.getSqlReadyName(field) + " IS NOT NULL";
     }
