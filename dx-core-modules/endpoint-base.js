@@ -21,12 +21,6 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         };
         this.declaredOperations = [];
         this.declaredSchemas = [];
-        const echoOperation = this.getOperationDefinition({
-            operationName: "echo",
-            allowedAccess: ["anonymous"],
-        });
-
-        this.declareOperations([echoOperation]);
         this.currentRequest = {};
         this.dxInstance = dxInstance;
         this.currentGlobalIdentifier = -1;
@@ -36,6 +30,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         if (typeof this.dxInstance === "undefined" || this.dxInstance === null) {
             throw new Error("Divblox instance was not provided");
         }
+    }
+
+    /**
+     * @returns {[]} An array of operation definitions to be passed to this.declareOperations()
+     */
+    handleOperationDeclarations() {
+        const echoOperation = this.getOperationDefinition({
+            operationName: "echo",
+            allowedAccess: ["anonymous"],
+        });
+        return [echoOperation];
     }
 
     /**
