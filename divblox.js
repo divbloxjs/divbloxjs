@@ -544,13 +544,12 @@ class DivbloxBase extends divbloxObjectBase {
             try {
                 await this.databaseConnector.checkDBConnection();
             } catch (error) {
-                this.populateError(error);
-
-                this.populateError(
+                dxUtils.printErrorMessage(
                     "Your database might not be configured properly. You can update your " +
                         "database connection information in dxconfig.json"
                 );
 
+                this.populateError(error);
                 dxUtils.printErrorMessage(JSON.stringify(this.getLastError()));
                 return;
             }
@@ -1314,8 +1313,10 @@ class DivbloxBase extends divbloxObjectBase {
             });
 
             if (createResult === -1) {
-                this.populateError("Could not create super user grouping.");
-                this.populateError(this.dataLayer.getLastError());
+                this.populateError({
+                    message: "Could not create super user grouping.",
+                    error: this.dataLayer.getLastError(),
+                });
                 return false;
             }
             superUserGroupId = createResult;
@@ -1534,8 +1535,7 @@ class DivbloxBase extends divbloxObjectBase {
             return uniqueIdentifier;
         }
 
-        this.populateError("Could not create globalIdentifier");
-        this.populateError(this.dataLayer.getLastError());
+        this.populateError({ message: "Could not create globalIdentifier", error: this.dataLayer.getLastError() });
 
         return null;
     }
@@ -1882,8 +1882,10 @@ class DivbloxBase extends divbloxObjectBase {
             });
 
             if (createResult === -1) {
-                this.populateError("Could not create " + nameNormalized + " grouping.");
-                this.populateError(this.dataLayer.getLastError());
+                this.populateError({
+                    message: "Could not create " + nameNormalized + " grouping.",
+                    error: this.dataLayer.getLastError(),
+                });
                 return false;
             }
 
@@ -1976,7 +1978,10 @@ class DivbloxBase extends divbloxObjectBase {
         const removeResult = await this.dataLayer.delete("globalIdentifierGrouping", existingGrouping["id"]);
         if (!removeResult) {
             this.populateError("Could not remove " + nameNormalized + " grouping.");
-            this.populateError(this.dataLayer.getLastError());
+            this.populateError({
+                message: "Could not remove " + nameNormalized + " grouping.",
+                error: this.dataLayer.getLastError(),
+            });
             return false;
         }
 
