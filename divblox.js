@@ -1511,7 +1511,8 @@ class DivbloxBase extends divbloxObjectBase {
         linkedEntity = "",
         linkedEntityId = -1,
         globalIdentifierGroupings = [],
-        isSuperUser = false
+        isSuperUser = false,
+        transaction = null
     ) {
         const uniqueIdentifierRaw = Date.now().toString() + Math.round(1000000 * Math.random()).toString();
         const uniqueIdentifier = require("crypto").createHash("md5").update(uniqueIdentifierRaw).digest("hex");
@@ -1526,14 +1527,14 @@ class DivbloxBase extends divbloxObjectBase {
             sessionData: "{}",
         };
 
-        const objId = await this.dataLayer.create("globalIdentifier", objectToSave);
+        const objId = await this.dataLayer.create("globalIdentifier", objectToSave, transaction);
 
         if (objId !== -1) {
             return uniqueIdentifier;
         }
 
         this.populateError("Could not create globalIdentifier");
-        this.populateError(this.dataLayer.getError());
+        this.populateError(this.dataLayer.getLastError());
 
         return null;
     }
