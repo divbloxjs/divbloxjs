@@ -544,24 +544,25 @@ class DivbloxBase extends divbloxObjectBase {
             try {
                 await this.databaseConnector.checkDBConnection();
             } catch (error) {
-                this.populateError(error, true);
+                this.populateError(error);
 
                 this.populateError(
                     "Your database might not be configured properly. You can update your " +
-                        "database connection information in dxconfig.json",
-                    true
+                        "database connection information in dxconfig.json"
                 );
 
-                dxUtils.printErrorMessage(JSON.stringify(this.getError()));
+                dxUtils.printErrorMessage(JSON.stringify(this.getLastError()));
                 return;
             }
 
             dxUtils.printSubHeadingMessage("Checking for database & ORM synchronization");
 
             if (!(await this.dataLayer.validateDataModel(this.dataModelState))) {
-                this.populateError(this.dataLayer.getError(), true);
+                this.populateError(this.dataLayer.getLastError());
 
-                dxUtils.printWarningMessage("Error validating data model: " + JSON.stringify(this.getError(), null, 2));
+                dxUtils.printWarningMessage(
+                    "Error validating data model: " + JSON.stringify(this.getLastError(), null, 2)
+                );
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
                     dxUtils.printErrorMessage(
@@ -597,7 +598,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.ensureGlobalSuperUserPresent())) {
-            dxUtils.printErrorMessage(this.getError());
+            dxUtils.printErrorMessage(JSON.stringify(this.getLastError()));
             process.exit(1);
             return;
         }
@@ -946,9 +947,9 @@ class DivbloxBase extends divbloxObjectBase {
         if (syncStr.toLowerCase() === "y") {
             if (!(await this.dataLayer.syncDatabase(skipUserPrompts))) {
                 if (handleErrorSilently) {
-                    console.error("Error synchronizing data model: " + JSON.stringify(this.getError(), null, 2));
+                    console.error("Error synchronizing data model: " + JSON.stringify(this.getLastError(), null, 2));
                 } else {
-                    throw new Error("Error synchronizing data model: " + JSON.stringify(this.getError(), null, 2));
+                    throw new Error("Error synchronizing data model: " + JSON.stringify(this.getLastError(), null, 2));
                 }
             } else {
                 this.dataModelState.lastDataModelSyncTimestamp = Date.now();
@@ -1314,7 +1315,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             if (createResult === -1) {
                 this.populateError("Could not create super user grouping.");
-                this.populateError(this.dataLayer.getError());
+                this.populateError(this.dataLayer.getLastError());
                 return false;
             }
             superUserGroupId = createResult;
@@ -1375,7 +1376,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const objId = await this.dataLayer.create(entityName, data, transaction);
         if (objId === -1) {
-            this.populateError(this.dataLayer.getError(), true, true);
+            this.populateError(this.dataLayer.getLastError());
         }
 
         return objId;
@@ -1396,7 +1397,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const dataObj = await this.dataLayer.read(entityName, id, transaction);
         if (dataObj === null) {
-            this.populateError(this.dataLayer.getError(), true, true);
+            this.populateError(this.dataLayer.getLastError());
         }
 
         return dataObj;
@@ -1418,7 +1419,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const dataObj = await this.dataLayer.readByField(entityName, fieldName, fieldValue, transaction);
         if (dataObj === null) {
-            this.populateError(this.dataLayer.getError(), true, true);
+            this.populateError(this.dataLayer.getLastError());
         }
 
         return dataObj;
@@ -1438,7 +1439,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.dataLayer.update(entityName, data, transaction))) {
-            this.populateError(this.dataLayer.getError(), true, true);
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 
@@ -1459,7 +1460,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.dataLayer.delete(entityName, id, transaction))) {
-            this.populateError(this.dataLayer.getError(), true, true);
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 
@@ -1485,7 +1486,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.dataLayer.addAuditLogEntry(entry, transaction))) {
-            this.populateError(this.dataLayer.getError());
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 
@@ -1575,7 +1576,7 @@ class DivbloxBase extends divbloxObjectBase {
         );
 
         if (globalIdentifier === null) {
-            this.populateError(this.dataLayer.getError());
+            this.populateError(this.dataLayer.getLastError());
         }
 
         return globalIdentifier;
@@ -1609,7 +1610,7 @@ class DivbloxBase extends divbloxObjectBase {
         );
 
         if (queryResult === null || queryResult.length === 0) {
-            this.populateError(this.dataLayer.getError());
+            this.populateError(this.dataLayer.getLastError());
             return null;
         }
 
@@ -1749,7 +1750,9 @@ class DivbloxBase extends divbloxObjectBase {
                 );
 
                 if (!createResult) {
-                    dxUtils.printErrorMessage("Error creating grouping:\n" + JSON.stringify(this.getError(), null, 2));
+                    dxUtils.printErrorMessage(
+                        "Error creating grouping:\n" + JSON.stringify(this.getLastError(), null, 2)
+                    );
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully created!");
                 }
@@ -1790,7 +1793,9 @@ class DivbloxBase extends divbloxObjectBase {
 
                 const modifyResult = await this.modifyGlobalIdentifierGrouping(modifyName, modifications);
                 if (!modifyResult) {
-                    dxUtils.printErrorMessage("Error modifying grouping:\n" + JSON.stringify(this.getError(), null, 2));
+                    dxUtils.printErrorMessage(
+                        "Error modifying grouping:\n" + JSON.stringify(this.getLastError(), null, 2)
+                    );
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully modified!");
                 }
@@ -1804,7 +1809,9 @@ class DivbloxBase extends divbloxObjectBase {
 
                 const removeResult = await this.removeGlobalIdentifierGrouping(removeName);
                 if (!removeResult) {
-                    dxUtils.printErrorMessage("Error removing grouping:\n" + JSON.stringify(this.getError(), null, 2));
+                    dxUtils.printErrorMessage(
+                        "Error removing grouping:\n" + JSON.stringify(this.getLastError(), null, 2)
+                    );
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully removed!");
                 }
@@ -1876,7 +1883,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             if (createResult === -1) {
                 this.populateError("Could not create " + nameNormalized + " grouping.");
-                this.populateError(this.dataLayer.getError());
+                this.populateError(this.dataLayer.getLastError());
                 return false;
             }
 
@@ -1931,7 +1938,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         if (!updateResult) {
             this.populateError("Could not modify " + nameNormalized + " grouping.");
-            this.populateError(this.dataLayer.getError());
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 
@@ -1969,7 +1976,7 @@ class DivbloxBase extends divbloxObjectBase {
         const removeResult = await this.dataLayer.delete("globalIdentifierGrouping", existingGrouping["id"]);
         if (!removeResult) {
             this.populateError("Could not remove " + nameNormalized + " grouping.");
-            this.populateError(this.dataLayer.getError());
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 
@@ -2050,8 +2057,8 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {boolean} True if the email was sent, false otherwise with an error populated
      */
     async sendEmail(options = {}) {
-        this.populateError(options, true);
-        this.populateError("sendEmail function is NOT implemented", true);
+        this.populateError(options);
+        this.populateError("sendEmail function is NOT implemented");
         return false;
     }
 
@@ -2062,8 +2069,8 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {boolean} True if the message was sent, false otherwise with an error populated
      */
     async sendMessage(options = {}) {
-        this.populateError(options, true);
-        this.populateError("sendMessage function is NOT implemented", true);
+        this.populateError(options);
+        this.populateError("sendMessage function is NOT implemented");
         return false;
     }
 
