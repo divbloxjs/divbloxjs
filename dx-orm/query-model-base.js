@@ -53,6 +53,17 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     }
 
     /**
+     * Provides the sql code for an 1 = 1 meme operator
+     * @returns  {Object}
+     */
+    static all() {
+        return {
+            preparedStatement: "1 = 1",
+            values: [],
+        };
+    }
+
+    /**
      * Provides the sql code for an EQUALS operator
      * @param {*} field The field to check on
      * @param {*} value The value to check on
@@ -88,7 +99,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     static isNull(field = null) {
         return {
             preparedStatement: this.getSqlReadyName(field) + " IS NULL",
-            values: []
+            values: [],
         };
         //return this.getSqlReadyName(field) + " IS NULL";
     }
@@ -101,7 +112,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
     static isNotNull(field = null) {
         return {
             preparedStatement: this.getSqlReadyName(field) + " IS NOT NULL",
-            values: []
+            values: [],
         };
         //return this.getSqlReadyName(field) + " IS NOT NULL";
     }
@@ -335,7 +346,8 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         let localValues = [];
 
         for (const clause of clauses) {
-            if (clause === null) {
+            // If falsy, invalid clause provided, skip
+            if (!clause) {
                 continue;
             }
 
@@ -371,6 +383,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         for (const clause of clauses) {
             let isAdditionalClause = false;
             let preparedStatement = "";
+
+            // If falsy, invalid clause provided, skip
+            if (!clause) {
+                continue;
+            }
 
             if (typeof clause !== "object") {
                 preparedStatement = clause;
@@ -411,6 +428,11 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
         let limit = null;
 
         for (const clause of clauses) {
+            // If falsy, invalid clause provided, skip
+            if (!clause) {
+                continue;
+            }
+
             if (typeof clause === "object") {
                 continue;
             }
