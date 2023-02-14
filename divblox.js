@@ -1112,6 +1112,11 @@ class DivbloxBase extends divbloxObjectBase {
                     case "double":
                         entitySchemaData[attributeName]["format"] = "double";
                         break;
+                    case "enum":
+                        const enumOptionsStr = attributes[attributeName].lengthOrValues;
+                        const enumOptions = enumOptionsStr.replaceAll("'", "").split(",");
+                        entitySchemaData[attributeName]["enum"] = enumOptions;
+                        break;
                 }
 
                 if (typeof attributes[attributeName]["default"] === "undefined") {
