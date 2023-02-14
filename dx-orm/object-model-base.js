@@ -148,7 +148,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     /**
      * Partial function to be overwritten for custom logic that needs to run before loading an entity model object
      * @param {number} id ID of entity you are trying to load
-     * @param {{}|null}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
      */
     async onBeforeLoad(id = -1, transaction = null) {
@@ -159,7 +159,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     /**
      * Partial function to be overwritten for custom logic that needs to run after loading an entity model object
      * @param {boolean} success Whether or not the loading of the object was successful or not
-     * @param {{}|null}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
      */
     async onAfterLoad(success = true, transaction = null) {
@@ -204,7 +204,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     /**
      * Partial function to be overwritten for custom logic that needs to run before loading an entity model object by field name
      * @param {number} id ID of entity you are trying to load
-     * @param {{}|null}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
      */
     async onBeforeLoadByField(fieldName = "id", fieldValue = -1, transaction = null) {
@@ -215,7 +215,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     /**
      * Partial function to be overwritten for custom logic that needs to run after loading an entity model object by field name
      * @param {boolean} success Whether or not the loading of the object was successful or not
-     * @param {{}|null}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
      * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
      */
     async onAfterLoadByField(success = true, transaction = null) {
@@ -233,19 +233,48 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * @return {Promise<boolean>} True if successful, false if not. If false, an error can be retrieved from the dxInstance
      */
     async save(mustIgnoreLockingConstraints = false, transaction = null, additionalParams = {}) {
+        if (!(await this.onBeforeSave(transaction))) {
+            return false;
+        }
+
         let saveResult;
         this.isSaving = true;
 
         if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
             // Creating a new entry for this entity
-            saveResult = this.#doCreate(transaction);
+            saveResult = await this.#doCreate(transaction);
         } else {
             // Updating an existing entry for this entity
-            saveResult = this.#doUpdate(mustIgnoreLockingConstraints, transaction);
+            saveResult = await this.#doUpdate(mustIgnoreLockingConstraints, transaction);
         }
 
+        await this.onAfterSave(saveResult, transaction);
+
         this.isSaving = false;
+
         return saveResult;
+    }
+
+    /**
+     * Partial function to be overwritten for custom logic that needs to run after loading an entity model object
+     * @param {boolean} success Whether or not the loading of the object was successful or not
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     */
+    async onBeforeSave(transaction = null) {
+        // TODO overwrite as needed
+        return true;
+    }
+
+    /**
+     * Partial function to be overwritten for custom logic that needs to run after loading an entity model object
+     * @param {boolean} success Whether or not the loading of the object was successful or not
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     */
+    async onAfterSave(success, transaction = null) {
+        // TODO overwrite as needed
+        return true;
     }
 
     /**
