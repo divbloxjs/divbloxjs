@@ -178,17 +178,49 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * @returns {Promise<boolean>} True if data was successfully stored, false otherwise
      */
     async loadByField(fieldName = "id", fieldValue = -1, transaction = null, additionalParams = {}) {
+        if (!(await this.onBeforeLoadByField(fieldName, fieldValue, transaction))) {
+            return false;
+        }
+
         this.lastLoadedData = await this.dxInstance.readByField(this.entityName, fieldName, fieldValue, transaction);
         if (this.lastLoadedData !== null) {
             this.data = JSON.parse(JSON.stringify(this.lastLoadedData));
+
+            if (!(await this.onAfterLoadByField(true, transaction))) {
+                return false;
+            }
+
             return true;
         }
 
-        this.populateError("Object not found for " + fieldName + " = " + fieldValue, true, true);
+        await this.onAfterLoadByField(false, transaction);
 
+        this.populateError("Object not found for " + fieldName + " = " + fieldValue);
         this.reset();
 
         return false;
+    }
+
+    /**
+     * Partial function to be overwritten for custom logic that needs to run before loading an entity model object by field name
+     * @param {number} id ID of entity you are trying to load
+     * @param {{}|null}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     */
+    async onBeforeLoadByField(fieldName = "id", fieldValue = -1, transaction = null) {
+        // TODO overwrite as needed
+        return true;
+    }
+
+    /**
+     * Partial function to be overwritten for custom logic that needs to run after loading an entity model object by field name
+     * @param {boolean} success Whether or not the loading of the object was successful or not
+     * @param {{}|null}} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     */
+    async onAfterLoadByField(success = true, transaction = null) {
+        // TODO overwrite as needed
+        return true;
     }
 
     /**
