@@ -216,7 +216,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * Partial function to be overwritten for custom logic that needs to run after loading an entity model object by field name
      * @param {boolean} success Whether or not the loading of the object was successful or not
      * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
-     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     * @returns {Promise<boolean>} True if you want to continue after loading the data, false otherwise
      */
     async onAfterLoadByField(success = true, transaction = null) {
         // TODO overwrite as needed
@@ -237,7 +237,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             return false;
         }
 
-        let saveResult;
+        let saveResult = false;
         this.isSaving = true;
 
         if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
@@ -248,7 +248,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             saveResult = await this.#doUpdate(mustIgnoreLockingConstraints, transaction);
         }
 
-        await this.onAfterSave(saveResult, transaction);
+        saveResult &= await this.onAfterSave(saveResult, transaction);
 
         this.isSaving = false;
 
@@ -256,10 +256,9 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     }
 
     /**
-     * Partial function to be overwritten for custom logic that needs to run after loading an entity model object
-     * @param {boolean} success Whether or not the loading of the object was successful or not
+     * Partial function to be overwritten for custom logic that needs to run after saving an entity model object
      * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
-     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     * @returns {Promise<boolean>} True if you want to continue saving the data, false otherwise
      */
     async onBeforeSave(transaction = null) {
         // TODO overwrite as needed
@@ -267,12 +266,12 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     }
 
     /**
-     * Partial function to be overwritten for custom logic that needs to run after loading an entity model object
+     * Partial function to be overwritten for custom logic that needs to run after saving an entity model object
      * @param {boolean} success Whether or not the loading of the object was successful or not
      * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
-     * @returns {Promise<boolean>} True if you want to continue loading the data, false otherwise
+     * @returns {Promise<boolean>} True if you want to continue after saving the data, false otherwise
      */
-    async onAfterSave(success, transaction = null) {
+    async onAfterSave(success = true, transaction = null) {
         // TODO overwrite as needed
         return true;
     }
@@ -405,6 +404,10 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
      * @return {Promise<boolean>} True if delete was successful
      */
     async delete(transaction = null, additionalParams = {}) {
+        if (!(await this.onBeforeDelete(transaction))) {
+            return false;
+        }
+
         const deleteResult = await this.dxInstance.delete(this.entityName, this.data.id, transaction);
 
         if (deleteResult) {
@@ -414,7 +417,30 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             this.populateError(this.dxInstance.getLastError());
         }
 
+        deleteResult &= await this.onAfterDelete(deleteResult, transaction);
+
         return deleteResult;
+    }
+
+    /**
+     * Partial function to be overwritten for custom logic that needs to run after deleting an entity model object
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @returns {Promise<boolean>} True if you want to continue deleting the data, false otherwise
+     */
+    async onBeforeDelete(transaction = null) {
+        // TODO overwrite as needed
+        return true;
+    }
+
+    /**
+     * Partial function to be overwritten for custom logic that needs to run after deleting an entity model object
+     * @param {boolean} success Whether or not the loading of the object was successful or not
+     * @param {{}|null} transaction An optional transaction object that contains the database connection that must be used for the query
+     * @returns {Promise<boolean>} True if you want to continue after deleting the data, false otherwise
+     */
+    async onAfterDelete(success = true, transaction = null) {
+        // TODO overwrite as needed
+        return true;
     }
 
     /**
