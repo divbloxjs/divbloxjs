@@ -408,7 +408,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             return false;
         }
 
-        const deleteResult = await this.dxInstance.delete(this.entityName, this.data.id, transaction);
+        let deleteResult = await this.dxInstance.delete(this.entityName, this.data.id, transaction);
 
         if (deleteResult) {
             await this.addAuditLogEntry(this.modificationTypes.delete, transaction);
