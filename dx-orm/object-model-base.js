@@ -248,7 +248,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             saveResult = await this.#doUpdate(mustIgnoreLockingConstraints, transaction);
         }
 
-        saveResult &= await this.onAfterSave(saveResult, transaction);
+        saveResult &&= await this.onAfterSave(saveResult, transaction);
 
         this.isSaving = false;
 
@@ -417,7 +417,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             this.populateError(this.dxInstance.getLastError());
         }
 
-        deleteResult &= await this.onAfterDelete(deleteResult, transaction);
+        deleteResult &&= await this.onAfterDelete(deleteResult, transaction);
 
         return deleteResult;
     }
