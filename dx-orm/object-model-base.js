@@ -304,7 +304,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
         const createdObjectId = await this.dxInstance.create(this.entityName, this.data, transaction);
         if (createdObjectId === -1) {
-            this.populateError(this.dxInstance.getLastError());
+            this.populateError("Could not create '" + this.entityName + "'", this.dxInstance.getLastError());
             return false;
         }
 
@@ -389,7 +389,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         const updateResult = await this.dxInstance.update(this.entityName, dataToSave, transaction);
 
         if (!updateResult) {
-            this.populateError(this.dxInstance.getLastError());
+            this.populateError("Could not update '" + this.entityName + "'", this.dxInstance.getLastError());
             return false;
         }
 
@@ -414,7 +414,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             await this.addAuditLogEntry(this.modificationTypes.delete, transaction);
             this.reset();
         } else {
-            this.populateError(this.dxInstance.getLastError());
+            this.populateError("Could not delete '" + this.entityName + "'", this.dxInstance.getLastError());
         }
 
         deleteResult &&= await this.onAfterDelete(deleteResult, transaction);
@@ -466,7 +466,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         };
         const auditLogEntryResult = await this.dxInstance.addAuditLogEntry(entry, transaction);
         if (!auditLogEntryResult) {
-            this.populateError(this.dxInstance.getLastError());
+            this.populateError("Could not add AuditLogEntry", this.dxInstance.getLastError());
         }
         return auditLogEntryResult;
     }

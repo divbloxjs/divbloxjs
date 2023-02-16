@@ -74,7 +74,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " = ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " = '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -88,7 +87,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " != ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " != '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -101,7 +99,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " IS NULL",
             values: [],
         };
-        //return this.getSqlReadyName(field) + " IS NULL";
     }
 
     /**
@@ -114,7 +111,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " IS NOT NULL",
             values: [],
         };
-        //return this.getSqlReadyName(field) + " IS NOT NULL";
     }
 
     /**
@@ -128,7 +124,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " LIKE ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " LIKE '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -142,7 +137,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " NOT LIKE ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " NOT LIKE '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -164,8 +158,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " IN (" + tokenStr + ")",
             values: values,
         };
-
-        //return this.getSqlReadyName(field) + " IN (" + comparisonStr + ")";
     }
 
     /**
@@ -187,8 +179,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " NOT IN (" + tokenStr + ")",
             values: values,
         };
-
-        //return this.getSqlReadyName(field) + " NOT IN (" + comparisonStr + ")";
     }
 
     /**
@@ -202,7 +192,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " > ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " > '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -216,7 +205,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " >= ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " >= '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -230,7 +218,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " < ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " < '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -244,7 +231,6 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             preparedStatement: this.getSqlReadyName(field) + " <= ?",
             values: [this.getSqlReadyValue(value)],
         };
-        //return this.getSqlReadyName(field) + " <= '" + this.getSqlReadyValue(value) + "'";
     }
 
     /**
@@ -534,6 +520,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                                 "' is defined more than once. To achieve this functionality, please create" +
                                 " a custom query."
                         );
+
                         throw new Error("Fatal error in findArray()");
                     }
 
@@ -611,7 +598,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             dxUtils.printInfoMessage("\nSQL query values: " + JSON.stringify(values));
 
             if (queryResult === null) {
-                dxUtils.printErrorMessage(JSON.stringify(dataLayer.getError(), null, 2));
+                dataLayer.printLastError();
             }
         }
 

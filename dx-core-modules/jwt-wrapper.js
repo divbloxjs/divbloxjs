@@ -61,7 +61,7 @@ class DivbloxJwtWrapperBase extends divbloxObjectBase {
             const decoded = jwt.verify(token, this.jwtSecret);
         } catch (err) {
             // err
-            this.populateError(err);
+            this.populateError("Could not verify JWT", err);
             return false;
         }
 

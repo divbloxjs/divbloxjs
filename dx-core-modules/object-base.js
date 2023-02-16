@@ -1,3 +1,5 @@
+const dxUtils = require("dx-utilities");
+
 /**
  * DivbloxGlobalBase is the lowest-level Divblox class that provides functionality that is reused in many Divblox
  * implementation classes.
@@ -21,43 +23,78 @@ class DivbloxGlobalBase {
 
     /**
      * Returns the latest error that was pushed, as an error object
-     * @returns {{error: {}|null}} The latest error
+     * @returns {DxObjectBaseError|null} The latest error
      */
     getLastError() {
-        const lastError = { error: null };
+        let lastError = null;
 
         if (this.errorInfo.length > 0) {
-            const lastErrorDetail = this.errorInfo[this.errorInfo.length - 1];
-            lastError.error = lastErrorDetail;
-
-            if (typeof lastErrorDetail === "object" && lastErrorDetail.error !== undefined) {
-                lastError.error = lastErrorDetail.error;
-            }
+            lastError = this.errorInfo[this.errorInfo.length - 1];
         }
 
         return lastError;
     }
 
+    printLastError() {
+        console.dir(this.getLastError(), { depth: null });
+    }
+
     /**
-     * Pushes a new error object/array/string into the error array
-     * @param {{}|[]|string} errorToPush An object, array or string containing error information
-     * @param {boolean} addAtStart If true, adds the error to the top of the errorInfo array
+     * @typedef dxErrorStack
+     * @property {string} callerClass Name of the class populating the error
+     * @property {string} message Error message given
+     * @property {dxErrorStack|DxObjectBaseError|string|null} errorStack Nested dxErrorStack,
+     * or if is the base error populated, then can be a:
+     * - DxObjectBaseError,
+     * - message,
+     * - null (if not provided)
+     */
+
+    /**
+     * Pushes a new error object/string into the error array
+     * @param {dxErrorStack|string} errorToPush An object, array or string containing error information
+     * @param {dxErrorStack|DxObjectBaseError|null} errorStack An object, containing error information
      * @param {boolean} mustClean If true, the errorInfo array will first be emptied before adding the new error.
      */
-    populateError(errorToPush = [], addAtStart = false, mustClean = false) {
+    populateError(errorToPush = "", errorStack = null, mustClean = false) {
         if (mustClean) {
             this.errorInfo = [];
         }
 
-        if (!addAtStart) {
-            if (Array.isArray(errorToPush)) {
-                this.errorInfo.push(...errorToPush);
-            } else {
-                this.errorInfo.push(errorToPush);
-            }
-        } else {
-            this.errorInfo.unshift(errorToPush);
+        if (!errorStack) {
+            errorStack = errorToPush;
         }
+
+        let message = "No message provided";
+        if (typeof errorToPush === "string") {
+            message = errorToPush;
+        } else if (dxUtils.isValidObject(errorToPush)) {
+            message = errorToPush.message ? errorToPush.message : "No message provided";
+        } else {
+            this.populateError("Invalid error type provided, errors can be only of type string or Object");
+            return;
+        }
+
+        // Only the latest error to be of type DxObjectBaseError
+        let newErrorStack = {
+            callerClass: errorStack.callerClass ? errorStack.callerClass : this.constructor.name,
+            message: message ? message : errorStack.message ? errorStack.message : "No message provided",
+            errorStack: errorStack.errorStack
+                ? errorStack.errorStack
+                : typeof errorStack === "string"
+                ? null
+                : errorStack,
+        };
+
+        const error = new DxObjectBaseError(message, this.constructor.name, newErrorStack);
+
+        // Make sure to keep the deepest stackTrace
+        if (errorStack instanceof DxObjectBaseError) {
+            error.stack = errorStack.stack;
+        }
+
+        this.errorInfo.push(error);
+        return;
     }
 
     /**
@@ -67,4 +104,25 @@ class DivbloxGlobalBase {
         this.errorInfo = [];
     }
 }
+
+class DxObjectBaseError extends Error {
+    constructor(message = "", callerClass = "", errorStack = null, ...params) {
+        // Pass remaining arguments (including vendor specific ones) to parent constructor
+        super(...params);
+
+        // Maintains proper stack trace for where our error was thrown (only available on V8)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, DxObjectBaseError);
+        }
+
+        this.name = "DxObjectBaseError";
+
+        // Custom debugging information
+        this.message = message;
+        this.callerClass = callerClass;
+        this.dateTimeOccurred = new Date();
+        this.errorStack = errorStack;
+    }
+}
+
 module.exports = DivbloxGlobalBase;
