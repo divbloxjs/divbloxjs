@@ -44,8 +44,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
             }
         }
 
-        if (this.getError().length > 0) {
-            this.populateError("Required entities are missing from data model", true);
+        if (this.getLastError() !== null) {
+            this.populateError("Required entities are missing from data model");
             return false;
         }
 
@@ -371,7 +371,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
             transaction
         );
 
-        return typeof queryResult["error"] === "undefined";
+        if (queryResult === null) {
+            this.populateError("Could not add audit log", this.getLastError());
+        }
+
+        return queryResult;
     }
 
     /**
@@ -435,12 +439,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.databaseConnector.queryDB(query, moduleName, values, transaction);
 
         if (queryResult === null) {
-            this.populateError(this.databaseConnector.getError(), false, true);
-            return null;
-        }
-
-        if (typeof queryResult["error"] !== "undefined") {
-            this.populateError(queryResult["error"]);
+            this.populateError("Could not execute query", this.databaseConnector.getLastError());
             return null;
         }
 
