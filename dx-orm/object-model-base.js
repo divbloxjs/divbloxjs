@@ -331,8 +331,8 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
         let dataToSave = { id: this.data.id };
         for (const attributeName of Object.keys(this.lastLoadedData)) {
-            const inputDataAttributeValue = this.data[attributeName];
-            const lastLoadedDataAttributeValue = this.lastLoadedData[attributeName];
+            let inputDataAttributeValue = this.data[attributeName];
+            let lastLoadedDataAttributeValue = this.lastLoadedData[attributeName];
 
             if (typeof inputDataAttributeValue === "undefined" || attributeName === "lastUpdated") {
                 continue;

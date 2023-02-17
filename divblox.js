@@ -541,31 +541,32 @@ class DivbloxBase extends divbloxObjectBase {
         if (!startSilent) {
             await this.processInvalidModuleMapping();
 
-            try {
-                await this.databaseConnector.checkDBConnection();
-            } catch (error) {
+            const dbConnectionSuccess = await this.databaseConnector.checkDBConnection();
+
+            if (!dbConnectionSuccess) {
                 dxUtils.printErrorMessage(
                     "Your database might not be configured properly. You can update your " +
                         "database connection information in dxconfig.json"
                 );
 
-                this.populateError(error);
-                dxUtils.printErrorMessage(JSON.stringify(this.getLastError()));
+                this.databaseConnector.printLastError();
                 return;
             }
 
             dxUtils.printSubHeadingMessage("Checking for database & ORM synchronization");
 
             if (!(await this.dataLayer.validateDataModel(this.dataModelState))) {
-                this.populateError(this.dataLayer.getLastError());
+                if (this.dataLayer.getLastError().message !== "Data model has changes") {
+                    this.populateError("Error validating data model", this.dataLayer.getLastError());
+                    this.printLastError();
+                    return;
+                }
 
-                dxUtils.printWarningMessage(
-                    "Error validating data model: " + JSON.stringify(this.getLastError(), null, 2)
-                );
+                dxUtils.printWarningMessage("Error validating data model: \n " + this.dataLayer.getLastError().message);
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
                     dxUtils.printErrorMessage(
-                        "You can run the application generator again to generate the " + "default model:"
+                        "You can run the application generator again to generate the default model:"
                     );
                     dxUtils.printTerminalMessage("npx divbloxjs-create-app");
                     return;
@@ -597,7 +598,8 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.ensureGlobalSuperUserPresent())) {
-            dxUtils.printErrorMessage(JSON.stringify(this.getLastError()));
+            dxUtils.printErrorMessage("Could not create super user grouping");
+            this.printLastError();
             process.exit(1);
             return;
         }
@@ -669,6 +671,7 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printWarningMessage("Or install a remote package using:");
             dxUtils.printTerminalMessage("npm run register-package");
         }
+        return true;
     }
 
     /**
@@ -1318,10 +1321,7 @@ class DivbloxBase extends divbloxObjectBase {
             });
 
             if (createResult === -1) {
-                this.populateError({
-                    message: "Could not create super user grouping.",
-                    error: this.dataLayer.getLastError(),
-                });
+                this.populateError("Could not create super user grouping.", this.dataLayer.getLastError());
                 return false;
             }
             superUserGroupId = createResult;
@@ -1382,7 +1382,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const objId = await this.dataLayer.create(entityName, data, transaction);
         if (objId === -1) {
-            this.populateError(this.dataLayer.getLastError());
+            this.populateError(this.dataLayer.getLastError().message, this.dataLayer.getLastError());
         }
 
         return objId;
@@ -1466,7 +1466,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.dataLayer.delete(entityName, id, transaction))) {
-            this.populateError(this.dataLayer.getLastError());
+            this.populateError(this.dataLayer.getLastError().message, this.dataLayer.getLastError());
             return false;
         }
 

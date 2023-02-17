@@ -61,11 +61,14 @@ class DivbloxGlobalBase {
             this.errorInfo = [];
         }
 
+        let message = "No message provided";
+        if (!errorToPush) {
+            errorToPush = message;
+        }
+
         if (!errorStack) {
             errorStack = errorToPush;
         }
-
-        let message = "No message provided";
         if (typeof errorToPush === "string") {
             message = errorToPush;
         } else if (dxUtils.isValidObject(errorToPush)) {
