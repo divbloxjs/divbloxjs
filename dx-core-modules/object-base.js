@@ -23,7 +23,7 @@ class DivbloxGlobalBase {
 
     /**
      * Returns the latest error that was pushed, as an error object
-     * @returns {DxObjectBaseError|null} The latest error
+     * @returns {DxBaseError|null} The latest error
      */
     getLastError() {
         let lastError = null;
@@ -43,9 +43,9 @@ class DivbloxGlobalBase {
      * @typedef dxErrorStack
      * @property {string} callerClass Name of the class populating the error
      * @property {string} message Error message given
-     * @property {dxErrorStack|DxObjectBaseError|string|null} errorStack Nested dxErrorStack,
+     * @property {dxErrorStack|DxBaseError|string|null} errorStack Nested dxErrorStack,
      * or if is the base error populated, then can be a:
-     * - DxObjectBaseError,
+     * - DxBaseError,
      * - message,
      * - null (if not provided)
      */
@@ -53,14 +53,9 @@ class DivbloxGlobalBase {
     /**
      * Pushes a new error object/string into the error array
      * @param {dxErrorStack|string} errorToPush An object, array or string containing error information
-     * @param {dxErrorStack|DxObjectBaseError|null} errorStack An object, containing error information
-     * @param {boolean} mustClean If true, the errorInfo array will first be emptied before adding the new error.
+     * @param {dxErrorStack|DxBaseError|null} errorStack An object, containing error information
      */
-    populateError(errorToPush = "", errorStack = null, mustClean = false) {
-        if (mustClean) {
-            this.errorInfo = [];
-        }
-
+    populateError(errorToPush = "", errorStack = null) {
         let message = "No message provided";
         if (!errorToPush) {
             errorToPush = message;
@@ -69,16 +64,23 @@ class DivbloxGlobalBase {
         if (!errorStack) {
             errorStack = errorToPush;
         }
+
         if (typeof errorToPush === "string") {
             message = errorToPush;
-        } else if (dxUtils.isValidObject(errorToPush)) {
+        } else if (
+            dxUtils.isValidObject(errorToPush) ||
+            errorToPush instanceof DxBaseError ||
+            errorToPush instanceof Error
+        ) {
             message = errorToPush.message ? errorToPush.message : "No message provided";
         } else {
-            this.populateError("Invalid error type provided, errors can be only of type string or Object");
+            this.populateError(
+                "Invalid error type provided, errors can be only of type string/Object/Error/DxBaseError"
+            );
             return;
         }
 
-        // Only the latest error to be of type DxObjectBaseError
+        // Only the latest error to be of type DxBaseError
         let newErrorStack = {
             callerClass: errorStack.callerClass ? errorStack.callerClass : this.constructor.name,
             message: message ? message : errorStack.message ? errorStack.message : "No message provided",
@@ -89,10 +91,10 @@ class DivbloxGlobalBase {
                 : errorStack,
         };
 
-        const error = new DxObjectBaseError(message, this.constructor.name, newErrorStack);
+        const error = new DxBaseError(message, this.constructor.name, newErrorStack);
 
         // Make sure to keep the deepest stackTrace
-        if (errorStack instanceof DxObjectBaseError) {
+        if (errorStack instanceof DxBaseError || errorStack instanceof Error) {
             error.stack = errorStack.stack;
         }
 
@@ -108,17 +110,17 @@ class DivbloxGlobalBase {
     }
 }
 
-class DxObjectBaseError extends Error {
+class DxBaseError extends Error {
     constructor(message = "", callerClass = "", errorStack = null, ...params) {
         // Pass remaining arguments (including vendor specific ones) to parent constructor
         super(...params);
 
         // Maintains proper stack trace for where our error was thrown (only available on V8)
         if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, DxObjectBaseError);
+            Error.captureStackTrace(this, DxBaseError);
         }
 
-        this.name = "DxObjectBaseError";
+        this.name = "DxBaseError";
 
         // Custom debugging information
         this.message = message;
