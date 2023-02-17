@@ -35,6 +35,9 @@ class DivbloxGlobalBase {
         return lastError;
     }
 
+    /**
+     * Prints to console the latest error message
+     */
     printLastError() {
         console.dir(this.getLastError(), { depth: null });
     }
@@ -52,7 +55,7 @@ class DivbloxGlobalBase {
 
     /**
      * Pushes a new error object/string into the error array
-     * @param {dxErrorStack|string} errorToPush An object, array or string containing error information
+     * @param {dxErrorStack|DxBaseError|string} errorToPush An object or string containing error information
      * @param {dxErrorStack|DxBaseError|null} errorStack An object, containing error information
      */
     populateError(errorToPush = "", errorStack = null) {

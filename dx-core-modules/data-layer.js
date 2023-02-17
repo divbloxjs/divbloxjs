@@ -371,7 +371,11 @@ class DivbloxDataLayer extends divbloxObjectBase {
             transaction
         );
 
-        return typeof queryResult["error"] === "undefined";
+        if (queryResult === null) {
+            this.populateError("Could not add audit log", this.getLastError());
+        }
+
+        return queryResult;
     }
 
     /**
