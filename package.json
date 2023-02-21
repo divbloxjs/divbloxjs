@@ -1,6 +1,6 @@
 {
     "name": "divbloxjs",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "The divblox node.js backend",
     "main": "divblox.js",
     "scripts": {
@@ -24,8 +24,8 @@
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "debug": "^4.3.4",
-        "dx-db-connector": "^1.1.0",
-        "dx-db-sync": "^1.1.0",
+        "dx-db-connector": "^1.1.1",
+        "dx-db-sync": "^1.1.1",
         "dx-utilities": "^1.0.3",
         "express": "^4.18.2",
         "express-fileupload": "^1.4.0",
