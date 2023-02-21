@@ -120,6 +120,10 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.moduleArray = Object.keys(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
 
+        if (typeof process.env.MAX_ERROR_LIMIT === "undefined") {
+            process.env.MAX_ERROR_LIMIT = this.configObj["environmentArray"][process.env.NODE_ENV].maxErrorLimit ?? 50;
+        }
+
         process.env.TZ =
             typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined"
                 ? this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"]
