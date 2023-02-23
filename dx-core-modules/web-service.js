@@ -175,8 +175,10 @@ class DivbloxWebService extends divbloxObjectBase {
                 const finalPath = "/" + endpointName + "/" + operationName;
 
                 if (!handledPaths.includes(finalPath)) {
+                    let requestMethod = null;
                     router.all(finalPath, async (req, res, next) => {
                         const packageInstance = new packageEndpoint(this.dxInstance);
+                        requestMethod = req.method;
 
                         await packageInstance.executeOperation(operationName, {
                             headers: req.headers,
@@ -186,15 +188,25 @@ class DivbloxWebService extends divbloxObjectBase {
                             files: req.files,
                         });
 
+                        const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
+                            operationName,
+                            requestMethod
+                        );
+
+                        // Default status code configured in endpoint operation
                         if (packageInstance.result["success"] !== true) {
                             res.status(400);
+                        } else {
+                            res.status(
+                                currentlyExecutingOperation.successStatusCode
+                                    ? currentlyExecutingOperation.successStatusCode
+                                    : 200
+                            );
+                        }
 
-                            if (
-                                packageInstance.result["message"] === "Not authorized" ||
-                                packageInstance.result["unauthorized"] === true
-                            ) {
-                                res.status(401);
-                            }
+                        // If result has specifically updated the status code
+                        if (packageInstance.result["statusCode"]) {
+                            res.status(packageInstance.result["statusCode"]);
                         }
 
                         if (
@@ -209,6 +221,7 @@ class DivbloxWebService extends divbloxObjectBase {
                             });
                         }
 
+                        delete packageInstance.result["statusCode"];
                         delete packageInstance.result["success"];
                         delete packageInstance.result["cookie"];
                         delete packageInstance.result["unauthorized"];
@@ -222,9 +235,12 @@ class DivbloxWebService extends divbloxObjectBase {
                 for (const param of operation.parameters) {
                     if (param.in === "path") {
                         const finalPath = "/" + endpointName + "/" + operationName + "/:" + param.name;
+                        const packageInstance = new packageEndpoint(this.dxInstance);
 
                         if (!handledPaths.includes(finalPath)) {
+                            let requestMethod = null;
                             router.all(finalPath, async (req, res, next) => {
+                                requestMethod = req.method;
                                 await packageInstance.executeOperation(operationName, {
                                     headers: req.headers,
                                     body: req.body,
@@ -234,18 +250,31 @@ class DivbloxWebService extends divbloxObjectBase {
                                     files: req.files,
                                 });
 
+                                const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
+                                    operationName,
+                                    requestMethod
+                                );
+
+                                // Default status code configured in endpoint
                                 if (packageInstance.result["success"] !== true) {
                                     res.status(400);
-
-                                    if (
-                                        packageInstance.result["message"] === "Not authorized" ||
-                                        packageInstance.result["unauthorized"] === true
-                                    ) {
-                                        res.status(401);
-                                    }
+                                } else {
+                                    res.status(
+                                        currentlyExecutingOperation.successStatusCode
+                                            ? currentlyExecutingOperation.successStatusCode
+                                            : 200
+                                    );
                                 }
 
-                                if (packageInstance.result["cookie"] !== null) {
+                                // If result has specifically updated the status code
+                                if (packageInstance.result["statusCode"]) {
+                                    res.status(packageInstance.result["statusCode"]);
+                                }
+
+                                if (
+                                    typeof packageInstance.result["cookie"] !== "undefined" &&
+                                    packageInstance.result["cookie"] !== null
+                                ) {
                                     const cookie = packageInstance.result["cookie"];
                                     res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
                                         secure: cookie["secure"],
@@ -254,6 +283,7 @@ class DivbloxWebService extends divbloxObjectBase {
                                     });
                                 }
 
+                                delete packageInstance.result["statusCode"];
                                 delete packageInstance.result["success"];
                                 delete packageInstance.result["cookie"];
                                 delete packageInstance.result["unauthorized"];
@@ -401,41 +431,54 @@ class DivbloxWebService extends divbloxObjectBase {
                     summary: operation.operationSummary,
                     description: operation.operationDescription,
                     parameters: operation.parameters,
-                    responses: {
-                        200: {
-                            description: "OK",
-                            content: responseBodyContent,
-                        },
-                        400: {
-                            description: "Bad request",
-                            content: {
-                                "application/json": {
-                                    schema: {
-                                        properties: {
-                                            message: {
-                                                type: "string",
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        408: {
-                            description: "Request timed out",
-                            content: {
-                                "application/json": {
-                                    schema: {
-                                        properties: {
-                                            message: {
-                                                type: "string",
-                                            },
-                                        },
+                    responses: {},
+                };
+
+                const defaultOperationSuccessStatusCode = operation.successStatusCode
+                    ? operation.successStatusCode
+                    : 200;
+                const defaultOperationSuccessMessage = operation.successMessage ? operation.successMessage : "OK";
+
+                paths[path][operation.requestType.toLowerCase()].responses[defaultOperationSuccessStatusCode] = {
+                    description: defaultOperationSuccessMessage,
+                    content: responseBodyContent,
+                };
+
+                paths[path][operation.requestType.toLowerCase()].responses[400] = {
+                    description: "Bad request",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                properties: {
+                                    message: {
+                                        type: "string",
                                     },
                                 },
                             },
                         },
                     },
                 };
+
+                paths[path][operation.requestType.toLowerCase()].responses[408] = {
+                    description: "Request timed out",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                properties: {
+                                    message: {
+                                        type: "string",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                };
+
+                Object.entries(operation.responses).forEach(([statusCode, config]) => {
+                    paths[path][operation.requestType.toLowerCase()].responses[statusCode] = config;
+                    // refer to https://swagger.io/docs/specification/describing-responses/
+                    // 408: {"description":"","content":{"application/json":{"schema":{"properties":{"message":{"type":"string"}}}}}}
+                });
 
                 if (Object.keys(requestBodyContent).length > 0) {
                     paths[path][operation.requestType.toLowerCase()]["requestBody"] = {
@@ -451,7 +494,7 @@ class DivbloxWebService extends divbloxObjectBase {
                         "This operation requires JWT authentication using " +
                         "Authorization: Bearer xxxx<br>This should be sent as part of the header of the request<br><br>";
 
-                    paths[path][operation.requestType.toLowerCase()]["responses"]["401"] = {
+                    paths[path][operation.requestType.toLowerCase()]["responses"][401] = {
                         description: "Unauthorized",
                         content: {
                             "application/json": {

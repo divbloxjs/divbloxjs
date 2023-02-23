@@ -94,7 +94,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             responseSchema: this.getSchema({ message: "string" }),
             additionalRequestSchemas: {},
             additionalResponseSchemas: {},
+            responses: {},
             disableSwaggerDoc: false,
+            successStatusCode: 200,
+            successMessage: "OK",
         };
 
         for (const property of Object.keys(operationDefinition)) {
@@ -236,6 +239,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
     }
 
+    setStatusCode(statusCode = 400) {
+        this.result.statusCode = statusCode;
+    }
+
     /**
      * Sets the current result to false and forces a 401 http error code
      * @param {string} message An optional message to return
@@ -243,6 +250,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     setResultNotAuthorized(message) {
         this.result["success"] = false;
         this.result["unauthorized"] = true;
+        this.statusCode = 401;
 
         delete this.result["message"];
         if (typeof message !== "undefined") {
@@ -331,9 +339,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {string} operationName The name of the operation to find
      * @return {null|*} Null if not found, operation definition if found
      */
-    getDeclaredOperation(operationName) {
+    getDeclaredOperation(operationName, requestType = "GET") {
         for (const operation of this.declaredOperations) {
-            if (operation.operationName === operationName) {
+            if (operation.operationName === operationName && operation.requestType === requestType) {
                 return operation;
             }
         }
