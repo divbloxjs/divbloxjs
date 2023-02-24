@@ -349,7 +349,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             }
 
             if (["date", "date-time"].includes(this.entitySchema[attributeName]?.["format"])) {
-                dataToSave[attributeName] = new Date(inputDataAttributeValue);
+                inputDataAttributeValue = new Date(inputDataAttributeValue);
             }
 
             if (this.entitySchema[attributeName].hasOwnProperty("enum")) {
