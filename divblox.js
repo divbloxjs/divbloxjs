@@ -346,6 +346,8 @@ class DivbloxBase extends divbloxObjectBase {
                         );
                     }
 
+                    this.dataModelObj[entityName].package = packageToLoad;
+
                     // The entity is already defined, let's add any relevant attributes/relationships from the base package
 
                     // Let's ensure that this entity is placed inside a module
@@ -439,6 +441,8 @@ class DivbloxBase extends divbloxObjectBase {
                     } else if (!this.moduleArray.includes(entityObj["module"])) {
                         this.invalidModuleArray.push(entityObj["module"]);
                     }
+
+                    entityObj.package = packageToLoad;
 
                     this.dataModelObj[entityName] = entityObj;
                 }
@@ -599,6 +603,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         if (!(await this.checkOrmBaseClassesComplete())) {
             await this.generateOrmBaseClasses();
+            await this.generateEntityDataSeriesBaseClasses();
         }
 
         if (!(await this.ensureGlobalSuperUserPresent())) {
@@ -1149,7 +1154,7 @@ class DivbloxBase extends divbloxObjectBase {
             let linkedEntityGetters = "";
 
             let fileContentObjectModelGettersStr = fs.readFileSync(
-                DIVBLOX_ROOT_DIR + "/dx-orm/object-model-getters.tpl",
+                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-getters.tpl",
                 "utf-8"
             );
 
@@ -1215,15 +1220,10 @@ class DivbloxBase extends divbloxObjectBase {
 
                     for (const token of Object.keys(tokensToReplace)) {
                         const search = "[" + token + "]";
-                        let done = false;
-                        while (!done) {
-                            done = linkedEntityGettersForRelationship.indexOf(search) === -1;
-                            //TODO: This should be done with the replaceAll function
-                            linkedEntityGettersForRelationship = linkedEntityGettersForRelationship.replace(
-                                search,
-                                tokensToReplace[token]
-                            );
-                        }
+                        linkedEntityGettersForRelationship = linkedEntityGettersForRelationship.replaceAll(
+                            search,
+                            tokensToReplace[token]
+                        );
                     }
                 }
 
@@ -1248,25 +1248,19 @@ class DivbloxBase extends divbloxObjectBase {
                 linkedEntityGetters: linkedEntityGetters,
             };
 
-            let fileContentObjectModelStr = fs.readFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/object-model.tpl", "utf-8");
-            let fileContentObjectSchemaStr = fs.readFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/object-schema.tpl", "utf-8");
+            let fileContentObjectModelStr = fs.readFileSync(
+                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model.tpl",
+                "utf-8"
+            );
+            let fileContentObjectSchemaStr = fs.readFileSync(
+                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-schema.tpl",
+                "utf-8"
+            );
 
             for (const token of Object.keys(tokensToReplace)) {
                 const search = "[" + token + "]";
-
-                let done = false;
-                while (!done) {
-                    done = fileContentObjectModelStr.indexOf(search) === -1;
-                    //TODO: This should be done with the replaceAll function
-                    fileContentObjectModelStr = fileContentObjectModelStr.replace(search, tokensToReplace[token]);
-                }
-
-                done = false;
-                while (!done) {
-                    done = fileContentObjectSchemaStr.indexOf(search) === -1;
-                    //TODO: This should be done with the replaceAll function
-                    fileContentObjectSchemaStr = fileContentObjectSchemaStr.replace(search, tokensToReplace[token]);
-                }
+                fileContentObjectModelStr = fileContentObjectModelStr.replaceAll(search, tokensToReplace[token]);
+                fileContentObjectSchemaStr = fileContentObjectSchemaStr.replaceAll(search, tokensToReplace[token]);
             }
 
             fs.writeFileSync(
@@ -1287,24 +1281,114 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         let fileContentDataModelSchemaStr = fs.readFileSync(
-            DIVBLOX_ROOT_DIR + "/dx-orm/data-model-schema.tpl",
+            DIVBLOX_ROOT_DIR + "/dx-orm/templates/data-model-schema.tpl",
             "utf-8"
         );
 
         const search = "[SchemaData]";
         const replace = JSON.stringify(schemaComplete, null, 2);
-
-        let done = false;
-        while (!done) {
-            done = fileContentDataModelSchemaStr.indexOf(search) === -1;
-            //TODO: This should be done with the replaceAll function
-            fileContentDataModelSchemaStr = fileContentDataModelSchemaStr.replace(search, replace);
-        }
+        fileContentDataModelSchemaStr = fileContentDataModelSchemaStr.replaceAll(search, replace);
 
         fs.writeFileSync(
             DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/data-model-schema.js",
             fileContentDataModelSchemaStr
         );
+    }
+
+    /**
+     * Generates the base object data series classes, based on the project's complete data model
+     * This is only generated ONCE!
+     * @return {Promise<void>}
+     */
+    async generateEntityDataSeriesBaseClasses() {
+        dxUtils.printSubHeadingMessage("Generating data series base classes from data model specification");
+
+        if (!fs.existsSync("divblox-orm")) {
+            dxUtils.printInfoMessage("Creating /divblox-orm/ directory...");
+            fs.mkdirSync("divblox-orm");
+        }
+
+        if (!fs.existsSync("divblox-orm/data-series")) {
+            dxUtils.printInfoMessage("Creating /divblox-orm/data-series/ directory...");
+            fs.mkdirSync("divblox-orm/data-series");
+        }
+
+        if (!fs.existsSync("divblox-orm/models")) {
+            dxUtils.printInfoMessage("Creating /divblox-orm/models/ directory...");
+            fs.mkdirSync("divblox-orm/models");
+        }
+
+        for (const entityName of Object.keys(this.dataModelObj)) {
+            dxUtils.printInfoMessage("Generating base object data-series class for '" + entityName + "'...");
+
+            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
+                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
+                "_"
+            );
+            const entityNameCamelCase = entityName;
+            const attributes = this.dataModelObj[entityName]["attributes"];
+
+            let entityAttributesStr = "";
+            for (const attributeName of Object.keys(attributes)) {
+                entityAttributesStr += entityNamePascalCase + "." + attributeName + ", ";
+            }
+
+            entityAttributesStr = entityAttributesStr.slice(0, -2);
+
+            const tokensToReplace = {
+                EntityNamePascalCase: entityNamePascalCase,
+                EntityNameCamelCase: entityNameCamelCase,
+                EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
+                EntityAttributesStr: entityAttributesStr,
+            };
+
+            let fileContentDataSeriesBaseStr = fs.readFileSync(
+                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-data-series-base.tpl",
+                "utf-8"
+            );
+            let fileContentModelBaseStr = fs.readFileSync(
+                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-specialisation.tpl",
+                "utf-8"
+            );
+
+            for (const token of Object.keys(tokensToReplace)) {
+                const search = "[" + token + "]";
+                fileContentModelBaseStr = fileContentModelBaseStr.replaceAll(search, tokensToReplace[token]);
+                fileContentDataSeriesBaseStr = fileContentDataSeriesBaseStr.replaceAll(search, tokensToReplace[token]);
+            }
+
+            if (
+                !fs.existsSync(
+                    "divblox-orm/data-series/data-series-" +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".js"
+                )
+            ) {
+                dxUtils.printInfoMessage(
+                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + "-data-series.js file..."
+                );
+                fs.writeFileSync(
+                    "divblox-orm/data-series/data-series-" +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".js",
+                    fileContentDataSeriesBaseStr
+                );
+            }
+
+            if (
+                !fs.existsSync(
+                    "divblox-orm/models/model-" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".js"
+                )
+            ) {
+                dxUtils.printInfoMessage(
+                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + "-model.js file..."
+                );
+                fs.writeFileSync(
+                    "divblox-orm/models/model-" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".js",
+                    fileContentModelBaseStr
+                );
+            }
+        }
     }
 
     /**
