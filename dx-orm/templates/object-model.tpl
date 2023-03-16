@@ -21,6 +21,7 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
     constructor(dxInstance, entityName = '[EntityNameCamelCase]', globalIdentifier = '') {
         super(dxInstance, entityName, globalIdentifier);
         this.entitySchema = entitySchema;
+        this.entityName = entityName;
     }
 
     /**
