@@ -989,6 +989,18 @@ class DivbloxBase extends divbloxObjectBase {
             return false;
         }
 
+        if (!fs.existsSync("/divblox-orm")) {
+            return false;
+        }
+
+        if (!fs.existsSync("/divblox-orm/models")) {
+            return false;
+        }
+
+        if (!fs.existsSync("/divblox-orm/data-series")) {
+            return false;
+        }
+
         for (const entityName of Object.keys(this.dataModelObj)) {
             if (
                 !fs.existsSync(

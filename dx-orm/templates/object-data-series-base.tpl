@@ -12,7 +12,7 @@ class [EntityNamePascalCase]BaseDataSeries extends DxBaseDataSeries {
     }
 
     async setFields() {
-        this.fields = [[EntityAttributesStr]];
+        this.fields = [[EntityNamePascalCase].id, [EntityAttributesStr]];
     }
 }
 

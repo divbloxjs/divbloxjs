@@ -2,19 +2,48 @@ const DivbloxObjectBase = require("../dx-core-modules/object-base");
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
 
 /**
+ * @typedef dataSeriesConfig
+ * @property {string} [searchValue] Additional classes ot add to the action button
+ * @property {number} [offset] Display label to be shown next to the action button
+ * @property {number} [limit] Display label to be shown next to the action button
+ * @property {{string, columnConfig}} columns Display label to be shown next to the action button
+ */
+
+/**
+ * @typedef columnConfig
+ * @property {boolean} isSortAscending
+ * @property {boolean} sortBy
+ * @property {{filterText|filterNumber|filterDropdown|fromDate|toDate: string}} filterBy
+ */
+
+/**
+ * @typedef queryBuilderConfig
+ * @property {Array} fields Array of fields from the base table to select
+ * @property {Array} linkedEntities Array of config objects to build JOINS with
+ * @property {DivbloxBase} dxInstance
+ * @property {{}} baseEntityObject The instance of the base entity ORM class
+ */
+
+/**
  * Base DxDataSeries class that handles building queries and handling results for
  * orderable, filterable, searchable and paginatable data series
  */
 class DxBaseDataSeries extends DivbloxObjectBase {
     /**
-     * @param {*} dataSeriesConfig Standardised configuration object for building specific clauses
-     * @param {{fields: [], linkedEntities: [], baseEntityObject: *}} queryBuilderConfig Standardised configuration object to create
+     * @param {dataSeriesConfig} dataSeriesConfig Standardised configuration object for building specific clauses
+     * @param {queryBuilderConfig} queryBuilderConfig Standardised configuration object to create
      * the dx ORM select statement for your query
      */
     constructor(dataSeriesConfig = {}, queryBuilderConfig = {}) {
         super();
-        this.#dataSeriesConfig = dataSeriesConfig;
-        this.#queryBuilderConfig = queryBuilderConfig;
+        /**
+         * @type {dataSeriesConfig}
+         */
+        this.dataSeriesConfig = dataSeriesConfig;
+        /**
+         * @type {queryBuilderConfig}
+         */
+        this.queryBuilderConfig = queryBuilderConfig;
 
         this.dxInstance = queryBuilderConfig.dxInstance ?? null;
         this.baseEntityObject = queryBuilderConfig.baseEntityObject ?? null;
@@ -37,7 +66,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @param {[]} fields Array of attributes to select from the base entity
      */
     async setFields(fields) {
-        this.#fields = fields ?? [];
+        this.fields = fields ?? [];
     }
 
     /**
@@ -45,7 +74,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @param {[]} linkedEntities Array of objects to build JOINs with
      */
     async setLinkedEntities(linkedEntities) {
-        this.#linkedEntities = linkedEntities ?? [];
+        this.linkedEntities = linkedEntities ?? [];
     }
 
     /**
