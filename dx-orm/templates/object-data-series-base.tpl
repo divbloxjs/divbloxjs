@@ -1,5 +1,5 @@
 const DxBaseDataSeries = require("divbloxjs/dx-orm/data-series-base");
-const [EntityNamePascalCase] = require("divbloxjs/dx-orm/generated/[EntityNameLowerCaseSplitted]");
+const [EntityNamePascalCase] = require("../models/[EntityNameLowerCaseSplitted].model");
 
 /**
  * Base [EntityNamePascalCase] entity Data series class.

@@ -618,7 +618,7 @@ class DivbloxBase extends divbloxObjectBase {
         );
 
         //It is important that this is called before starting the webserver, otherwise the schemas will not be available
-        this.dataModelSchema = require("./dx-orm/generated/schemas/data-model-schema.js");
+        this.dataModelSchema = require("./dx-orm/generated/schemas/data-model.schema.js");
 
         if (!this.disableWebServer) {
             const webServerPort =
@@ -980,48 +980,34 @@ class DivbloxBase extends divbloxObjectBase {
      * @return {Promise<boolean>} True if all expected classes exists, false otherwise
      */
     async checkOrmBaseClassesComplete() {
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated")) {
-            return false;
-        }
-
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas")) {
-            return false;
-        }
-
-        if (!fs.existsSync("/divblox-orm")) {
-            return false;
-        }
-
-        if (!fs.existsSync("/divblox-orm/models")) {
-            return false;
-        }
-
-        if (!fs.existsSync("/divblox-orm/data-series")) {
+        // TODO: Optimise this to only regenerate what is missing, when it is missing
+        if (
+            !fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated") ||
+            !fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas") ||
+            !fs.existsSync("/divblox-orm") ||
+            !fs.existsSync("/divblox-orm/data-series") ||
+            !fs.existsSync("/divblox-orm/models")
+        ) {
             return false;
         }
 
         for (const entityName of Object.keys(this.dataModelObj)) {
+            const casedEntityName = dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-");
+            const modelBasePath = DIVBLOX_ROOT_DIR + "/dx-orm/generated/models/" + casedEntityName + ".model-base.js";
+            const schemaPath = DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/" + casedEntityName + ".schema.js";
+            const dataSeriesPath = "/divblox-orm/data-series/" + casedEntityName + ".data-series.js";
+            const modelSpecialisationPath = "/divblox-orm/models/" + casedEntityName + ".model.js";
+
             if (
-                !fs.existsSync(
-                    DIVBLOX_ROOT_DIR +
-                        "/dx-orm/generated/" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".js"
-                )
-            ) {
-                return false;
-            }
-            if (
-                !fs.existsSync(
-                    DIVBLOX_ROOT_DIR +
-                        "/dx-orm/generated/schemas/" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        "-schema.js"
-                )
+                !fs.existsSync(modelBasePath) ||
+                !fs.existsSync(schemaPath) ||
+                !fs.existsSync(dataSeriesPath) ||
+                !fs.existsSync(modelSpecialisationPath)
             ) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -1213,9 +1199,9 @@ class DivbloxBase extends divbloxObjectBase {
                             "const " +
                             relationshipNamePascalCase +
                             " " +
-                            ' = require("divbloxjs/dx-orm/generated/' +
+                            ' = require("divbloxjs/dx-orm/generated/models/' +
                             lowerCaseSplitterRelationshipName +
-                            '");\n';
+                            '.model-base");\n';
                     }
 
                     if (linkedEntityGettersForRelationship === "") {
@@ -1276,9 +1262,9 @@ class DivbloxBase extends divbloxObjectBase {
 
             fs.writeFileSync(
                 DIVBLOX_ROOT_DIR +
-                    "/dx-orm/generated/" +
+                    "/dx-orm/generated/models/" +
                     dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".js",
+                    ".model-base.js",
                 fileContentObjectModelStr
             );
 
@@ -1286,7 +1272,7 @@ class DivbloxBase extends divbloxObjectBase {
                 DIVBLOX_ROOT_DIR +
                     "/dx-orm/generated/schemas/" +
                     dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    "-schema.js",
+                    ".schema.js",
                 fileContentObjectSchemaStr
             );
         }
@@ -1301,7 +1287,7 @@ class DivbloxBase extends divbloxObjectBase {
         fileContentDataModelSchemaStr = fileContentDataModelSchemaStr.replaceAll(search, replace);
 
         fs.writeFileSync(
-            DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/data-model-schema.js",
+            DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/data-model.schema.js",
             fileContentDataModelSchemaStr
         );
     }

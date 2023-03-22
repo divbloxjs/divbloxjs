@@ -1,6 +1,6 @@
 const DivbloxBase = require("divbloxjs/divblox");
 const ModelBase = require('divbloxjs/dx-orm/object-model-base');
-const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted]-schema');
+const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted].schema');
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
 [linkedEntityRequires]
 /**
