@@ -59,6 +59,8 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         this.sqlReadyNameMap = {};
         this.setSqlReadyNameMap(dataSeriesConfig);
+
+        this.DEFAULT_LIMIT_SIZE = 50;
     }
 
     /**
@@ -97,7 +99,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         return true;
-        // TODO check structure of dataSeriesConfig
+        // TODO Further improve validation of the dataSeriesConfig
     }
 
     /**
@@ -208,6 +210,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             default:
                 this.populateError("Unhandled filter type provided: " + filterType);
         }
+
         return filterClause;
     }
 
@@ -278,7 +281,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             },
             dxQ.andCondition(whereClauses, await this.getAdditionalWhereClauses()),
             dxQ.orderBy(await this.getAllOrderByClauses(orderByClause)),
-            dxQ.limit(this.dataSeriesConfig.limit ?? -1),
+            dxQ.limit(this.dataSeriesConfig.limit ?? this.DEFAULT_LIMIT_SIZE),
             dxQ.offset(this.dataSeriesConfig.offset ?? -1)
         );
 
