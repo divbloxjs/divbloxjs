@@ -1028,6 +1028,11 @@ class DivbloxBase extends divbloxObjectBase {
             fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas");
         }
 
+        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/models")) {
+            dxUtils.printInfoMessage("Creating /dx-orm/generated/models directory...");
+            fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/models");
+        }
+
         const schemaComplete = {};
 
         for (const entityName of Object.keys(this.dataModelObj)) {
