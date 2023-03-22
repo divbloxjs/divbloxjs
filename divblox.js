@@ -597,13 +597,12 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printSubHeadingMessage("Finishing divbloxjs startup");
 
             await dxUtils.sleep(1000);
-
-            await this.generateOrmBaseClasses();
         }
 
         if (!(await this.checkOrmBaseClassesComplete())) {
             await this.generateOrmBaseClasses();
             await this.generateEntityDataSeriesBaseClasses();
+            await this.generateEntityModelSpecialisationClasses();
         }
 
         if (!(await this.ensureGlobalSuperUserPresent())) {
@@ -1325,14 +1324,7 @@ class DivbloxBase extends divbloxObjectBase {
             fs.mkdirSync("divblox-orm/data-series");
         }
 
-        if (!fs.existsSync("divblox-orm/models")) {
-            dxUtils.printInfoMessage("Creating /divblox-orm/models/ directory...");
-            fs.mkdirSync("divblox-orm/models");
-        }
-
         for (const entityName of Object.keys(this.dataModelObj)) {
-            dxUtils.printInfoMessage("Generating base object data-series class for '" + entityName + "'...");
-
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
                 dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
                 "_"
@@ -1358,6 +1350,72 @@ class DivbloxBase extends divbloxObjectBase {
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-data-series-base.tpl",
                 "utf-8"
             );
+
+            for (const token of Object.keys(tokensToReplace)) {
+                const search = "[" + token + "]";
+                fileContentDataSeriesBaseStr = fileContentDataSeriesBaseStr.replaceAll(search, tokensToReplace[token]);
+            }
+
+            if (
+                !fs.existsSync(
+                    "divblox-orm/data-series/" +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".data-series.js"
+                )
+            ) {
+                dxUtils.printInfoMessage(
+                    "Generating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".data-series.js file..."
+                );
+                fs.writeFileSync(
+                    "divblox-orm/data-series/" +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".data-series.js",
+                    fileContentDataSeriesBaseStr
+                );
+            }
+        }
+    }
+
+    /**
+     * Generates the specialisation object model classes, based on the project's complete data model
+     * This is only generated ONCE!
+     * @return {Promise<void>}
+     */
+    async generateEntityModelSpecialisationClasses() {
+        dxUtils.printSubHeadingMessage("Generating specialisation model classes from data model specification");
+
+        if (!fs.existsSync("divblox-orm")) {
+            dxUtils.printInfoMessage("Creating /divblox-orm/ directory...");
+            fs.mkdirSync("divblox-orm");
+        }
+
+        if (!fs.existsSync("divblox-orm/models")) {
+            dxUtils.printInfoMessage("Creating /divblox-orm/models/ directory...");
+            fs.mkdirSync("divblox-orm/models");
+        }
+
+        for (const entityName of Object.keys(this.dataModelObj)) {
+            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
+                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
+                "_"
+            );
+            const entityNameCamelCase = entityName;
+            const attributes = this.dataModelObj[entityName]["attributes"];
+
+            let entityAttributesStr = "";
+            for (const attributeName of Object.keys(attributes)) {
+                entityAttributesStr += entityNamePascalCase + "." + attributeName + ", ";
+            }
+
+            entityAttributesStr = entityAttributesStr.slice(0, -2);
+
+            const tokensToReplace = {
+                EntityNamePascalCase: entityNamePascalCase,
+                EntityNameCamelCase: entityNameCamelCase,
+                EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
+                EntityAttributesStr: entityAttributesStr,
+            };
+
             let fileContentModelBaseStr = fs.readFileSync(
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-specialisation.tpl",
                 "utf-8"
@@ -1366,37 +1424,18 @@ class DivbloxBase extends divbloxObjectBase {
             for (const token of Object.keys(tokensToReplace)) {
                 const search = "[" + token + "]";
                 fileContentModelBaseStr = fileContentModelBaseStr.replaceAll(search, tokensToReplace[token]);
-                fileContentDataSeriesBaseStr = fileContentDataSeriesBaseStr.replaceAll(search, tokensToReplace[token]);
             }
 
             if (
                 !fs.existsSync(
-                    "divblox-orm/data-series/data-series-" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".js"
+                    "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js"
                 )
             ) {
                 dxUtils.printInfoMessage(
-                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + "-data-series.js file..."
+                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js file..."
                 );
                 fs.writeFileSync(
-                    "divblox-orm/data-series/data-series-" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".js",
-                    fileContentDataSeriesBaseStr
-                );
-            }
-
-            if (
-                !fs.existsSync(
-                    "divblox-orm/models/model-" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".js"
-                )
-            ) {
-                dxUtils.printInfoMessage(
-                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + "-model.js file..."
-                );
-                fs.writeFileSync(
-                    "divblox-orm/models/model-" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".js",
+                    "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js",
                     fileContentModelBaseStr
                 );
             }
