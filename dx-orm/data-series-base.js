@@ -282,7 +282,8 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             dxQ.andCondition(whereClauses, await this.getAdditionalWhereClauses()),
             dxQ.orderBy(await this.getAllOrderByClauses(orderByClause)),
             dxQ.limit(this.dataSeriesConfig.limit ?? this.DEFAULT_LIMIT_SIZE),
-            dxQ.offset(this.dataSeriesConfig.offset ?? -1)
+            dxQ.offset(this.dataSeriesConfig.offset ?? -1),
+            await this.getGroupByClause()
         );
 
         if (findArrayResult === null) {
@@ -295,6 +296,14 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     }
 
     /**
+     * Builds the group by clause
+     * @returns {string} GROUP BY clause
+     */
+    async getGroupByClause() {
+        return null;
+    }
+
+    /**
      * Allows the developer to reformat, mutate, or update the result before returning it
      * @param {[]} initialResult Result that was received by DB connector
      * @returns {Promise<[]>} Finalised result output desired
@@ -302,6 +311,35 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     async getFinalResult(initialResult) {
         // TODO finalise or mutate return object
         return initialResult;
+    }
+
+    /**
+     * Returns the total count of the data series query without limit, offset or order by clauses
+     * @param {{}} options findCount() options
+     * @returns {Promise<number|null>} The total count, or null if error occurred
+     */
+    async getTotalCount(options = {}) {
+        if (!this.doValidation()) {
+            return null;
+        }
+
+        const { whereClauses } = await this.getPrebuiltClauses(this.dataSeriesConfig);
+        const findCountResult = await this.baseEntityObject.findCount(
+            {
+                fields: this.fields,
+                linkedEntities: this.linkedEntities,
+                ...options,
+            },
+            dxQ.andCondition(whereClauses, await this.getAdditionalWhereClauses())
+        );
+
+        if (findCountResult === null) {
+            this.baseEntityObject.printLastError();
+            this.populateError(this.baseEntityObject.getLastError());
+            return null;
+        }
+
+        return findCountResult;
     }
 }
 
