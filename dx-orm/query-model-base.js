@@ -602,6 +602,10 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             }
         }
 
+        if (queryResult === null) {
+            options.dxInstance.populateError(dataLayer.getLastError());
+        }
+
         return queryResult;
     }
 
