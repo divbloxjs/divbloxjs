@@ -250,7 +250,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     setResultNotAuthorized(message) {
         this.result["success"] = false;
         this.result["unauthorized"] = true;
-        this.statusCode = 401;
+        this.result.statusCode = 401;
 
         delete this.result["message"];
         if (typeof message !== "undefined") {
