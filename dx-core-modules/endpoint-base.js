@@ -132,7 +132,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Formats the properties provided into a schema that is acceptable for openapi 3
      * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
-     * the type of the property, e.g {"firstName":"string","age":"integer"}. For file names, use the type "file"
+     * the type of the property, e.g {"firstName":"string","age":"integer", "someObject": this.getSchema("key":"value")}.
+     * For file names, use the type "file". For objects, simply provide a result from this function
      * @return {{properties: {}}}
      */
     getSchema(properties) {
@@ -144,42 +145,48 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         for (const key of Object.keys(properties)) {
             let type = "string";
             let format = "";
+            const isObject = typeof properties[key] === "object" && properties[key] !== null;
 
-            switch (properties[key]) {
-                case "date":
-                    format = "date";
-                    break;
-                case "datetime":
-                case "date-time":
-                    format = "date-time";
-                    break;
-                case "int":
-                case "integer":
-                    type = "number";
-                    format = "integer";
-                    break;
-                case "float":
-                    type = "number";
-                    format = "float";
-                    break;
-                case "double":
-                    type = "number";
-                    format = "double";
-                    break;
-                case "file":
-                    type = "string";
-                    format = "binary";
-                    break;
-                case "boolean":
-                    type = "boolean";
-                    break;
+            if (!isObject) {
+                switch (properties[key]) {
+                    case "date":
+                        format = "date";
+                        break;
+                    case "datetime":
+                    case "date-time":
+                        format = "date-time";
+                        break;
+                    case "int":
+                    case "integer":
+                        type = "number";
+                        format = "integer";
+                        break;
+                    case "float":
+                        type = "number";
+                        format = "float";
+                        break;
+                    case "double":
+                        type = "number";
+                        format = "double";
+                        break;
+                    case "file":
+                        type = "string";
+                        format = "binary";
+                        break;
+                    case "boolean":
+                        type = "boolean";
+                        break;
+                }
+
+                schema.properties[key] = {
+                    type: type,
+                    format: format,
+                };
+            } else {
+                schema.properties[key] = properties[key];
             }
-
-            schema.properties[key] = {
-                type: type,
-                format: format,
-            };
         }
+
         return schema;
     }
 
