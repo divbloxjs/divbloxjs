@@ -142,6 +142,43 @@ class DivbloxWebService extends divbloxObjectBase {
             const endpointName =
                 packageConfigInstance.endpointName === null ? packageName : packageConfigInstance.endpointName;
 
+            packageConfigInstance.declaredOperations.forEach(element => {
+                if (!element.f) {
+                    return;
+                }
+
+                const path = "/" + endpointName + "/" + element.operationName;
+                const executeCallback = async (req, res) => {
+                    packageConfigInstance.resetResultDetail();
+                    await element.f(req, res);
+                    delete packageConfigInstance.result["success"];
+                    delete packageConfigInstance.result["cookie"];
+                    delete packageConfigInstance.result["unauthorized"];
+                    res.header("x-powered-by", "divbloxjs");
+                    res.send(packageConfigInstance.result);
+                };
+
+                switch (element.requestType) {
+                    case 'GET':
+                        router.get(path, executeCallback);
+                        break;
+                    case 'POST':
+                        router.post(path, executeCallback);
+                        break;
+                    case 'PUT':
+                        router.put(path, executeCallback);
+                        break;
+                    case 'PATCH':
+                        router.patch(path, executeCallback);
+                        break;
+                    case 'DELETE':
+                        router.delete(path, executeCallback);
+                        break;
+                    default:
+                        break;
+                }
+            });
+
             router.all("/" + endpointName, async (req, res, next) => {
                 const packageInstance = new packageEndpoint(this.dxInstance);
 
