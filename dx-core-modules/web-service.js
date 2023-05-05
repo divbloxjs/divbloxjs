@@ -148,31 +148,29 @@ class DivbloxWebService extends divbloxObjectBase {
                 }
 
                 const path = "/" + endpointName + "/" + element.operationName;
-                const executeCallback = async (req, res) => {
+                const execute = async (req, res) => {
                     packageConfigInstance.resetResultDetail();
                     await element.f(req, res);
-                    delete packageConfigInstance.result["success"];
-                    delete packageConfigInstance.result["cookie"];
-                    delete packageConfigInstance.result["unauthorized"];
                     res.header("x-powered-by", "divbloxjs");
-                    res.send(packageConfigInstance.result);
+                    res.statusCode = packageConfigInstance.result.statusCode || 200;
+                    res.send(packageConfigInstance.result.message);
                 };
 
                 switch (element.requestType) {
                     case 'GET':
-                        router.get(path, executeCallback);
+                        router.get(path, execute);
                         break;
                     case 'POST':
-                        router.post(path, executeCallback);
+                        router.post(path, execute);
                         break;
                     case 'PUT':
-                        router.put(path, executeCallback);
+                        router.put(path, execute);
                         break;
                     case 'PATCH':
-                        router.patch(path, executeCallback);
+                        router.patch(path, execute);
                         break;
                     case 'DELETE':
-                        router.delete(path, executeCallback);
+                        router.delete(path, execute);
                         break;
                     default:
                         break;
