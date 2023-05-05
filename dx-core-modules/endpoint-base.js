@@ -281,6 +281,14 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Forces the result to the provided data
+     * Bypasses the setResult() and addResultDetail() functions
+     */
+    forceResult(data) {
+        this.result = data;
+    }
+
+    /**
      * Sets the result back to its initial state
      */
     resetResultDetail() {
