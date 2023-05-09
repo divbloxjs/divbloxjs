@@ -413,20 +413,24 @@ class DivbloxWebService extends divbloxObjectBase {
                 let operationPath = '';
                 let pathParameters = operation.operationName.split('/');
                 for (const parameter of pathParameters) {
-                    if (parameter.startsWith(':')) {
-                        let parameterName = parameter.substring(1);
-                        operationPath += '/{' + parameterName + '}';
-                        if (!parameters.some(p => p.name == parameterName && p.in == 'path')) {
-                            parameters.push({
-                                in: "path",
-                                name: parameterName,
-                                required: true,
-                                description: "The " + parameterName + " path parameter",
-                            });
-                        }
-                    } else {
+                    if (!parameter.startsWith(':')) {
                         operationPath += '/' + parameter;
+                        continue;
                     }
+
+                    let parameterName = parameter.substring(1);
+                    operationPath += '/{' + parameterName + '}';
+                
+                    if (parameters.some(p => p.name == parameterName && p.in == 'path')) {
+                        continue;
+                    }
+
+                    parameters.push({
+                        in: "path",
+                        name: parameterName,
+                        required: true,
+                        description: "The " + parameterName + " path parameter",
+                    });
                 }
 
                 const path = "/" + endpointName + operationPath;
