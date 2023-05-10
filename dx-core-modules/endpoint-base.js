@@ -19,6 +19,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             unauthorized: false,
             cookie: null,
         };
+        this.statusCode = null;
         this.declaredOperations = [];
         this.declaredSchemas = [];
         this.currentRequest = {};
@@ -283,9 +284,14 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Forces the result to the provided data
      * Bypasses the setResult() and addResultDetail() functions
+     * @param {*} data The response data to return
+     * @param {number} statusCode The http status code to return
      */
-    forceResult(data) {
+    forceResult(data, statusCode = null) {
         this.result = data;
+        if (statusCode !== null) {
+            this.statusCode = statusCode;
+        }
     }
 
     /**
@@ -298,6 +304,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             unauthorized: false,
             cookie: null,
         };
+        this.statusCode = null;
     }
 
     /**

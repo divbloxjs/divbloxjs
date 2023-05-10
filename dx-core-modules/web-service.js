@@ -152,7 +152,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     packageConfigInstance.resetResultDetail();
                     await operation.f(req, res);
                     res.header("x-powered-by", "divbloxjs");
-                    res.statusCode = packageConfigInstance.result.statusCode || operation.successStatusCode || 200;
+                    res.statusCode = packageConfigInstance.statusCode || operation.successStatusCode || 200;
                     res.send(packageConfigInstance.result);
                 };
 
