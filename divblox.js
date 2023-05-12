@@ -115,33 +115,86 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] === "undefined") {
-            throw new Error("No databases configured for the environment: " + process.env.NODE_ENV);
+            // First going to check whether ENV variables have been set for the database credentials
+            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"] = {};
         }
 
-        this.moduleArray = Object.keys(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
+        let dotEnvModuleData = {};
+        Object.keys(process.env).forEach((envName) => {
+            const envNameArr = envName.split("__");
+            if (envNameArr[0] !== "MODULE") {
+                return;
+            }
+
+            const environmentName = dxUtils.convertLowerCaseToCamelCase(envNameArr[1]);
+            const moduleAttribute = dxUtils.convertLowerCaseToCamelCase(envNameArr[2]);
+
+            if (!dotEnvModuleData.hasOwnProperty(environmentName)) {
+                dotEnvModuleData[environmentName] = {};
+            }
+
+            dotEnvModuleData[environmentName][moduleAttribute] = process.env[envName];
+        });
+
+        const dotEnvModuleNames = Object.keys(dotEnvModuleData);
+
+        const initialConfigFileModuleNames = Object.keys(
+            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]
+        );
+
+        dotEnvModuleNames.forEach((dotEnvModuleName) => {
+            // Append dotEnv data to config object if not already there
+            if (!initialConfigFileModuleNames.includes(dotEnvModuleName)) {
+                this.configObj["environmentArray"][process.env.NODE_ENV]["modules"][dotEnvModuleName] = {};
+            }
+
+            // Overwrite configFile data with dotEnv data
+            Object.entries(dotEnvModuleData[dotEnvModuleName]).forEach(([moduleAttribute, attributeValue]) => {
+                if (moduleAttribute === "port") {
+                    attributeValue = Number(attributeValue);
+                }
+
+                if (moduleAttribute === "ssl") {
+                    if (typeof attributeValue === "string") {
+                        if (dxUtils.isJsonString(attributeValue)) {
+                            attributeValue = JSON.parse(attributeValue ?? "");
+                        } else {
+                            attributeValue = attributeValue.toLowerCase() === "true" || attributeValue === "1";
+                        }
+                    }
+                }
+
+                this.configObj["environmentArray"][process.env.NODE_ENV]["modules"][dotEnvModuleName][moduleAttribute] =
+                    attributeValue;
+            });
+        });
+
+        this.moduleNames = Object.keys(this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]);
+        if (this.moduleNames.length < 1) {
+            throw new Error("No databases configured for the environment: " + process.env.NODE_ENV);
+        }
 
         if (typeof process.env.MAX_ERROR_LIMIT === "undefined") {
             process.env.MAX_ERROR_LIMIT = this.configObj["environmentArray"][process.env.NODE_ENV].maxErrorLimit ?? 50;
         }
 
-        process.env.TZ =
-            typeof this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"] !== "undefined"
-                ? this.configObj["environmentArray"][process.env.NODE_ENV]["timeZone"]
+        if (process.env.TZ === undefined) {
+            process.env.TZ = this.#getFinalConfigVariable("timeZone")
+                ? this.#getFinalConfigVariable("timeZone")
                 : "Africa/Abidjan";
+        }
 
         if (typeof this.configObj["webServiceConfig"] === "undefined") {
             throw new Error("No web service configuration provided");
         }
 
-        this.serverBaseUrl = "http://localhost";
-        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["serverBaseUrl"] !== "undefined") {
-            this.serverBaseUrl = this.configObj["environmentArray"][process.env.NODE_ENV]["serverBaseUrl"];
-        }
+        this.serverBaseUrl = this.#getFinalConfigVariable("serverBaseUrl")
+            ? this.#getFinalConfigVariable("serverBaseUrl")
+            : "http://localhost";
 
-        this.uploadServePath = "/uploads";
-        if (typeof this.configObj["environmentArray"][process.env.NODE_ENV]["uploadServePath"] !== "undefined") {
-            this.uploadServePath = this.configObj["environmentArray"][process.env.NODE_ENV]["uploadServePath"];
-        }
+        this.uploadServePath = this.#getFinalConfigVariable("uploadServePath")
+            ? this.#getFinalConfigVariable("uploadServePath")
+            : "/uploads";
 
         this.databaseConnector = new divbloxDatabaseConnector(
             this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]
@@ -166,7 +219,7 @@ class DivbloxBase extends divbloxObjectBase {
         this.packageOptions[process.env.NODE_ENV] = {};
 
         // This is used later to keep track of modules that are defined inside of packages but that are not properly configured for divbloxjs databases
-        this.invalidModuleArray = [];
+        this.invalidModuleNames = [];
 
         const dynamicConfig = this.getDynamicConfig();
         this.moduleMapping = dynamicConfig["environmentArray"][process.env.NODE_ENV]["moduleMapping"];
@@ -438,8 +491,10 @@ class DivbloxBase extends divbloxObjectBase {
 
                     if (typeof this.moduleMapping[entityObj["module"]] !== "undefined") {
                         entityObj["module"] = this.moduleMapping[entityObj["module"]];
-                    } else if (!this.moduleArray.includes(entityObj["module"])) {
-                        this.invalidModuleArray.push(entityObj["module"]);
+                    } else if (!this.moduleNames.includes(entityObj["module"])) {
+                        if (!this.invalidModuleNames.includes(entityObj["module"])) {
+                            this.invalidModuleNames.push(entityObj["module"]);
+                        }
                     }
 
                     entityObj.package = packageToLoad;
@@ -486,6 +541,9 @@ class DivbloxBase extends divbloxObjectBase {
      */
     initJwtWrapper() {
         dxUtils.printSubHeadingMessage("Initializing JWT wrapper");
+        if (typeof process.env.JWT_SECRET !== "undefined") {
+            this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"] = process.env.JWT_SECRET;
+        }
 
         if (
             typeof this.initOptions["jwtWrapperImplementationClass"] !== "undefined" &&
@@ -621,28 +679,22 @@ class DivbloxBase extends divbloxObjectBase {
         this.dataModelSchema = require("./dx-orm/generated/schemas/data-model.schema.js");
 
         if (!this.disableWebServer) {
-            const webServerPort =
-                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"] === "undefined"
-                    ? 3000
-                    : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerPort"];
+            const webServerPort = this.#getFinalConfigVariable("webServerPort", "number")
+                ? this.#getFinalConfigVariable("webServerPort", "number")
+                : 3000;
+            const webServerCorsAllowedList = this.#getFinalConfigVariable("webServerCorsAllowedList", "json")
+                ? this.#getFinalConfigVariable("webServerCorsAllowedList", "json")
+                : [];
 
-            const webServerCorsAllowedList =
-                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"] ===
-                "undefined"
-                    ? []
-                    : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsAllowedList"];
+            const webServerCorsOptions = this.#getFinalConfigVariable("webServerCorsOptions", "json")
+                ? this.#getFinalConfigVariable("webServerCorsOptions", "json")
+                : {};
 
-            const webServerCorsOptions =
-                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsOptions"] === "undefined"
-                    ? {}
-                    : this.configObj["environmentArray"][process.env.NODE_ENV]["webServerCorsOptions"];
+            const webServerUseHttps = this.#getFinalConfigVariable("useHttps", "boolean")
+                ? this.#getFinalConfigVariable("useHttps", "boolean")
+                : false;
 
-            const webServerUseHttps =
-                typeof this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"] === "undefined"
-                    ? false
-                    : this.configObj["environmentArray"][process.env.NODE_ENV]["useHttps"];
-
-            const webServerHttpsConfig = this.configObj["environmentArray"][process.env.NODE_ENV]["serverHttps"];
+            const webServerHttpsConfig = this.#getFinalConfigVariable("serverHttps", "json");
 
             const webServiceConfig = {
                 webServerPort: webServerPort,
@@ -683,27 +735,27 @@ class DivbloxBase extends divbloxObjectBase {
     }
 
     /**
-     * Iterates over the invalidModuleArray to force the user to map invalid module names to existing ones
+     * Iterates over the invalidModuleNames to force the user to map invalid module names to existing ones
      * @returns {void}
      */
     async processInvalidModuleMapping() {
-        if (this.invalidModuleArray.length === 0) {
+        if (this.invalidModuleNames.length === 0) {
             return;
         }
 
         dxUtils.printSubHeadingMessage("Validating modules");
 
-        const availableModulesStr = this.moduleArray.join(", ");
+        const availableModulesStr = this.moduleNames.join(", ");
 
         dxUtils.printInfoMessage("The following modules are configured:\n [" + availableModulesStr + "]");
 
-        for (const moduleName of this.invalidModuleArray) {
+        for (const moduleName of this.invalidModuleNames) {
             dxUtils.printWarningMessage(
                 "Module '" + moduleName + "' is not configured.\n " + "Would you like to map it to an existing module?"
             );
             const mappedName = await dxUtils.getCommandLineInput(" (Type an existing module name to map it to): ");
 
-            if (!this.moduleArray.includes(mappedName)) {
+            if (!this.moduleNames.includes(mappedName)) {
                 dxUtils.printErrorMessage(
                     "Module " +
                         moduleName +
@@ -773,7 +825,7 @@ class DivbloxBase extends divbloxObjectBase {
     updateModuleMapping(invalidModule, mappedToModule) {
         let dynamicConfig = this.getDynamicConfig();
 
-        this.configObj["environmentArray"][process.env.NODE_ENV]["moduleMapping"][invalidModule] = mappedToModule;
+        dynamicConfig["environmentArray"][process.env.NODE_ENV]["moduleMapping"][invalidModule] = mappedToModule;
         fs.writeFileSync(this.configRoot + "/dynamic-config.json", JSON.stringify(dynamicConfig, null, 4));
     }
 
@@ -935,6 +987,103 @@ class DivbloxBase extends divbloxObjectBase {
             return this.packageOptions[process.env.NODE_ENV][packageName];
         }
         return {};
+    }
+
+    /**
+     * Internal helper function to return the necessary configuration variable value for the current environment from either the dxconfig.json file, or a node
+     * environment variable (if one is set via a .env file or CLI).
+     *
+     * NOTE: The node environment variable will always take preference over the config variable if both are defined
+     *
+     * NOTE: This function can't be used to access database (module) credentials from the node environement variables,
+     * as they have a different casing format (MODULE__YOUR_CUSTOM_NAME__ATRIBUTE).
+     * They are saved in this.configObj for you.
+     *
+     * @param {string} variableName The cameCase name of config parameter you want to get
+     * @param {"number"|"boolean"|"json"} forceStringToType Parsed the resulting value to the correct data type
+     * @returns {*|null} Returns null if variable not found, or error occurred
+     */
+    #getFinalConfigVariable(variableName, forceStringToType = undefined) {
+        if (forceStringToType !== undefined && !["number", "boolean", "json"].includes(forceStringToType)) {
+            dxUtils.printErrorMessage(`Invalid forceStringToType provided ${forceStringToType}`);
+            return null;
+        }
+
+        let finalVariableValue = null;
+
+        const configFileVariableValue = this.configObj["environmentArray"][process.env.NODE_ENV][variableName];
+        if (typeof configFileVariableValue !== "undefined") {
+            finalVariableValue = configFileVariableValue;
+        }
+
+        // e.g. ROOT_VARIABLE_VALUE: Case used to access node environment variables
+        const upperUnderScoreCaseName = dxUtils.getCamelCaseSplittedToUpperCase(variableName, "_");
+        if (typeof process.env[upperUnderScoreCaseName] !== "undefined") {
+            finalVariableValue = process.env[upperUnderScoreCaseName];
+        }
+
+        if (forceStringToType === "boolean") {
+            finalVariableValue = String(finalVariableValue);
+            finalVariableValue = finalVariableValue.toLowerCase() === "true" || finalVariableValue === "1";
+        }
+
+        if (forceStringToType === "number") {
+            finalVariableValue = String(finalVariableValue);
+            finalVariableValue = Number(finalVariableValue);
+        }
+
+        if (forceStringToType === "json") {
+            if (typeof finalVariableValue === "string") {
+                if (!dxUtils.isJsonString(finalVariableValue ?? "")) {
+                    dxUtils.printErrorMessage(`Invalid JSON provided for rootVariableValue ${finalVariableValue}`);
+                    return null;
+                }
+
+                finalVariableValue = JSON.parse(finalVariableValue);
+            }
+        }
+
+        return finalVariableValue;
+    }
+
+    /**
+     * Returns the configuration object of a specified module for the current environment
+     * @param {string} moduleName The camelCase module name
+     * @returns {*} Configuration object as set by dxconfig.json or node environment variables
+     */
+    getModuleConfig(moduleName = "") {
+        if (!this.isInitFinished) {
+            throw new Error("Trying to access module configuration before initialisation is complete");
+        }
+
+        const moduleArray = this.getEnvironmentConfigVariable("modules");
+        return moduleArray?.[moduleName];
+    }
+
+    /**
+     * Returns the value of a ROOT configuration variable (Not environment-specific)
+     * @param {string} variableName camelCase name of the variable
+     * @returns {*}
+     */
+    getRootConfigVariable(variableName = "") {
+        if (!this.isInitFinished) {
+            throw new Error("Trying to access root configuration before initialisation is complete");
+        }
+
+        return this.configObj[variableName];
+    }
+
+    /**
+     * Returns the value of a ENVIRONMENT configuration variable
+     * @param {string} variableName camelCase name of the variable
+     * @returns {*}
+     */
+    getEnvironmentConfigVariable(variableName = "") {
+        if (!this.isInitFinished) {
+            throw new Error("Trying to access environment configuration before initialisation is complete");
+        }
+
+        return this.configObj["environmentArray"][process.env.NODE_ENV][variableName];
     }
 
     //#endregion
@@ -1628,6 +1777,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         return true;
     }
+
     //#endregion
 
     //#region Session/Authentication related functionality
@@ -2148,6 +2298,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
         return "";
     }
+
     //#endregion
 
     //#region Project specific functions (To be overridden by the developer as needed)
@@ -2231,6 +2382,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
         return {};
     }
+
     //#endregion
 }
 
