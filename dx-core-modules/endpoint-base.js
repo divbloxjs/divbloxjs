@@ -19,6 +19,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             unauthorized: false,
             cookie: null,
         };
+        this.statusCode = null;
         this.declaredOperations = [];
         this.declaredSchemas = [];
         this.currentRequest = {};
@@ -45,7 +46,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Returns an operation definition that contains the information need to form a swagger documentation
-     * @param {string} definition.operationName Required. The name of the operation
+     * @param {string} definition.operationName Required. The name of the operation and the route that will be used. Express.js route syntax can be used
      * @param {[]} definition.allowedAccess Required. An array of Global Identifier Groupings that are allowed
      * to access this operation
      * @param {string} definition.operationDescription Optional. A description of what the operation does
@@ -60,6 +61,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * Use this.getSchema() to provide a properly formatted schema
      * @param {*} definition.additionalResponseSchemas Optional. Any additional response schemas that you want to specify that
      * are not of media type "application/json". Specified as {"[mediaType]": {[schema]}}
+     * @param {*} definition.f Optional. Can be used to provide a custom async function to handle the operation. Will get passed a req and res object from Express.  If this is not provided,
+     * the default operation handler "executeOperation" will be used. Specified as (req, res) => { ... }
      * @param {boolean} definition.disableSwaggerDoc If set to true, this operation will not be included in swagger UI
      * @return {
      * {allowedAccess: ([string]|*),
@@ -95,6 +98,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             additionalRequestSchemas: {},
             additionalResponseSchemas: {},
             responses: {},
+            f : null,
             disableSwaggerDoc: false,
             successStatusCode: 200,
             successMessage: "OK",
@@ -278,6 +282,19 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Forces the result to the provided data
+     * Bypasses the setResult() and addResultDetail() functions
+     * @param {*} data The response data to return
+     * @param {number} statusCode The http status code to return
+     */
+    forceResult(data, statusCode = null) {
+        this.result = data;
+        if (statusCode !== null) {
+            this.statusCode = statusCode;
+        }
+    }
+
+    /**
      * Sets the result back to its initial state
      */
     resetResultDetail() {
@@ -287,6 +304,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             unauthorized: false,
             cookie: null,
         };
+        this.statusCode = null;
     }
 
     /**

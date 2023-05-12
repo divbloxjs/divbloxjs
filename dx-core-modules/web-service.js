@@ -142,6 +142,41 @@ class DivbloxWebService extends divbloxObjectBase {
             const endpointName =
                 packageConfigInstance.endpointName === null ? packageName : packageConfigInstance.endpointName;
 
+            packageConfigInstance.declaredOperations.forEach(operation => {
+                if (!operation.f) {
+                    return;
+                }
+
+                const path = "/" + endpointName + "/" + operation.operationName;
+                const execute = async (req, res) => {
+                    packageConfigInstance.resetResultDetail();
+                    await operation.f(req, res);
+                    res.header("x-powered-by", "divbloxjs");
+                    res.statusCode = packageConfigInstance.statusCode || operation.successStatusCode || 200;
+                    res.send(packageConfigInstance.result);
+                };
+
+                switch (operation.requestType) {
+                    case 'GET':
+                        router.get(path, execute);
+                        break;
+                    case 'POST':
+                        router.post(path, execute);
+                        break;
+                    case 'PUT':
+                        router.put(path, execute);
+                        break;
+                    case 'PATCH':
+                        router.patch(path, execute);
+                        break;
+                    case 'DELETE':
+                        router.delete(path, execute);
+                        break;
+                    default:
+                        break;
+                }
+            });
+
             router.all("/" + endpointName, async (req, res, next) => {
                 const packageInstance = new packageEndpoint(this.dxInstance);
 
@@ -373,16 +408,32 @@ class DivbloxWebService extends divbloxObjectBase {
                 if (operation.disableSwaggerDoc) {
                     continue;
                 }
-                const operationName = operation.operationName;
 
-                let pathParameters = "";
-                for (const param of operation.parameters) {
-                    if (param.in === "path") {
-                        pathParameters += "/{" + param.name + "}";
+                let parameters = operation.parameters || [];
+                let operationPath = '';
+                let pathParameters = operation.operationName.split('/');
+                for (const parameter of pathParameters) {
+                    if (!parameter.startsWith(':')) {
+                        operationPath += '/' + parameter;
+                        continue;
                     }
+
+                    let parameterName = parameter.substring(1);
+                    operationPath += '/{' + parameterName + '}';
+                
+                    if (parameters.some(p => p.name == parameterName && p.in == 'path')) {
+                        continue;
+                    }
+
+                    parameters.push({
+                        in: "path",
+                        name: parameterName,
+                        required: true,
+                        description: "The " + parameterName + " path parameter",
+                    });
                 }
 
-                const path = "/" + endpointName + "/" + operationName + pathParameters;
+                const path = "/" + endpointName + operationPath;
 
                 if (typeof paths[path] === "undefined") {
                     paths[path] = {};
@@ -430,7 +481,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     tags: [endpointName],
                     summary: operation.operationSummary,
                     description: operation.operationDescription,
-                    parameters: operation.parameters,
+                    parameters: parameters,
                     responses: {},
                 };
 
