@@ -110,7 +110,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             }
 
             if (property === "responseSchema") {
-                if (typeof definition[property]["properties"] === "undefined") {
+                if (typeof definition[property]["properties"] === "undefined" && definition[property]["type"] !== "array") {
                     continue;
                 }
 
