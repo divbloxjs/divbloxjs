@@ -68,11 +68,11 @@ class DivbloxWebService extends divbloxObjectBase {
             typeof this.config["serverHttps"] !== "undefined"
                 ? this.config.serverHttps
                 : {
-                      keyPath: null,
-                      certPath: null,
-                      allowHttp: true,
-                      httpsPort: 3001,
-                  };
+                    keyPath: null,
+                    certPath: null,
+                    allowHttp: true,
+                    httpsPort: 3001,
+                };
         this.initExpress();
     }
 
@@ -149,7 +149,13 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 const path = "/" + endpointName + "/" + operation.operationName;
                 const execute = async (req, res) => {
-                    packageConfigInstance.resetResultDetail();
+                    const beforeSuccess = await packageConfigInstance.onBeforeExecuteOperation(operation.operationName, req);
+                    if (!beforeSuccess) {
+                        res.header("x-powered-by", "divbloxjs");
+                        res.send(packageConfigInstance.result);
+                        return;
+                    }
+
                     await operation.f(req, res);
                     res.header("x-powered-by", "divbloxjs");
                     res.statusCode = packageConfigInstance.statusCode || operation.successStatusCode || 200;
@@ -363,13 +369,13 @@ class DivbloxWebService extends divbloxObjectBase {
             const staticConfigStr = fs.readFileSync(swaggerPath, "utf-8");
             dxUtils.printInfoMessage(
                 "Swagger config was loaded from predefined swagger.json file. You can delete it to " +
-                    "force divbloxjs to generate it dynamically, based on your package endpoints."
+                "force divbloxjs to generate it dynamically, based on your package endpoints."
             );
             return JSON.parse(staticConfigStr);
         } else {
             dxUtils.printInfoMessage(
                 "Swagger config was dynamically generated. To use a predefined swagger config, copy " +
-                    "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it"
+                "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it"
             );
         }
 
@@ -420,7 +426,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                     let parameterName = parameter.substring(1);
                     operationPath += '/{' + parameterName + '}';
-                
+
                     if (parameters.some(p => p.name == parameterName && p.in == 'path')) {
                         continue;
                     }
@@ -454,15 +460,15 @@ class DivbloxWebService extends divbloxObjectBase {
 
                 //TODO: Cater for examples in endpoint spec
                 /*if (Object.keys(requestBodyContent).length > 0) {
-                    requestBodyContent["application/json"]["examples"] = {
-                        "exampleInput":{
-                            "summary": "Summary value",
-                            "values": {
-                                "def":"value1"
-                            }
-                        }
-                    };
-                }*/
+                 requestBodyContent["application/json"]["examples"] = {
+                 "exampleInput":{
+                 "summary": "Summary value",
+                 "values": {
+                 "def":"value1"
+                 }
+                 }
+                 };
+                 }*/
 
                 let responseBodyContent =
                     Object.keys(operation.responseSchema).length > 0
@@ -587,7 +593,7 @@ class DivbloxWebService extends divbloxObjectBase {
         if (Object.keys(schemas).length === 0) {
             dxUtils.printWarningMessage(
                 "No data model entity schemas have been defined for swagger ui. You can define " +
-                    "these within the package endpoint"
+                "these within the package endpoint"
             );
         }
 

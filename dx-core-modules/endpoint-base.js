@@ -426,12 +426,18 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     //#region Operations implemented.
 
     /**
-     * A wrapper function that executes the given operation
+     * Handles necessary preamble before executing the requested operation.
+     * Parsed the JWT and checks whether the user has access to the requested operation.
+     * Resets the class variables for:
+     * - currentRequest
+     * - currentGlobalIdentifier
+     * - currentGlobalIdentifierGroupings
+     *
      * @param {string} operation The operation to execute
      * @param {*} request The received request object
-     * @return {Promise<*>}
+     * @returns {Promise<boolean>}
      */
-    async executeOperation(operation, request) {
+    async onBeforeExecuteOperation(operation, request) {
         this.resetResultDetail();
 
         this.currentRequest = request;
@@ -483,6 +489,22 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             this.setResultNotAuthorized("Not authorized");
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
             // on a true response to know whether they can proceed
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * A wrapper function that executes the given operation
+     * @param {string} operation The operation to execute
+     * @param {*} request The received request object
+     * @return {Promise<boolean>}
+     */
+    async executeOperation(operation, request) {
+        const beforeSuccess = this.onBeforeExecuteOperation(operation, request);
+
+        if (!beforeSuccess) {
             return false;
         }
 
