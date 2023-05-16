@@ -36,6 +36,11 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      */
     constructor(dataSeriesConfig = {}, queryBuilderConfig = {}) {
         super();
+
+        if (!dataSeriesConfig.hasOwnProperty("columns")) {
+            dataSeriesConfig.columns = [];
+        }
+
         /**
          * @type {dataSeriesConfig}
          */
@@ -125,7 +130,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
     async #getOrderByClauses(dataSeriesConfig) {
         // Defaults to the first provided attribute in descending order
-        let orderByClause = { field: Object.keys(dataSeriesConfig.columns)[0], isDescending: true };
+        let orderByClause = { field: Object.keys(dataSeriesConfig.columns)[0] ?? this.fields[0], isDescending: true };
 
         if (dataSeriesConfig.hasOwnProperty("columns") && Object.keys(dataSeriesConfig.columns).length > 0) {
             for (const [attributeName, attributeSettings] of Object.entries(dataSeriesConfig.columns)) {

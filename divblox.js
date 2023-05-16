@@ -98,7 +98,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof process.env.NODE_ENV === "undefined" && typeof this.configObj.environment === "undefined") {
             throw new Error(
                 "NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
-                    " try running your script with NODE_ENV=development node [your_script.js]\n"
+                " try running your script with NODE_ENV=development node [your_script.js]\n"
             );
         }
 
@@ -232,7 +232,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["divbloxPackagesRootLocal"] === "undefined") {
             dxUtils.printErrorMessage(
                 "No path configured for 'divbloxPackagesRootLocal'! Update config file with a property called" +
-                    +"'divbloxPackagesRootLocal' that defines where local divbloxjs packages are stored."
+                +"'divbloxPackagesRootLocal' that defines where local divbloxjs packages are stored."
             );
             throw new Error("Configuration incomplete");
         }
@@ -325,9 +325,9 @@ class DivbloxBase extends divbloxObjectBase {
         if (duplicatePackages.length > 0) {
             dxUtils.printErrorMessage(
                 "Duplicate packages are not allowed.\n" +
-                    "The following packages have been defined multiple times: '" +
-                    duplicatePackages.join(",") +
-                    "'"
+                "The following packages have been defined multiple times: '" +
+                duplicatePackages.join(",") +
+                "'"
             );
             throw new Error("Configuration invalid");
         }
@@ -391,11 +391,11 @@ class DivbloxBase extends divbloxObjectBase {
                     if (isRemote) {
                         throw new Error(
                             "Entity " +
-                                entityName +
-                                " already exist in the data model. " +
-                                "Tried to define entity '" +
-                                entityName +
-                                "' multiple times in the data model"
+                            entityName +
+                            " already exist in the data model. " +
+                            "Tried to define entity '" +
+                            entityName +
+                            "' multiple times in the data model"
                         );
                     }
 
@@ -407,8 +407,8 @@ class DivbloxBase extends divbloxObjectBase {
                     if (typeof this.dataModelObj[entityName]["module"] === "undefined") {
                         throw new Error(
                             "No module was provided for entity '" +
-                                entityName +
-                                "'. Entities have to have be assigned to modules. Please check your data model."
+                            entityName +
+                            "'. Entities have to have be assigned to modules. Please check your data model."
                         );
                     }
 
@@ -422,11 +422,11 @@ class DivbloxBase extends divbloxObjectBase {
                     if (duplicateAttributes.length > 0) {
                         dxUtils.printErrorMessage(
                             "Duplicate attributes for entities are not allowed.\n" +
-                                "The following attributes have been defined multiple times for entity '" +
-                                entityName +
-                                "': '" +
-                                duplicateAttributes.join(",") +
-                                "'"
+                            "The following attributes have been defined multiple times for entity '" +
+                            entityName +
+                            "': '" +
+                            duplicateAttributes.join(",") +
+                            "'"
                         );
                         throw new Error("Data model invalid");
                     }
@@ -483,8 +483,8 @@ class DivbloxBase extends divbloxObjectBase {
                     if (typeof entityObj["module"] === "undefined") {
                         dxUtils.printErrorMessage(
                             "No module was provided for entity '" +
-                                entityName +
-                                "'. Entities have to have be assigned to modules. Please check your data model."
+                            entityName +
+                            "'. Entities have to have be assigned to modules. Please check your data model."
                         );
                         throw new Error("Invalid data model.");
                     }
@@ -612,7 +612,7 @@ class DivbloxBase extends divbloxObjectBase {
             if (!dbConnectionSuccess) {
                 dxUtils.printErrorMessage(
                     "Your database might not be configured properly. You can update your " +
-                        "database connection information in dxconfig.json"
+                    "database connection information in dxconfig.json"
                 );
 
                 this.databaseConnector.printLastError();
@@ -758,8 +758,8 @@ class DivbloxBase extends divbloxObjectBase {
             if (!this.moduleNames.includes(mappedName)) {
                 dxUtils.printErrorMessage(
                     "Module " +
-                        moduleName +
-                        " has not been mapped or configured. Please configure it in your divbloxjs config file to proceed."
+                    moduleName +
+                    " has not been mapped or configured. Please configure it in your divbloxjs config file to proceed."
                 );
                 process.exit(1);
             } else {
@@ -1416,17 +1416,17 @@ class DivbloxBase extends divbloxObjectBase {
 
             fs.writeFileSync(
                 DIVBLOX_ROOT_DIR +
-                    "/dx-orm/generated/models/" +
-                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".model-base.js",
+                "/dx-orm/generated/models/" +
+                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                ".model-base.js",
                 fileContentObjectModelStr
             );
 
             fs.writeFileSync(
                 DIVBLOX_ROOT_DIR +
-                    "/dx-orm/generated/schemas/" +
-                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".schema.js",
+                "/dx-orm/generated/schemas/" +
+                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                ".schema.js",
                 fileContentObjectSchemaStr
             );
         }
@@ -1499,8 +1499,8 @@ class DivbloxBase extends divbloxObjectBase {
             if (
                 !fs.existsSync(
                     "divblox-orm/data-series/" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".data-series.js"
+                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                    ".data-series.js"
                 )
             ) {
                 dxUtils.printInfoMessage(
@@ -1508,8 +1508,8 @@ class DivbloxBase extends divbloxObjectBase {
                 );
                 fs.writeFileSync(
                     "divblox-orm/data-series/" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".data-series.js",
+                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                    ".data-series.js",
                     fileContentDataSeriesBaseStr
                 );
             }
@@ -1630,15 +1630,23 @@ class DivbloxBase extends divbloxObjectBase {
     /**
      * Returns the schema for the given entity name
      * @param {string} entityName The entity for which to return a schema
-     * @param {boolean} excludeId If set to true, the schema is returned without the primary key id field
+     * @param {boolean|[]} excludedAttributes If true, the schema is returned without the primary key id field.
+     * If false, the schema is returned with all attributes.
+     * If an array is provided, the schema is returned without the attributes in the array
      * @return {{}|*}
      */
-    getEntitySchema(entityName, excludeId = false) {
+    getEntitySchema(entityName, excludedAttributes = false) {
         if (typeof this.dataModelSchema[entityName] !== "undefined") {
             const returnSchema = JSON.parse(JSON.stringify(this.dataModelSchema[entityName]));
 
-            if (excludeId) {
+            if (excludedAttributes === true) {
                 delete returnSchema["id"];
+            }
+
+            if (Array.isArray(excludedAttributes)) {
+                excludedAttributes.forEach(attribute => {
+                    delete returnSchema[attribute];
+                })
             }
 
             return { properties: returnSchema };
@@ -2059,7 +2067,7 @@ class DivbloxBase extends divbloxObjectBase {
 
                 const modifiedParentId = await dxUtils.getCommandLineInput(
                     "Optional: Provide a new parent " +
-                        "grouping id for the grouping (Leave blank to skip or provide -1 to remove): "
+                    "grouping id for the grouping (Leave blank to skip or provide -1 to remove): "
                 );
 
                 let modifications = {};
