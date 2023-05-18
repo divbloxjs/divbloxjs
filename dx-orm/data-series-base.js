@@ -113,6 +113,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @param {Promise<{}>} dataSeriesConfig Standardised configuration object for building specific clauses
      */
     async setSqlReadyNameMap(dataSeriesConfig) {
+        this.fields.forEach(attributeName => {
+            this.sqlReadyNameMap[attributeName] = dxQ.getSqlReadyName(attributeName);
+        })
+
         Object.keys(dataSeriesConfig.columns).forEach((attributeName) => {
             this.sqlReadyNameMap[attributeName] = attributeName;
             // TODO Overwrite to map to correct SQL-ready name
@@ -292,8 +296,8 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         );
 
         if (findArrayResult === null) {
-            this.baseEntityObject.printLastError();
-            this.populateError(this.baseEntityObject.getLastError());
+            this.dxInstance.printLastError();
+            this.populateError(this.dxInstance.getLastError());
             return null;
         }
 
