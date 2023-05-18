@@ -40,6 +40,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         const echoOperation = this.getOperationDefinition({
             operationName: "echo",
             allowedAccess: ["anonymous"],
+            responseSchema: this.getSchema({ timestamp: "int" }),
+            f: async (req, res) => {
+                await this.echo();
+            },
         });
         return [echoOperation];
     }
@@ -98,7 +102,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             additionalRequestSchemas: {},
             additionalResponseSchemas: {},
             responses: {},
-            f : null,
+            f: null,
             disableSwaggerDoc: false,
             successStatusCode: 200,
             successMessage: "OK",
@@ -110,7 +114,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             }
 
             if (property === "responseSchema") {
-                if (typeof definition[property]["properties"] === "undefined" && definition[property]["type"] !== "array") {
+                if (
+                    typeof definition[property]["properties"] === "undefined" &&
+                    definition[property]["type"] !== "array"
+                ) {
                     continue;
                 }
 
@@ -536,9 +543,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @return {Promise<*|{success: boolean, message: string}>}
      */
     async echo() {
-        this.result["currentTimestamp"] = Date.now();
-        this.result["request"] = this.currentRequest;
-        this.setResult(true, "Current timestamp populated");
+        this.forceResult({ timestamp: Date.now() }, 200);
     }
     //#endregion
 }
