@@ -246,9 +246,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Sets the current result with a message
      * @param {boolean} isSuccess
-     * @param {string} message A message to return
+     * @param {string|undefined} message A message to return
      */
-    setResult(isSuccess = false, message) {
+    setResult(isSuccess = false, message = undefined) {
         this.result["success"] = isSuccess;
 
         delete this.result["message"];
@@ -509,7 +509,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @return {Promise<boolean>}
      */
     async executeOperation(operation, request) {
-        const beforeSuccess = this.onBeforeExecuteOperation(operation, request);
+        const beforeSuccess = await this.onBeforeExecuteOperation(operation, request);
 
         if (!beforeSuccess) {
             return false;
