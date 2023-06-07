@@ -17,8 +17,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             success: false,
             message: "none",
             unauthorized: false,
-            cookie: null,
         };
+        this.cookie = null;
         this.statusCode = null;
         this.declaredOperations = [];
         this.declaredSchemas = [];
@@ -315,7 +315,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
-     * Sets the cookie attribute in the result object to instruct the web service to send the cookie with the response
+     * Sets the cookie object to instruct the web service to send the cookie with the response
      * @param {string} name The name of the cookie
      * @param {string} data The data, in string format, that will be stored
      * @param {boolean} isSecure True or false
@@ -323,7 +323,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * @param {number} expiryInDays How many days from now should it expire
      */
     setCookie(name = "cookie", data = "", isSecure = true, isHttpOnly = true, expiryInDays = 30) {
-        this.result.cookie = {
+        this.cookie = {
             name: name,
             data: data,
             secure: isSecure,
