@@ -68,11 +68,12 @@ class DivbloxWebService extends divbloxObjectBase {
             typeof this.config["serverHttps"] !== "undefined"
                 ? this.config.serverHttps
                 : {
-                    keyPath: null,
-                    certPath: null,
-                    allowHttp: true,
-                    httpsPort: 3001,
-                };
+                      keyPath: null,
+                      certPath: null,
+                      allowHttp: true,
+                      httpsPort: 3001,
+                  };
+        this.dxApiRouter = null;
         this.initExpress();
     }
 
@@ -92,7 +93,12 @@ class DivbloxWebService extends divbloxObjectBase {
             this.setupExpress(this.expressHttp, this.port);
         }
 
+        this.dxApiRouter = express.Router();
+
         this.addRoute("/", path.join(path.resolve("./"), this.wwwRoot));
+
+        // Additional middlewares can be added by overriding setupMiddleWares() function
+        this.setupMiddleWares();
 
         this.setupApiRouters();
 
@@ -108,8 +114,9 @@ class DivbloxWebService extends divbloxObjectBase {
                     key: fs.readFileSync(path.join(path.resolve("./"), this.config["serverHttps"]["keyPath"])),
                     cert: fs.readFileSync(path.join(path.resolve("./"), this.config["serverHttps"]["certPath"])),
                 },
-                true
+                true,
             );
+
             if (this.serverHttpsConfig.allowHttp) {
                 this.startServer({}, false);
             }
@@ -125,13 +132,13 @@ class DivbloxWebService extends divbloxObjectBase {
     setupApiRouters() {
         dxUtils.printSubHeadingMessage("Configuring API routes");
 
-        const router = express.Router();
-
-        router.all("/", async (req, res, next) => {
+        this.dxApiRouter.all("/", async (req, res, next) => {
             res.redirect("/api/docs");
         });
 
         let instantiatedPackages = {};
+
+        // Setup the api routes for each provided divblox package
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
             const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint"));
@@ -142,14 +149,18 @@ class DivbloxWebService extends divbloxObjectBase {
             const endpointName =
                 packageConfigInstance.endpointName === null ? packageName : packageConfigInstance.endpointName;
 
-            packageConfigInstance.declaredOperations.forEach(operation => {
+            // Handle endpoints with declarations that provide an inline function
+            packageConfigInstance.declaredOperations.forEach((operation) => {
                 if (!operation.f) {
                     return;
                 }
 
                 const path = "/" + endpointName + "/" + operation.operationName;
                 const execute = async (req, res) => {
-                    const beforeSuccess = await packageConfigInstance.onBeforeExecuteOperation(operation.operationName, req);
+                    const beforeSuccess = await packageConfigInstance.onBeforeExecuteOperation(
+                        operation.operationName,
+                        req,
+                    );
                     if (!beforeSuccess) {
                         res.header("x-powered-by", "divbloxjs");
                         res.send(packageConfigInstance.result);
@@ -157,67 +168,58 @@ class DivbloxWebService extends divbloxObjectBase {
                     }
 
                     await operation.f(req, res);
+                    if (packageConfigInstance.cookie !== null) {
+                        const cookie = packageConfigInstance.cookie;
+                        res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
+                            secure: cookie["secure"],
+                            httpOnly: cookie["httpOnly"],
+                            maxAge: cookie["maxAge"],
+                        });
+                        packageConfigInstance.cookie = null;
+                    }
                     res.header("x-powered-by", "divbloxjs");
                     res.statusCode = packageConfigInstance.statusCode || operation.successStatusCode || 200;
                     res.send(packageConfigInstance.result);
                 };
 
                 switch (operation.requestType) {
-                    case 'GET':
-                        router.get(path, execute);
+                    case "GET":
+                        this.dxApiRouter.get(path, execute);
                         break;
-                    case 'POST':
-                        router.post(path, execute);
+                    case "POST":
+                        this.dxApiRouter.post(path, execute);
                         break;
-                    case 'PUT':
-                        router.put(path, execute);
+                    case "PUT":
+                        this.dxApiRouter.put(path, execute);
                         break;
-                    case 'PATCH':
-                        router.patch(path, execute);
+                    case "PATCH":
+                        this.dxApiRouter.patch(path, execute);
                         break;
-                    case 'DELETE':
-                        router.delete(path, execute);
+                    case "DELETE":
+                        this.dxApiRouter.delete(path, execute);
                         break;
                     default:
                         break;
                 }
             });
+            ///////////////////////////////////////////////////////////////////////////
 
-            router.all("/" + endpointName, async (req, res, next) => {
-                const packageInstance = new packageEndpoint(this.dxInstance);
-
-                await packageInstance.executeOperation(null, {
-                    headers: req.headers,
-                    body: req.body,
-                    query: req.query,
-                });
-
-                if (packageInstance.result["cookie"] !== null) {
-                    const cookie = packageInstance.result["cookie"];
-                    res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
-                        secure: cookie["secure"],
-                        httpOnly: cookie["httpOnly"],
-                        maxAge: cookie["maxAge"],
-                    });
-                }
-
-                delete packageInstance.result["success"];
-                delete packageInstance.result["cookie"];
-                delete packageInstance.result["unauthorized"];
-
+            // Handle endpoint routes that do not receive operations
+            this.dxApiRouter.all("/" + endpointName, async (req, res, next) => {
                 res.header("x-powered-by", "divbloxjs");
-                res.send(packageInstance.result);
+                res.send({ message: "No operation provided" });
             });
+            ///////////////////////////////////////////////////////////////////////////
 
+            // Handle paths defined that use the executeOperation structure to deal with function execution
             let handledPaths = [];
-
             for (const operation of packageConfigInstance.declaredOperations) {
                 const operationName = operation.operationName;
                 const finalPath = "/" + endpointName + "/" + operationName;
 
                 if (!handledPaths.includes(finalPath)) {
                     let requestMethod = null;
-                    router.all(finalPath, async (req, res, next) => {
+                    this.dxApiRouter.all(finalPath, async (req, res, next) => {
                         const packageInstance = new packageEndpoint(this.dxInstance);
                         requestMethod = req.method;
 
@@ -231,7 +233,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                         const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
                             operationName,
-                            requestMethod
+                            requestMethod,
                         );
 
                         // Default status code configured in endpoint operation
@@ -241,7 +243,7 @@ class DivbloxWebService extends divbloxObjectBase {
                             res.status(
                                 currentlyExecutingOperation.successStatusCode
                                     ? currentlyExecutingOperation.successStatusCode
-                                    : 200
+                                    : 200,
                             );
                         }
 
@@ -250,21 +252,18 @@ class DivbloxWebService extends divbloxObjectBase {
                             res.status(packageInstance.result["statusCode"]);
                         }
 
-                        if (
-                            typeof packageInstance.result["cookie"] !== "undefined" &&
-                            packageInstance.result["cookie"] !== null
-                        ) {
-                            const cookie = packageInstance.result["cookie"];
+                        if (packageInstance.cookie !== null) {
+                            const cookie = packageInstance.cookie;
                             res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
                                 secure: cookie["secure"],
                                 httpOnly: cookie["httpOnly"],
                                 maxAge: cookie["maxAge"],
                             });
+                            packageInstance.cookie = null;
                         }
 
                         delete packageInstance.result["statusCode"];
                         delete packageInstance.result["success"];
-                        delete packageInstance.result["cookie"];
                         delete packageInstance.result["unauthorized"];
 
                         res.header("x-powered-by", "divbloxjs");
@@ -280,7 +279,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                         if (!handledPaths.includes(finalPath)) {
                             let requestMethod = null;
-                            router.all(finalPath, async (req, res, next) => {
+                            this.dxApiRouter.all(finalPath, async (req, res, next) => {
                                 requestMethod = req.method;
                                 await packageInstance.executeOperation(operationName, {
                                     headers: req.headers,
@@ -293,7 +292,7 @@ class DivbloxWebService extends divbloxObjectBase {
 
                                 const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
                                     operationName,
-                                    requestMethod
+                                    requestMethod,
                                 );
 
                                 // Default status code configured in endpoint
@@ -303,7 +302,7 @@ class DivbloxWebService extends divbloxObjectBase {
                                     res.status(
                                         currentlyExecutingOperation.successStatusCode
                                             ? currentlyExecutingOperation.successStatusCode
-                                            : 200
+                                            : 200,
                                     );
                                 }
 
@@ -312,21 +311,18 @@ class DivbloxWebService extends divbloxObjectBase {
                                     res.status(packageInstance.result["statusCode"]);
                                 }
 
-                                if (
-                                    typeof packageInstance.result["cookie"] !== "undefined" &&
-                                    packageInstance.result["cookie"] !== null
-                                ) {
-                                    const cookie = packageInstance.result["cookie"];
+                                if (packageInstance.cookie !== null) {
+                                    const cookie = packageInstance.cookie;
                                     res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
                                         secure: cookie["secure"],
                                         httpOnly: cookie["httpOnly"],
                                         maxAge: cookie["maxAge"],
                                     });
+                                    packageInstance.cookie = null;
                                 }
 
                                 delete packageInstance.result["statusCode"];
                                 delete packageInstance.result["success"];
-                                delete packageInstance.result["cookie"];
                                 delete packageInstance.result["unauthorized"];
 
                                 res.header("x-powered-by", "divbloxjs");
@@ -338,15 +334,21 @@ class DivbloxWebService extends divbloxObjectBase {
                     }
                 }
             }
+            ///////////////////////////////////////////////////////////////////////////
         }
 
-        this.addRoute("/api", undefined, router);
+        this.addRoute("/api", undefined, this.dxApiRouter);
 
-        dxUtils.printSubHeadingMessage("Configuring Swagger UI");
+        this.writeSwaggerDoc(instantiatedPackages);
 
-        const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
-        fs.writeFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/swagger.json", JSON.stringify(swaggerDocument, null, 2));
+        this.serveSwaggerUi(this.getSwaggerConfig(instantiatedPackages));
+    }
 
+    /**
+     * Serves the provided swagger config document as a swagger UI on the path /api/docs
+     * @param {*} swaggerDocument
+     */
+    serveSwaggerUi(swaggerDocument) {
         if (this.useHttps) {
             this.expressHttps.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
             if (this.serverHttpsConfig.allowHttp) {
@@ -355,6 +357,21 @@ class DivbloxWebService extends divbloxObjectBase {
         } else {
             this.expressHttp.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
         }
+    }
+
+    /**
+     * Writes the swagger config document to a json file that conforms to the openapi 3.0.3 spec
+     * @param {*} instantiatedPackages
+     */
+    writeSwaggerDoc(instantiatedPackages = null) {
+        dxUtils.printSubHeadingMessage("Configuring Swagger UI");
+
+        if (instantiatedPackages === null) {
+            dxUtils.printErrorMessage("No packages instantiated");
+        }
+
+        const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
+        fs.writeFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/swagger.json", JSON.stringify(swaggerDocument, null, 2));
     }
 
     /**
@@ -369,13 +386,13 @@ class DivbloxWebService extends divbloxObjectBase {
             const staticConfigStr = fs.readFileSync(swaggerPath, "utf-8");
             dxUtils.printInfoMessage(
                 "Swagger config was loaded from predefined swagger.json file. You can delete it to " +
-                "force divbloxjs to generate it dynamically, based on your package endpoints."
+                    "force divbloxjs to generate it dynamically, based on your package endpoints.",
             );
             return JSON.parse(staticConfigStr);
         } else {
             dxUtils.printInfoMessage(
                 "Swagger config was dynamically generated. To use a predefined swagger config, copy " +
-                "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it"
+                    "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
             );
         }
 
@@ -416,18 +433,18 @@ class DivbloxWebService extends divbloxObjectBase {
                 }
 
                 let parameters = operation.parameters || [];
-                let operationPath = '';
-                let pathParameters = operation.operationName.split('/');
+                let operationPath = "";
+                let pathParameters = operation.operationName.split("/");
                 for (const parameter of pathParameters) {
-                    if (!parameter.startsWith(':')) {
-                        operationPath += '/' + parameter;
+                    if (!parameter.startsWith(":")) {
+                        operationPath += "/" + parameter;
                         continue;
                     }
 
                     let parameterName = parameter.substring(1);
-                    operationPath += '/{' + parameterName + '}';
+                    operationPath += "/{" + parameterName + "}";
 
-                    if (parameters.some(p => p.name == parameterName && p.in == 'path')) {
+                    if (parameters.some((p) => p.name == parameterName && p.in == "path")) {
                         continue;
                     }
 
@@ -593,7 +610,7 @@ class DivbloxWebService extends divbloxObjectBase {
         if (Object.keys(schemas).length === 0) {
             dxUtils.printWarningMessage(
                 "No data model entity schemas have been defined for swagger ui. You can define " +
-                "these within the package endpoint"
+                    "these within the package endpoint",
             );
         }
 
@@ -628,16 +645,18 @@ class DivbloxWebService extends divbloxObjectBase {
      */
     setupExpress(expressInstance, port) {
         expressInstance.set("port", this.port);
-        expressInstance.use(logger("dev"));
 
+        // Default middlewares required by divbloxjs
         this.setupExpressCors(expressInstance);
-
+        expressInstance.use(logger("dev"));
         expressInstance.use(express.json());
         expressInstance.use(express.urlencoded({ extended: false }));
         expressInstance.use(cookieParser());
         expressInstance.use(fileUpload());
         expressInstance.use(express.static(path.join(path.resolve("./"), this.staticRoot)));
         expressInstance.use(this.dxInstance.uploadServePath, express.static(this.dxInstance.getFileUploadPath()));
+        ////////////////////////////////////////////
+
         expressInstance.set("views", [
             path.join(path.resolve("./"), this.viewsRoot),
             DIVBLOX_ROOT_DIR + "/dx-core-views",
@@ -647,6 +666,30 @@ class DivbloxWebService extends divbloxObjectBase {
         if (!fs.existsSync(this.dxInstance.getFileUploadPath())) {
             fs.mkdirSync(this.dxInstance.getFileUploadPath());
         }
+    }
+
+    /**
+     * This function is intended to be overridden by the implemented web-service class to allow
+     * for any additional express middleware that the developer might want to use
+     */
+    setupMiddleWares() {
+        // TODO: Setup additional application level middleware here using either the http or https express instances
+        // Example
+        /*this.expressHttp.use( (req, res, next) => {
+            console.log("APP Request Type:", req.method);
+            next();
+        });*/
+        // TODO: Setup additional route level middleware here using the apiRouter
+        // Example
+        /*this.dxApiRouter.use( (req, res, next) => {
+            console.log("ROUTE Request Type:", req.method);
+            next();
+        });
+
+        this.dxApiRouter.use("/user/:id", (req, res, next) => {
+            console.log("ROUTE Request Type for user with an id:", req.method);
+            next();
+        });*/
     }
 
     /**
