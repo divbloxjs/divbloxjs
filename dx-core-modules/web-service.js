@@ -132,10 +132,6 @@ class DivbloxWebService extends divbloxObjectBase {
     setupApiRouters() {
         dxUtils.printSubHeadingMessage("Configuring API routes");
 
-        this.dxApiRouter.all("/", async (req, res, next) => {
-            res.redirect("/api/docs");
-        });
-
         let instantiatedPackages = {};
 
         // Setup the api routes for each provided divblox package
@@ -336,8 +332,6 @@ class DivbloxWebService extends divbloxObjectBase {
             }
             ///////////////////////////////////////////////////////////////////////////
         }
-
-        this.addRoute("/api", undefined, this.dxApiRouter);
 
         this.writeSwaggerDoc(instantiatedPackages);
 
@@ -716,6 +710,11 @@ class DivbloxWebService extends divbloxObjectBase {
      */
     startServer(options = {}, isHttps = false) {
         if (isHttps) {
+            // Setup a redirect to reach swagger UI
+            this.expressHttps.all("/api", async (req, res, next) => {
+                res.redirect("/api/docs");
+            });
+
             // catch 404 and forward to error handler
             this.expressHttps.use(function (req, res, next) {
                 next(createError(404));
@@ -737,6 +736,11 @@ class DivbloxWebService extends divbloxObjectBase {
             this.serverHttps.on("error", this.onErrorHttps.bind(this));
             this.serverHttps.on("listening", this.onListeningHttps.bind(this));
         } else {
+            // Setup a redirect to reach swagger UI
+            this.expressHttp.all("/api", async (req, res, next) => {
+                res.redirect("/api/docs");
+            });
+
             // catch 404 and forward to error handler
             this.expressHttp.use(function (req, res, next) {
                 next(createError(404));
