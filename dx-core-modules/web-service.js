@@ -333,6 +333,8 @@ class DivbloxWebService extends divbloxObjectBase {
             ///////////////////////////////////////////////////////////////////////////
         }
 
+        this.addRoute("/api", undefined, this.dxApiRouter);
+
         this.writeSwaggerDoc(instantiatedPackages);
 
         this.serveSwaggerUi(this.getSwaggerConfig(instantiatedPackages));
@@ -710,8 +712,8 @@ class DivbloxWebService extends divbloxObjectBase {
      */
     startServer(options = {}, isHttps = false) {
         if (isHttps) {
-            // Setup a redirect to reach swagger UI
-            this.expressHttps.all("/api", async (req, res, next) => {
+            // Setup a redirect to swagger UI
+            this.expressHttps.get("/api", async (req, res, next) => {
                 res.redirect("/api/docs");
             });
 
@@ -736,8 +738,8 @@ class DivbloxWebService extends divbloxObjectBase {
             this.serverHttps.on("error", this.onErrorHttps.bind(this));
             this.serverHttps.on("listening", this.onListeningHttps.bind(this));
         } else {
-            // Setup a redirect to reach swagger UI
-            this.expressHttp.all("/api", async (req, res, next) => {
+            // Setup a redirect to swagger UI
+            this.expressHttp.get("/api", async (req, res, next) => {
                 res.redirect("/api/docs");
             });
 
