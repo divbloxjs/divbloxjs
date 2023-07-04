@@ -290,6 +290,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         }
 
         for (const key of Object.keys(this.data)) {
+            if (!this.entitySchema[key]) {
+                this.populateError("Invalid attribute provided: '" + key + "': " + this.data[key]);
+                return false;
+            }
+
             if (["date", "date-time"].includes(this.entitySchema[key]?.["format"])) {
                 this.data[key] = new Date(this.data[key]);
             }
