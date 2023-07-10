@@ -340,7 +340,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
      */
     async addAuditLogEntry(entry = {}, transaction) {
         if (!this.isEntityAudited(entry["objectName"])) {
-            return;
+            return true;
         }
         entry["entryTimeStamp"] = new Date();
 

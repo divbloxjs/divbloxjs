@@ -290,6 +290,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         }
 
         for (const key of Object.keys(this.data)) {
+            if (!this.entitySchema[key]) {
+                this.populateError("Invalid attribute provided: '" + key + "': " + this.data[key]);
+                return false;
+            }
+
             if (["date", "date-time"].includes(this.entitySchema[key]?.["format"])) {
                 this.data[key] = new Date(this.data[key]);
             }
@@ -411,7 +416,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         let deleteResult = await this.dxInstance.delete(this.entityName, this.data.id, transaction);
 
         if (deleteResult) {
-            await this.addAuditLogEntry(this.modificationTypes.delete, transaction);
+            await this.addAuditLogEntry(this.modificationTypes.delete, this.data, transaction);
             this.reset();
         } else {
             this.populateError("Could not delete '" + this.entityName + "'", this.dxInstance.getLastError());
