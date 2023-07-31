@@ -296,7 +296,9 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             }
 
             if (["date", "date-time"].includes(this.entitySchema[key]?.["format"])) {
-                this.data[key] = new Date(this.data[key]);
+                if (this.data[key]) {
+                    this.data[key] = new Date(this.data[key]);
+                }
             }
 
             if (this.entitySchema[key].hasOwnProperty("enum")) {
