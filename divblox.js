@@ -98,7 +98,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof process.env.NODE_ENV === "undefined" && typeof this.configObj.environment === "undefined") {
             throw new Error(
                 "NODE_ENV has not been set. Divblox requires the environment to be specified. You can" +
-                " try running your script with NODE_ENV=development node [your_script.js]\n"
+                    " try running your script with NODE_ENV=development node [your_script.js]\n",
             );
         }
 
@@ -139,7 +139,7 @@ class DivbloxBase extends divbloxObjectBase {
         const dotEnvModuleNames = Object.keys(dotEnvModuleData);
 
         const initialConfigFileModuleNames = Object.keys(
-            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]
+            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"],
         );
 
         dotEnvModuleNames.forEach((dotEnvModuleName) => {
@@ -197,7 +197,7 @@ class DivbloxBase extends divbloxObjectBase {
             : "/uploads";
 
         this.databaseConnector = new divbloxDatabaseConnector(
-            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"]
+            this.configObj["environmentArray"][process.env.NODE_ENV]["modules"],
         );
 
         this.dataModelPath = DIVBLOX_ROOT_DIR + "/dx-orm/data-model-base.json";
@@ -232,7 +232,7 @@ class DivbloxBase extends divbloxObjectBase {
         if (typeof this.configObj["divbloxPackagesRootLocal"] === "undefined") {
             dxUtils.printErrorMessage(
                 "No path configured for 'divbloxPackagesRootLocal'! Update config file with a property called" +
-                +"'divbloxPackagesRootLocal' that defines where local divbloxjs packages are stored."
+                    +"'divbloxPackagesRootLocal' that defines where local divbloxjs packages are stored.",
             );
             throw new Error("Configuration incomplete");
         }
@@ -325,9 +325,9 @@ class DivbloxBase extends divbloxObjectBase {
         if (duplicatePackages.length > 0) {
             dxUtils.printErrorMessage(
                 "Duplicate packages are not allowed.\n" +
-                "The following packages have been defined multiple times: '" +
-                duplicatePackages.join(",") +
-                "'"
+                    "The following packages have been defined multiple times: '" +
+                    duplicatePackages.join(",") +
+                    "'",
             );
             throw new Error("Configuration invalid");
         }
@@ -391,11 +391,11 @@ class DivbloxBase extends divbloxObjectBase {
                     if (isRemote) {
                         throw new Error(
                             "Entity " +
-                            entityName +
-                            " already exist in the data model. " +
-                            "Tried to define entity '" +
-                            entityName +
-                            "' multiple times in the data model"
+                                entityName +
+                                " already exist in the data model. " +
+                                "Tried to define entity '" +
+                                entityName +
+                                "' multiple times in the data model",
                         );
                     }
 
@@ -407,8 +407,8 @@ class DivbloxBase extends divbloxObjectBase {
                     if (typeof this.dataModelObj[entityName]["module"] === "undefined") {
                         throw new Error(
                             "No module was provided for entity '" +
-                            entityName +
-                            "'. Entities have to have be assigned to modules. Please check your data model."
+                                entityName +
+                                "'. Entities have to have be assigned to modules. Please check your data model.",
                         );
                     }
 
@@ -416,23 +416,23 @@ class DivbloxBase extends divbloxObjectBase {
                     const existingDataModelAttributes = Object.keys(this.dataModelObj[entityName]["attributes"]);
 
                     const duplicateAttributes = Object.keys(entityObj["attributes"]).filter((x) =>
-                        existingDataModelAttributes.includes(x)
+                        existingDataModelAttributes.includes(x),
                     );
 
                     if (duplicateAttributes.length > 0) {
                         dxUtils.printErrorMessage(
                             "Duplicate attributes for entities are not allowed.\n" +
-                            "The following attributes have been defined multiple times for entity '" +
-                            entityName +
-                            "': '" +
-                            duplicateAttributes.join(",") +
-                            "'"
+                                "The following attributes have been defined multiple times for entity '" +
+                                entityName +
+                                "': '" +
+                                duplicateAttributes.join(",") +
+                                "'",
                         );
                         throw new Error("Data model invalid");
                     }
 
                     const attributesToAdd = Object.keys(entityObj["attributes"]).filter(
-                        (x) => !existingDataModelAttributes.includes(x)
+                        (x) => !existingDataModelAttributes.includes(x),
                     );
 
                     for (const attributeToAdd of attributesToAdd) {
@@ -457,7 +457,7 @@ class DivbloxBase extends divbloxObjectBase {
                     const existingDataModelRelationships = Object.keys(this.dataModelObj[entityName]["relationships"]);
 
                     const relationshipsToAdd = Object.keys(entityObj["relationships"]).filter(
-                        (x) => !existingDataModelRelationships.includes(x)
+                        (x) => !existingDataModelRelationships.includes(x),
                     );
 
                     for (const relationshipToAdd of relationshipsToAdd) {
@@ -473,7 +473,7 @@ class DivbloxBase extends divbloxObjectBase {
                     const existingDataModelOptions = Object.keys(this.dataModelObj[entityName]["options"]);
 
                     const optionsToAdd = Object.keys(entityObj["options"]).filter(
-                        (x) => !existingDataModelOptions.includes(x)
+                        (x) => !existingDataModelOptions.includes(x),
                     );
 
                     for (const optionToAdd of optionsToAdd) {
@@ -483,8 +483,8 @@ class DivbloxBase extends divbloxObjectBase {
                     if (typeof entityObj["module"] === "undefined") {
                         dxUtils.printErrorMessage(
                             "No module was provided for entity '" +
-                            entityName +
-                            "'. Entities have to have be assigned to modules. Please check your data model."
+                                entityName +
+                                "'. Entities have to have be assigned to modules. Please check your data model.",
                         );
                         throw new Error("Invalid data model.");
                     }
@@ -558,7 +558,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         this.jwtWrapper = new DivbloxJwtWrapper(
             this.configObj["environmentArray"][process.env.NODE_ENV]["jwtSecret"],
-            this
+            this,
         );
     }
 
@@ -612,7 +612,7 @@ class DivbloxBase extends divbloxObjectBase {
             if (!dbConnectionSuccess) {
                 dxUtils.printErrorMessage(
                     "Your database might not be configured properly. You can update your " +
-                    "database connection information in dxconfig.json"
+                        "database connection information in dxconfig.json",
                 );
 
                 this.databaseConnector.printLastError();
@@ -632,7 +632,7 @@ class DivbloxBase extends divbloxObjectBase {
 
                 if (this.dataLayer.isRequiredEntitiesMissing) {
                     dxUtils.printErrorMessage(
-                        "You can run the application generator again to generate the default model:"
+                        "You can run the application generator again to generate the default model:",
                     );
                     dxUtils.printTerminalMessage("npx divbloxjs-create-app");
                     return;
@@ -672,7 +672,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         await this.createGlobalIdentifierGrouping(
             this.getDefaultGlobalIdentifierGrouping(),
-            "The default globalIdentifierGrouping"
+            "The default globalIdentifierGrouping",
         );
 
         //It is important that this is called before starting the webserver, otherwise the schemas will not be available
@@ -751,20 +751,20 @@ class DivbloxBase extends divbloxObjectBase {
 
         for (const moduleName of this.invalidModuleNames) {
             dxUtils.printWarningMessage(
-                "Module '" + moduleName + "' is not configured.\n " + "Would you like to map it to an existing module?"
+                "Module '" + moduleName + "' is not configured.\n " + "Would you like to map it to an existing module?",
             );
             const mappedName = await dxUtils.getCommandLineInput(" (Type an existing module name to map it to): ");
 
             if (!this.moduleNames.includes(mappedName)) {
                 dxUtils.printErrorMessage(
                     "Module " +
-                    moduleName +
-                    " has not been mapped or configured. Please configure it in your divbloxjs config file to proceed."
+                        moduleName +
+                        " has not been mapped or configured. Please configure it in your divbloxjs config file to proceed.",
                 );
                 process.exit(1);
             } else {
                 dxUtils.printInfoMessage(
-                    "Module name '" + moduleName + "' will be mapped to module '" + mappedName + "'"
+                    "Module name '" + moduleName + "' will be mapped to module '" + mappedName + "'",
                 );
                 this.updateModuleMapping(moduleName, mappedName);
             }
@@ -869,7 +869,7 @@ class DivbloxBase extends divbloxObjectBase {
             }
         } else {
             dxUtils.printErrorMessage(
-                "Remote package '" + registerPackageName + "' is already installed and registered!"
+                "Remote package '" + registerPackageName + "' is already installed and registered!",
             );
             return;
         }
@@ -1189,7 +1189,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
                 dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
-                "_"
+                "_",
             );
             const entityNameCamelCase = entityName;
             let entityData = "";
@@ -1306,7 +1306,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             let fileContentObjectModelGettersStr = fs.readFileSync(
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-getters.tpl",
-                "utf-8"
+                "utf-8",
             );
 
             for (const relationshipName of Object.keys(relationships)) {
@@ -1318,15 +1318,15 @@ class DivbloxBase extends divbloxObjectBase {
                     const sqlReadyRelationshipUniqueName = this.dataLayer.getSqlReadyName(relationshipUniqueName);
                     const relationshipNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
                         sqlReadyRelationshipName,
-                        "_"
+                        "_",
                     );
                     const lowerCaseSplitterRelationshipName = dxUtils.getCamelCaseSplittedToLowerCase(
                         relationshipName,
-                        "-"
+                        "-",
                     );
 
                     const finalRelationshipName = this.dataLayer.convertSqlNameToProperty(
-                        sqlReadyRelationshipName + "_" + sqlReadyRelationshipUniqueName
+                        sqlReadyRelationshipName + "_" + sqlReadyRelationshipUniqueName,
                     );
 
                     if (entityData.length > 0) {
@@ -1373,7 +1373,7 @@ class DivbloxBase extends divbloxObjectBase {
                         const search = "[" + token + "]";
                         linkedEntityGettersForRelationship = linkedEntityGettersForRelationship.replaceAll(
                             search,
-                            tokensToReplace[token]
+                            tokensToReplace[token],
                         );
                     }
                 }
@@ -1401,11 +1401,11 @@ class DivbloxBase extends divbloxObjectBase {
 
             let fileContentObjectModelStr = fs.readFileSync(
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model.tpl",
-                "utf-8"
+                "utf-8",
             );
             let fileContentObjectSchemaStr = fs.readFileSync(
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-schema.tpl",
-                "utf-8"
+                "utf-8",
             );
 
             for (const token of Object.keys(tokensToReplace)) {
@@ -1416,24 +1416,24 @@ class DivbloxBase extends divbloxObjectBase {
 
             fs.writeFileSync(
                 DIVBLOX_ROOT_DIR +
-                "/dx-orm/generated/models/" +
-                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                ".model-base.js",
-                fileContentObjectModelStr
+                    "/dx-orm/generated/models/" +
+                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                    ".model-base.js",
+                fileContentObjectModelStr,
             );
 
             fs.writeFileSync(
                 DIVBLOX_ROOT_DIR +
-                "/dx-orm/generated/schemas/" +
-                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                ".schema.js",
-                fileContentObjectSchemaStr
+                    "/dx-orm/generated/schemas/" +
+                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                    ".schema.js",
+                fileContentObjectSchemaStr,
             );
         }
 
         let fileContentDataModelSchemaStr = fs.readFileSync(
             DIVBLOX_ROOT_DIR + "/dx-orm/templates/data-model-schema.tpl",
-            "utf-8"
+            "utf-8",
         );
 
         const search = "[SchemaData]";
@@ -1442,7 +1442,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         fs.writeFileSync(
             DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/data-model.schema.js",
-            fileContentDataModelSchemaStr
+            fileContentDataModelSchemaStr,
         );
     }
 
@@ -1467,7 +1467,7 @@ class DivbloxBase extends divbloxObjectBase {
         for (const entityName of Object.keys(this.dataModelObj)) {
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
                 dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
-                "_"
+                "_",
             );
             const entityNameCamelCase = entityName;
             const attributes = this.dataModelObj[entityName]["attributes"];
@@ -1488,7 +1488,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             let fileContentDataSeriesBaseStr = fs.readFileSync(
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-data-series-base.tpl",
-                "utf-8"
+                "utf-8",
             );
 
             for (const token of Object.keys(tokensToReplace)) {
@@ -1499,18 +1499,20 @@ class DivbloxBase extends divbloxObjectBase {
             if (
                 !fs.existsSync(
                     "divblox-orm/data-series/" +
-                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".data-series.js"
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".data-series.js",
                 )
             ) {
                 dxUtils.printInfoMessage(
-                    "Generating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".data-series.js file..."
+                    "Generating " +
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".data-series.js file...",
                 );
                 fs.writeFileSync(
                     "divblox-orm/data-series/" +
-                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".data-series.js",
-                    fileContentDataSeriesBaseStr
+                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
+                        ".data-series.js",
+                    fileContentDataSeriesBaseStr,
                 );
             }
         }
@@ -1537,7 +1539,7 @@ class DivbloxBase extends divbloxObjectBase {
         for (const entityName of Object.keys(this.dataModelObj)) {
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
                 dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
-                "_"
+                "_",
             );
             const entityNameCamelCase = entityName;
             const attributes = this.dataModelObj[entityName]["attributes"];
@@ -1558,7 +1560,7 @@ class DivbloxBase extends divbloxObjectBase {
 
             let fileContentModelBaseStr = fs.readFileSync(
                 DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-specialisation.tpl",
-                "utf-8"
+                "utf-8",
             );
 
             for (const token of Object.keys(tokensToReplace)) {
@@ -1568,15 +1570,15 @@ class DivbloxBase extends divbloxObjectBase {
 
             if (
                 !fs.existsSync(
-                    "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js"
+                    "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js",
                 )
             ) {
                 dxUtils.printInfoMessage(
-                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js file..."
+                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js file...",
                 );
                 fs.writeFileSync(
                     "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js",
-                    fileContentModelBaseStr
+                    fileContentModelBaseStr,
                 );
             }
         }
@@ -1644,9 +1646,9 @@ class DivbloxBase extends divbloxObjectBase {
             }
 
             if (Array.isArray(excludedAttributes)) {
-                excludedAttributes.forEach(attribute => {
+                excludedAttributes.forEach((attribute) => {
                     delete returnSchema[attribute];
-                })
+                });
             }
 
             return { properties: returnSchema };
@@ -1807,7 +1809,7 @@ class DivbloxBase extends divbloxObjectBase {
         linkedEntityId = -1,
         globalIdentifierGroupings = [],
         isSuperUser = false,
-        transaction = null
+        transaction = null,
     ) {
         const uniqueIdentifierRaw = Date.now().toString() + Math.round(1000000 * Math.random()).toString();
         const uniqueIdentifier = require("crypto").createHash("md5").update(uniqueIdentifierRaw).digest("hex");
@@ -1865,7 +1867,7 @@ class DivbloxBase extends divbloxObjectBase {
         const globalIdentifier = await this.dataLayer.readByField(
             "globalIdentifier",
             "uniqueIdentifier",
-            uniqueIdentifier
+            uniqueIdentifier,
         );
 
         if (globalIdentifier === null) {
@@ -1899,7 +1901,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const queryResult = await this.dataLayer.executeQuery(
             query,
-            this.dataLayer.getModuleNameFromEntityName(entityName)
+            this.dataLayer.getModuleNameFromEntityName(entityName),
         );
 
         if (queryResult === null || queryResult.length === 0) {
@@ -1940,7 +1942,7 @@ class DivbloxBase extends divbloxObjectBase {
             let childrenArray = [];
             for (const globalIdentifierGroupingId of globalIdentifierGroupings) {
                 for (const childId of await this.getGlobalIdentifierGroupingChildrenRecursive(
-                    globalIdentifierGroupingId
+                    globalIdentifierGroupingId,
                 )) {
                     childrenArray.push(childId);
                 }
@@ -1966,7 +1968,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const childGroupings = await this.dataLayer.executeQuery(
             "SELECT id FROM `global_identifier_grouping` WHERE `parent_grouping_id` = '" + parentId + "'",
-            moduleName
+            moduleName,
         );
 
         if (childGroupings === null) {
@@ -2002,7 +2004,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const globalIdentifierGroupingsReadable = await this.dataLayer.executeQuery(
             "SELECT * FROM global_identifier_grouping WHERE id IN(" + globalIdentifierGroupingsStr + ")",
-            moduleName
+            moduleName,
         );
 
         if (globalIdentifierGroupingsReadable === null) {
@@ -2029,22 +2031,22 @@ class DivbloxBase extends divbloxObjectBase {
                 const createName = await dxUtils.getCommandLineInput("Please provide a name for the grouping: ");
 
                 const createDescription = await dxUtils.getCommandLineInput(
-                    "Optional: Provide a description for the grouping " + "(Leave blank to skip): "
+                    "Optional: Provide a description for the grouping " + "(Leave blank to skip): ",
                 );
 
                 const createParentId = await dxUtils.getCommandLineInput(
-                    "Optional: Provide a parent grouping id for the " + "grouping (Leave blank to skip): "
+                    "Optional: Provide a parent grouping id for the " + "grouping (Leave blank to skip): ",
                 );
 
                 const createResult = await this.createGlobalIdentifierGrouping(
                     createName,
                     createDescription,
-                    createParentId === "" ? -1 : parseInt(createParentId)
+                    createParentId === "" ? -1 : parseInt(createParentId),
                 );
 
                 if (!createResult) {
                     dxUtils.printErrorMessage(
-                        "Error creating grouping:\n" + JSON.stringify(this.getLastError(), null, 2)
+                        "Error creating grouping:\n" + JSON.stringify(this.getLastError(), null, 2),
                     );
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully created!");
@@ -2054,20 +2056,20 @@ class DivbloxBase extends divbloxObjectBase {
                 dxUtils.printHeadingMessage("Modify Global Identifier Grouping");
 
                 const modifyName = await dxUtils.getCommandLineInput(
-                    "Please provide the name of the grouping" + "to modify: "
+                    "Please provide the name of the grouping" + "to modify: ",
                 );
 
                 const modifiedName = await dxUtils.getCommandLineInput(
-                    "Optional: Please provide the new name " + "for the grouping (Leave blank to skip): "
+                    "Optional: Please provide the new name " + "for the grouping (Leave blank to skip): ",
                 );
 
                 const modifiedDescription = await dxUtils.getCommandLineInput(
-                    "Optional: Provide a new " + "description for the grouping (Leave blank to skip): "
+                    "Optional: Provide a new " + "description for the grouping (Leave blank to skip): ",
                 );
 
                 const modifiedParentId = await dxUtils.getCommandLineInput(
                     "Optional: Provide a new parent " +
-                    "grouping id for the grouping (Leave blank to skip or provide -1 to remove): "
+                        "grouping id for the grouping (Leave blank to skip or provide -1 to remove): ",
                 );
 
                 let modifications = {};
@@ -2087,7 +2089,7 @@ class DivbloxBase extends divbloxObjectBase {
                 const modifyResult = await this.modifyGlobalIdentifierGrouping(modifyName, modifications);
                 if (!modifyResult) {
                     dxUtils.printErrorMessage(
-                        "Error modifying grouping:\n" + JSON.stringify(this.getLastError(), null, 2)
+                        "Error modifying grouping:\n" + JSON.stringify(this.getLastError(), null, 2),
                     );
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully modified!");
@@ -2097,13 +2099,13 @@ class DivbloxBase extends divbloxObjectBase {
                 dxUtils.printHeadingMessage("Remove Global Identifier Grouping");
 
                 const removeName = await dxUtils.getCommandLineInput(
-                    "Please provide a name for the grouping" + "that should be removed: "
+                    "Please provide a name for the grouping" + "that should be removed: ",
                 );
 
                 const removeResult = await this.removeGlobalIdentifierGrouping(removeName);
                 if (!removeResult) {
                     dxUtils.printErrorMessage(
-                        "Error removing grouping:\n" + JSON.stringify(this.getLastError(), null, 2)
+                        "Error removing grouping:\n" + JSON.stringify(this.getLastError(), null, 2),
                     );
                 } else {
                     dxUtils.printSuccessMessage("Global Identifier Grouping successfully removed!");
@@ -2113,7 +2115,7 @@ class DivbloxBase extends divbloxObjectBase {
             default:
                 dxUtils.printHeadingMessage("Available Global Identifier Groupings");
                 dxUtils.printSuccessMessage(
-                    JSON.stringify(await this.getGlobalIdentifierGroupingsHierarchy(), null, 2)
+                    JSON.stringify(await this.getGlobalIdentifierGroupingsHierarchy(), null, 2),
                 );
         }
     }
@@ -2263,7 +2265,7 @@ class DivbloxBase extends divbloxObjectBase {
         const children = await this.getGlobalIdentifierGroupingChildrenRecursive(existingGrouping["id"]);
         if (children.length > 0) {
             this.populateError(
-                "Could not remove global identifier grouping. It has children. First remove " + "children"
+                "Could not remove global identifier grouping. It has children. First remove " + "children",
             );
             return false;
         }
@@ -2283,28 +2285,59 @@ class DivbloxBase extends divbloxObjectBase {
 
     /**
      * Stores the value for the given key in the session that is identified by the given globalIdentifier
-     * @param {string|null} globalIdentifier The id of the session that will be used to store the data
+     * @param {string|null} globalIdentifier The globalIdentifier for which the session data will be stored
      * @param {string} key The key for the data
      * @param {*} value The data to store
      * @return {Promise<boolean>} True if store was successful
      */
     async storeSessionData(globalIdentifier = "", key = "", value = null) {
         // TODO: Implement this functionality
+        const GlobalIdentifier = require("./../../divblox-orm/models/global-identifier.model");
+        const globalIdentifierObj = new GlobalIdentifier(this);
+
+        if (!(await globalIdentifierObj.loadByField("uniqueIdentifier", globalIdentifier))) {
+            this.populateError(globalIdentifierObj.getLastError());
+            return false;
+        }
+
+        const sessionData = JSON.parse(globalIdentifierObj.data["sessionData"]);
+        sessionData[key] = value;
+
+        globalIdentifierObj.data["sessionData"] = JSON.stringify(sessionData);
+
+        if (!(await globalIdentifierObj.save())) {
+            this.populateError(globalIdentifierObj.getLastError());
+            return false;
+        }
+
         return true;
     }
 
     /**
      * Retrieves the value for the given key in the session that is identified by the given globalIdentifier
-     * @param {string|null} globalIdentifier The id of the session that will be used to retrieve the data
-     * @param {string} key The key for the data
+     * @param {string|null} globalIdentifier The globalIdentifier to retrieve the data for
+     * @param {string} key The key for the data; If not provided, the entire session data will be returned
      * @return {Promise<string>}
      */
     async retrieveSessionData(globalIdentifier = null, key = "") {
-        // TODO: Implement this functionality
         if (globalIdentifier === null) {
             return null;
         }
-        return "";
+
+        const GlobalIdentifier = require("./../../divblox-orm/models/global-identifier.model");
+        const globalIdentifierObj = new GlobalIdentifier(this);
+
+        if (!(await globalIdentifierObj.loadByField("uniqueIdentifier", globalIdentifier))) {
+            this.populateError(globalIdentifierObj.getLastError());
+            return null;
+        }
+
+        const sessionData =
+            key.length > 0
+                ? JSON.parse(globalIdentifierObj.data["sessionData"])[key]
+                : JSON.parse(globalIdentifierObj.data["sessionData"]);
+
+        return sessionData;
     }
 
     //#endregion
