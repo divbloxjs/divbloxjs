@@ -68,11 +68,11 @@ class DivbloxWebService extends divbloxObjectBase {
             typeof this.config["serverHttps"] !== "undefined"
                 ? this.config.serverHttps
                 : {
-                    keyPath: null,
-                    certPath: null,
-                    allowHttp: true,
-                    httpsPort: 3001,
-                };
+                      keyPath: null,
+                      certPath: null,
+                      allowHttp: true,
+                      httpsPort: 3001,
+                  };
         this.dxApiRouter = null;
         this.initExpress();
     }
@@ -140,6 +140,8 @@ class DivbloxWebService extends divbloxObjectBase {
             const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint"));
             const packageConfigInstance = new packageEndpoint(this.dxInstance);
 
+            let handledPaths = [];
+
             instantiatedPackages[packageName] = packageConfigInstance;
 
             const endpointName =
@@ -148,24 +150,26 @@ class DivbloxWebService extends divbloxObjectBase {
             // Handle endpoints with declarations that provide an inline function
             packageConfigInstance.declaredOperations.forEach((operation) => {
                 const packageInstance = new packageEndpoint(this.dxInstance);
+                const operationInstance = packageInstance.declaredOperations.filter((obj) => {
+                    return obj.operationName === operation.operationName;
+                })[0];
 
-                if (!operation.f) {
+                if (!operationInstance.f) {
                     return;
                 }
 
                 const path = "/" + endpointName + "/" + operation.operationName;
+                handledPaths.push(path);
+
                 const execute = async (req, res) => {
-                    const beforeSuccess = await packageInstance.onBeforeExecuteOperation(
-                        operation.operationName,
-                        req,
-                    );
+                    const beforeSuccess = await packageInstance.onBeforeExecuteOperation(operation.operationName, req);
                     if (!beforeSuccess) {
                         res.header("x-powered-by", "divbloxjs");
                         res.send(packageInstance.result);
                         return;
                     }
 
-                    await operation.f(req, res);
+                    await operationInstance.f(req, res);
                     if (packageInstance.cookie !== null) {
                         const cookie = packageInstance.cookie;
                         res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
@@ -210,7 +214,6 @@ class DivbloxWebService extends divbloxObjectBase {
             ///////////////////////////////////////////////////////////////////////////
 
             // Handle paths defined that use the executeOperation structure to deal with function execution
-            let handledPaths = [];
             for (const operation of packageConfigInstance.declaredOperations) {
                 const operationName = operation.operationName;
                 const finalPath = "/" + endpointName + "/" + operationName;
@@ -384,13 +387,13 @@ class DivbloxWebService extends divbloxObjectBase {
             const staticConfigStr = fs.readFileSync(swaggerPath, "utf-8");
             dxUtils.printInfoMessage(
                 "Swagger config was loaded from predefined swagger.json file. You can delete it to " +
-                "force divbloxjs to generate it dynamically, based on your package endpoints.",
+                    "force divbloxjs to generate it dynamically, based on your package endpoints.",
             );
             return JSON.parse(staticConfigStr);
         } else {
             dxUtils.printInfoMessage(
                 "Swagger config was dynamically generated. To use a predefined swagger config, copy " +
-                "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
+                    "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
             );
         }
 
@@ -608,7 +611,7 @@ class DivbloxWebService extends divbloxObjectBase {
         if (Object.keys(schemas).length === 0) {
             dxUtils.printWarningMessage(
                 "No data model entity schemas have been defined for swagger ui. You can define " +
-                "these within the package endpoint",
+                    "these within the package endpoint",
             );
         }
 
