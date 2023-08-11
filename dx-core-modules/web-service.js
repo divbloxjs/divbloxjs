@@ -68,11 +68,11 @@ class DivbloxWebService extends divbloxObjectBase {
             typeof this.config["serverHttps"] !== "undefined"
                 ? this.config.serverHttps
                 : {
-                      keyPath: null,
-                      certPath: null,
-                      allowHttp: true,
-                      httpsPort: 3001,
-                  };
+                    keyPath: null,
+                    certPath: null,
+                    allowHttp: true,
+                    httpsPort: 3001,
+                };
         this.dxApiRouter = null;
         this.initExpress();
     }
@@ -147,35 +147,37 @@ class DivbloxWebService extends divbloxObjectBase {
 
             // Handle endpoints with declarations that provide an inline function
             packageConfigInstance.declaredOperations.forEach((operation) => {
+                const packageInstance = new packageEndpoint(this.dxInstance);
+
                 if (!operation.f) {
                     return;
                 }
 
                 const path = "/" + endpointName + "/" + operation.operationName;
                 const execute = async (req, res) => {
-                    const beforeSuccess = await packageConfigInstance.onBeforeExecuteOperation(
+                    const beforeSuccess = await packageInstance.onBeforeExecuteOperation(
                         operation.operationName,
                         req,
                     );
                     if (!beforeSuccess) {
                         res.header("x-powered-by", "divbloxjs");
-                        res.send(packageConfigInstance.result);
+                        res.send(packageInstance.result);
                         return;
                     }
 
                     await operation.f(req, res);
-                    if (packageConfigInstance.cookie !== null) {
-                        const cookie = packageConfigInstance.cookie;
+                    if (packageInstance.cookie !== null) {
+                        const cookie = packageInstance.cookie;
                         res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
                             secure: cookie["secure"],
                             httpOnly: cookie["httpOnly"],
                             maxAge: cookie["maxAge"],
                         });
-                        packageConfigInstance.cookie = null;
+                        packageInstance.cookie = null;
                     }
                     res.header("x-powered-by", "divbloxjs");
-                    res.statusCode = packageConfigInstance.statusCode || operation.successStatusCode || 200;
-                    res.send(packageConfigInstance.result);
+                    res.statusCode = packageInstance.statusCode || operation.successStatusCode || 200;
+                    res.send(packageInstance.result);
                 };
 
                 switch (operation.requestType) {
@@ -382,13 +384,13 @@ class DivbloxWebService extends divbloxObjectBase {
             const staticConfigStr = fs.readFileSync(swaggerPath, "utf-8");
             dxUtils.printInfoMessage(
                 "Swagger config was loaded from predefined swagger.json file. You can delete it to " +
-                    "force divbloxjs to generate it dynamically, based on your package endpoints.",
+                "force divbloxjs to generate it dynamically, based on your package endpoints.",
             );
             return JSON.parse(staticConfigStr);
         } else {
             dxUtils.printInfoMessage(
                 "Swagger config was dynamically generated. To use a predefined swagger config, copy " +
-                    "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
+                "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
             );
         }
 
@@ -606,7 +608,7 @@ class DivbloxWebService extends divbloxObjectBase {
         if (Object.keys(schemas).length === 0) {
             dxUtils.printWarningMessage(
                 "No data model entity schemas have been defined for swagger ui. You can define " +
-                    "these within the package endpoint",
+                "these within the package endpoint",
             );
         }
 
@@ -672,20 +674,20 @@ class DivbloxWebService extends divbloxObjectBase {
         // TODO: Setup additional application level middleware here using either the http or https express instances
         // Example
         /*this.expressHttp.use( (req, res, next) => {
-            console.log("APP Request Type:", req.method);
-            next();
-        });*/
+         console.log("APP Request Type:", req.method);
+         next();
+         });*/
         // TODO: Setup additional route level middleware here using the apiRouter
         // Example
         /*this.dxApiRouter.use( (req, res, next) => {
-            console.log("ROUTE Request Type:", req.method);
-            next();
-        });
+         console.log("ROUTE Request Type:", req.method);
+         next();
+         });
 
-        this.dxApiRouter.use("/user/:id", (req, res, next) => {
-            console.log("ROUTE Request Type for user with an id:", req.method);
-            next();
-        });*/
+         this.dxApiRouter.use("/user/:id", (req, res, next) => {
+         console.log("ROUTE Request Type for user with an id:", req.method);
+         next();
+         });*/
     }
 
     /**
