@@ -151,7 +151,7 @@ class DivbloxWebService extends divbloxObjectBase {
             packageConfigInstance.declaredOperations.forEach((operation) => {
                 const packageInstance = new packageEndpoint(this.dxInstance);
                 const operationInstance = packageInstance.declaredOperations.filter((obj) => {
-                    return obj.operationName === operation.operationName;
+                    return obj.operationName === operation.operationName && obj.requestType === operation.requestType;
                 })[0];
 
                 if (!operationInstance.f) {
