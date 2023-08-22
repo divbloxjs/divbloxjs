@@ -266,9 +266,10 @@ class DivbloxWebService extends divbloxObjectBase {
     }
 
     /**
+     * Handles the execution of a declared operation's inline function call
      *
-     * @param packageEndpoint
-     * @param declaredOperation
+     * @param packageEndpoint Instantiated package endpoint class
+     * @param declaredOperation Declared operation configuration object
      * @returns {(function(import('express').Request, import('express').Response, import('express').NextFunction): Promise<void>)|*}
      */
     inlineFunctionMiddleware = (packageEndpoint, declaredOperation) => {
