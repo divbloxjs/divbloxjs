@@ -68,11 +68,11 @@ class DivbloxWebService extends divbloxObjectBase {
             typeof this.config["serverHttps"] !== "undefined"
                 ? this.config.serverHttps
                 : {
-                      keyPath: null,
-                      certPath: null,
-                      allowHttp: true,
-                      httpsPort: 3001,
-                  };
+                    keyPath: null,
+                    certPath: null,
+                    allowHttp: true,
+                    httpsPort: 3001,
+                };
         this.dxApiRouter = null;
         this.initExpress();
     }
@@ -96,6 +96,8 @@ class DivbloxWebService extends divbloxObjectBase {
         this.dxApiRouter = express.Router();
 
         this.addRoute("/", path.join(path.resolve("./"), this.wwwRoot));
+
+        this.jwtMiddleware();
 
         // Additional middlewares can be added by overriding setupMiddleWares() function
         this.setupMiddleWares();
@@ -126,6 +128,36 @@ class DivbloxWebService extends divbloxObjectBase {
     }
 
     /**
+     * Sets the jwtToken in the res.locals object (jwtToken)
+     * If found, value, else null
+     *
+     */
+    jwtMiddleware() {
+        this.dxApiRouter.use((req, res, next) => {
+            let jwtToken = null;
+
+            if (typeof req["headers"] !== "undefined") {
+                if (typeof req["headers"]["authorization"] !== "undefined") {
+                    jwtToken = req["headers"]["authorization"].replace("Bearer ", "");
+                } else if (typeof req["headers"]["cookie"] !== "undefined") {
+                    const cookies = req["headers"]["cookie"].split(";");
+
+                    for (const cookie of cookies) {
+                        const cookieDecoded = decodeURIComponent(cookie);
+                        if (cookieDecoded.indexOf('jwt="') !== -1) {
+                            jwtToken = cookieDecoded.replace('jwt="', "");
+                            jwtToken = jwtToken.substring(0, jwtToken.length - 1).trim();
+                        }
+                    }
+                }
+            }
+
+            res.locals.jwtToken = jwtToken;
+            next();
+        });
+    }
+
+    /**
      * Handles the setup of the routers for the api endpoints. Iterates over all provided packages and installs routing
      * for each endpoint and operation
      */
@@ -133,209 +165,69 @@ class DivbloxWebService extends divbloxObjectBase {
         dxUtils.printSubHeadingMessage("Configuring API routes");
 
         let instantiatedPackages = {};
-
-        // Setup the api routes for each provided divblox package
+        // Setup the API routes for each provided divblox package
         for (const packageName of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageName];
-            const packageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint"));
-            const packageConfigInstance = new packageEndpoint(this.dxInstance);
-
-            let handledPaths = [];
+            const PackageEndpoint = require(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint"));
+            const packageConfigInstance = new PackageEndpoint(this.dxInstance);
 
             instantiatedPackages[packageName] = packageConfigInstance;
 
             const endpointName =
                 packageConfigInstance.endpointName === null ? packageName : packageConfigInstance.endpointName;
 
-            // Handle endpoints with declarations that provide an inline function
-            packageConfigInstance.declaredOperations.forEach((operation) => {
-                const packageInstance = new packageEndpoint(this.dxInstance);
-                const operationInstance = packageInstance.declaredOperations.filter((obj) => {
-                    return obj.operationName === operation.operationName && obj.requestType === operation.requestType;
-                })[0];
-
-                if (!operationInstance.f) {
-                    return;
-                }
-
-                const path = "/" + endpointName + "/" + operation.operationName;
-                handledPaths.push(path);
-
-                const execute = async (req, res) => {
-                    const beforeSuccess = await packageInstance.onBeforeExecuteOperation(operation.operationName, req);
-                    if (!beforeSuccess) {
-                        res.header("x-powered-by", "divbloxjs");
-                        res.send(packageInstance.result);
-                        return;
-                    }
-
-                    await operationInstance.f(req, res);
-                    if (packageInstance.cookie !== null) {
-                        const cookie = packageInstance.cookie;
-                        res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
-                            secure: cookie["secure"],
-                            httpOnly: cookie["httpOnly"],
-                            maxAge: cookie["maxAge"],
-                        });
-                        packageInstance.cookie = null;
-                    }
-                    res.header("x-powered-by", "divbloxjs");
-                    res.statusCode = packageInstance.statusCode || operation.successStatusCode || 200;
-                    res.send(packageInstance.result);
-                };
-
-                switch (operation.requestType) {
-                    case "GET":
-                        this.dxApiRouter.get(path, execute);
-                        break;
-                    case "POST":
-                        this.dxApiRouter.post(path, execute);
-                        break;
-                    case "PUT":
-                        this.dxApiRouter.put(path, execute);
-                        break;
-                    case "PATCH":
-                        this.dxApiRouter.patch(path, execute);
-                        break;
-                    case "DELETE":
-                        this.dxApiRouter.delete(path, execute);
-                        break;
-                    default:
-                        break;
-                }
-            });
-            ///////////////////////////////////////////////////////////////////////////
-
-            // Handle endpoint routes that do not receive operations
+            //region Endpoint routes that do NOT receive operations
             this.dxApiRouter.all("/" + endpointName, async (req, res, next) => {
                 res.header("x-powered-by", "divbloxjs");
                 res.send({ message: "No operation provided" });
             });
-            ///////////////////////////////////////////////////////////////////////////
+            //endregion
 
-            // Handle paths defined that use the executeOperation structure to deal with function execution
-            for (const operation of packageConfigInstance.declaredOperations) {
-                const operationName = operation.operationName;
+            //region Endpoint routes that DO receive operations
+            for (const configOperation of packageConfigInstance.declaredOperations) {
+                const operationName = configOperation.operationName;
                 const finalPath = "/" + endpointName + "/" + operationName;
 
-                if (!handledPaths.includes(finalPath)) {
-                    let requestMethod = null;
-                    this.dxApiRouter.all(finalPath, async (req, res, next) => {
-                        const packageInstance = new packageEndpoint(this.dxInstance);
-                        requestMethod = req.method;
+                // NOTE: Will be re-instantiated for every endpoint operation to prevent cross-pollination of data between requests
+                const packageEndpoint = new PackageEndpoint(this.dxInstance);
+                const declaredOperation = packageEndpoint.declaredOperations.filter((declaredOperation) => {
+                    return declaredOperation.operationName === configOperation.operationName &&
+                        declaredOperation.requestType === configOperation.requestType;
+                })[0];
 
-                        await packageInstance.executeOperation(operationName, {
-                            headers: req.headers,
-                            body: req.body,
-                            query: req.query,
-                            method: req.method,
-                            files: req.files,
-                        });
-
-                        const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
-                            operationName,
-                            requestMethod,
-                        );
-
-                        // Default status code configured in endpoint operation
-                        if (packageInstance.result["success"] !== true) {
-                            res.status(400);
-                        } else {
-                            res.status(
-                                currentlyExecutingOperation.successStatusCode
-                                    ? currentlyExecutingOperation.successStatusCode
-                                    : 200,
-                            );
-                        }
-
-                        // If result has specifically updated the status code
-                        if (packageInstance.result["statusCode"]) {
-                            res.status(packageInstance.result["statusCode"]);
-                        }
-
-                        if (packageInstance.cookie !== null) {
-                            const cookie = packageInstance.cookie;
-                            res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
-                                secure: cookie["secure"],
-                                httpOnly: cookie["httpOnly"],
-                                maxAge: cookie["maxAge"],
-                            });
-                            packageInstance.cookie = null;
-                        }
-
-                        delete packageInstance.result["statusCode"];
-                        delete packageInstance.result["success"];
-                        delete packageInstance.result["unauthorized"];
-
-                        res.header("x-powered-by", "divbloxjs");
-                        res.send(packageInstance.result);
-                    });
-
-                    handledPaths.push(finalPath);
+                //region Endpoint operations that use inline functions from operation definitions
+                if (configOperation.f) {
+                    this.executeInlineFunctionDefinition(finalPath, packageEndpoint, declaredOperation);
+                    continue;
                 }
-                for (const param of operation.parameters) {
+                //endregion
+
+                //region Endpoint operations that use the executeOperation structure to deal with function execution
+                //region Operations without parameters
+                this.dxApiRouter.all(finalPath, async (req, res, next) => {
+                    // NOTE: Re-instantiating packageEndpoint to prevent cross-pollination of data between requests
+                    const packageEndpoint = new PackageEndpoint(this.dxInstance);
+                    await packageEndpoint.executeOperation(operationName, req, res);
+                    this.sendResponse(packageEndpoint, operationName, req, res);
+                });
+                //endregion
+
+                //region Operations with parameters
+                for (const param of configOperation.parameters) {
                     if (param.in === "path") {
                         const finalPath = "/" + endpointName + "/" + operationName + "/:" + param.name;
-                        const packageInstance = new packageEndpoint(this.dxInstance);
-
-                        if (!handledPaths.includes(finalPath)) {
-                            let requestMethod = null;
-                            this.dxApiRouter.all(finalPath, async (req, res, next) => {
-                                requestMethod = req.method;
-                                await packageInstance.executeOperation(operationName, {
-                                    headers: req.headers,
-                                    body: req.body,
-                                    query: req.query,
-                                    path: req.params[param.name],
-                                    method: req.method,
-                                    files: req.files,
-                                });
-
-                                const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
-                                    operationName,
-                                    requestMethod,
-                                );
-
-                                // Default status code configured in endpoint
-                                if (packageInstance.result["success"] !== true) {
-                                    res.status(400);
-                                } else {
-                                    res.status(
-                                        currentlyExecutingOperation.successStatusCode
-                                            ? currentlyExecutingOperation.successStatusCode
-                                            : 200,
-                                    );
-                                }
-
-                                // If result has specifically updated the status code
-                                if (packageInstance.result["statusCode"]) {
-                                    res.status(packageInstance.result["statusCode"]);
-                                }
-
-                                if (packageInstance.cookie !== null) {
-                                    const cookie = packageInstance.cookie;
-                                    res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
-                                        secure: cookie["secure"],
-                                        httpOnly: cookie["httpOnly"],
-                                        maxAge: cookie["maxAge"],
-                                    });
-                                    packageInstance.cookie = null;
-                                }
-
-                                delete packageInstance.result["statusCode"];
-                                delete packageInstance.result["success"];
-                                delete packageInstance.result["unauthorized"];
-
-                                res.header("x-powered-by", "divbloxjs");
-                                res.send(packageInstance.result);
-                            });
-
-                            handledPaths.push(finalPath);
-                        }
+                        this.dxApiRouter.all(finalPath, async (req, res, next) => {
+                            // NOTE: Re-instantiating packageEndpoint to prevent cross-pollination of data between requests
+                            const packageEndpoint = new PackageEndpoint(this.dxInstance);
+                            await packageEndpoint.executeOperation(operationName, req, res);
+                            this.sendResponse(packageEndpoint, operationName, req, res);
+                        });
                     }
                 }
+                //endregion
+                //endregion
             }
-            ///////////////////////////////////////////////////////////////////////////
+            //endregion
         }
 
         this.addRoute("/api", undefined, this.dxApiRouter);
@@ -343,6 +235,100 @@ class DivbloxWebService extends divbloxObjectBase {
         this.writeSwaggerDoc(instantiatedPackages);
 
         this.serveSwaggerUi(this.getSwaggerConfig(instantiatedPackages));
+    }
+
+    /**
+     * Executes the common HTTP request types using a custom middleware to handle the inline function invocation
+     * @param {string} path Endpoint operation path
+     * @param packageEndpoint Instantiated package endpoint class
+     * @param declaredOperation Declared operation definition
+     */
+    executeInlineFunctionDefinition(path, packageEndpoint, declaredOperation) {
+        switch (declaredOperation.requestType) {
+            case "GET":
+                this.dxApiRouter.get(path, this.inlineFunctionMiddleware(packageEndpoint, declaredOperation));
+                break;
+            case "POST":
+                this.dxApiRouter.post(path, this.inlineFunctionMiddleware(packageEndpoint, declaredOperation));
+                break;
+            case "PUT":
+                this.dxApiRouter.put(path, this.inlineFunctionMiddleware(packageEndpoint, declaredOperation));
+                break;
+            case "PATCH":
+                this.dxApiRouter.patch(path, this.inlineFunctionMiddleware(packageEndpoint, declaredOperation));
+                break;
+            case "DELETE":
+                this.dxApiRouter.delete(path, this.inlineFunctionMiddleware(packageEndpoint, declaredOperation));
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Handles the execution of a declared operation's inline function call
+     *
+     * @param packageEndpoint Instantiated package endpoint class
+     * @param declaredOperation Declared operation configuration object
+     * @returns {(function(import('express').Request, import('express').Response, import('express').NextFunction): Promise<void>)|*}
+     */
+    inlineFunctionMiddleware = (packageEndpoint, declaredOperation) => {
+        return async (req, res, next) => {
+            const beforeSuccess = await packageEndpoint.onBeforeExecuteOperation(declaredOperation.operationName, req, res);
+            if (!beforeSuccess) {
+                this.sendResponse(packageEndpoint, declaredOperation.operationName, req, res);
+                return;
+            }
+
+            await declaredOperation.f(req, res);
+            this.sendResponse(packageEndpoint, declaredOperation.operationName, req, res);
+        };
+    };
+
+    /**
+     *
+     * @param packageInstance
+     * @param operationName
+     * @param {import('express').Request} req The received request object
+     * @param {import('express').Response} res The received response object
+     */
+    sendResponse(packageInstance, operationName, req, res) {
+        const currentlyExecutingOperation = packageInstance.getDeclaredOperation(
+            operationName,
+            req.method,
+        );
+
+        // Default status code configured in endpoint
+        if (packageInstance.result["success"] !== true) {
+            res.status(400);
+        } else {
+            res.status(
+                currentlyExecutingOperation.successStatusCode
+                    ? currentlyExecutingOperation.successStatusCode
+                    : 200,
+            );
+        }
+
+        // If result has specifically updated the status code
+        if (packageInstance["statusCode"]) {
+            res.status(packageInstance["statusCode"]);
+        }
+
+        if (packageInstance.cookie !== null) {
+            const cookie = packageInstance.cookie;
+            res.cookie(cookie["name"], JSON.stringify(cookie["data"]), {
+                secure: cookie["secure"],
+                httpOnly: cookie["httpOnly"],
+                maxAge: cookie["maxAge"],
+            });
+            packageInstance.cookie = null;
+        }
+
+        delete packageInstance.result["success"];
+        delete packageInstance.result["unauthorized"];
+
+        res.header("x-powered-by", "divbloxjs");
+        res.send(packageInstance.result);
     }
 
     /**
@@ -387,13 +373,13 @@ class DivbloxWebService extends divbloxObjectBase {
             const staticConfigStr = fs.readFileSync(swaggerPath, "utf-8");
             dxUtils.printInfoMessage(
                 "Swagger config was loaded from predefined swagger.json file. You can delete it to " +
-                    "force divbloxjs to generate it dynamically, based on your package endpoints.",
+                "force divbloxjs to generate it dynamically, based on your package endpoints.",
             );
             return JSON.parse(staticConfigStr);
         } else {
             dxUtils.printInfoMessage(
                 "Swagger config was dynamically generated. To use a predefined swagger config, copy " +
-                    "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
+                "the file located in /node_modules/divbloxjs/dx-orm/swagger.json to your divblox-config folder and modify it",
             );
         }
 
@@ -611,7 +597,7 @@ class DivbloxWebService extends divbloxObjectBase {
         if (Object.keys(schemas).length === 0) {
             dxUtils.printWarningMessage(
                 "No data model entity schemas have been defined for swagger ui. You can define " +
-                    "these within the package endpoint",
+                "these within the package endpoint",
             );
         }
 
@@ -796,6 +782,7 @@ class DivbloxWebService extends divbloxObjectBase {
         }
     }
 
+    //region Helpers
     /**
      * An error handler for our http web server
      * @param error The error that was passed
@@ -875,6 +862,8 @@ class DivbloxWebService extends divbloxObjectBase {
             dxUtils.printInfoMessage("API Root: https://localhost:" + addr.port + "/api");
         }
     }
+
+    //endregion
 }
 
 module.exports = DivbloxWebService;

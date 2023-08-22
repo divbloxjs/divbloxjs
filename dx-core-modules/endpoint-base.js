@@ -1,5 +1,6 @@
 const divbloxObjectBase = require("./object-base");
 const DivbloxBase = require("../divblox");
+
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
  * for divbloxjs projects
@@ -258,7 +259,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     setStatusCode(statusCode = 400) {
-        this.result.statusCode = statusCode;
+        this.statusCode = statusCode;
     }
 
     /**
@@ -268,7 +269,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     setResultNotAuthorized(message) {
         this.result["success"] = false;
         this.result["unauthorized"] = true;
-        this.result.statusCode = 401;
+        this.statusCode = 401;
 
         delete this.result["message"];
         if (typeof message !== "undefined") {
@@ -292,7 +293,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * Forces the result to the provided data
      * Bypasses the setResult() and addResultDetail() functions
      * @param {*} data The response data to return
-     * @param {number} statusCode The http status code to return
+     * @param {number|null} statusCode The http status code to return
      */
     forceResult(data, statusCode = null) {
         this.result = data;
@@ -369,7 +370,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     /**
      * Returns the operation definition of the declared operation matching the name provided
      * @param {string} operationName The name of the operation to find
-     * @return {null|*} Null if not found, operation definition if found
+     * @param {string} requestType The HTTP request type of the operation
+     * @returns {*|null} The operation if found, null otherwise
      */
     getDeclaredOperation(operationName, requestType = "GET") {
         for (const operation of this.declaredOperations) {
@@ -397,7 +399,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * Checks whether the provided groupings have access to the provided operation, as defined in the constructor
      * @param {string} operationName The name of the operation to check
      * @param {string} requestType The request method
-     * @param {[]} globalIdentifierGroupings An array of groupings as received by the request
+     * @param {string[]} globalIdentifierGroupings An array of groupings as received by the request
      * @return {boolean} True if access is allowed, false otherwise
      */
     isAccessAllowed(operationName = "", requestType = "get", globalIdentifierGroupings = []) {
@@ -434,25 +436,18 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Handles necessary preamble before executing the requested operation.
-     * Parsed the JWT and checks whether the user has access to the requested operation.
-     * Resets the class variables for:
-     * - currentRequest
-     * - currentGlobalIdentifier
-     * - currentGlobalIdentifierGroupings
+     * This includes:
+     * - JWT handling
+     * - Setting class variables from JWT for currentIdentifier
+     * - Setting class variable this.currentRequest
      *
      * @param {string} operation The operation to execute
-     * @param {*} request The received request object
+     * @param {import('express').Request} request The received request object
+     * @param {import('express').Response} response The received response object
      * @returns {Promise<boolean>}
      */
-    async onBeforeExecuteOperation(operation, request) {
+    async onBeforeExecuteOperation(operation, request, response) {
         this.resetResultDetail();
-
-        this.currentRequest = request;
-
-        this.currentGlobalIdentifier = -1;
-        this.currentGlobalIdentifierGroupings = [];
-
-        let providedIdentifierGroupings = ["anonymous"];
 
         if (this.dxInstance === null) {
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
@@ -461,38 +456,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             return false;
         }
 
-        let jwtToken = null;
-        if (typeof request["headers"] !== "undefined") {
-            if (typeof request["headers"]["authorization"] !== "undefined") {
-                jwtToken = request["headers"]["authorization"].replace("Bearer ", "");
-            } else if (typeof request["headers"]["cookie"] !== "undefined") {
-                const cookies = request["headers"]["cookie"].split(";");
+        this.currentRequest = request;
 
-                for (const cookie of cookies) {
-                    const cookieDecoded = decodeURIComponent(cookie);
-                    if (cookieDecoded.indexOf('jwt="') !== -1) {
-                        jwtToken = cookieDecoded.replace('jwt="', "");
-                        jwtToken = jwtToken.substring(0, jwtToken.length - 1).trim();
-                    }
-                }
-            }
+        this.getCurrentInformationFromJwt(response?.locals?.jwtToken);
 
-            if (jwtToken !== null) {
-                this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
-                this.currentGlobalIdentifierGroupings =
-                    this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
-
-                for (const grouping of this.currentGlobalIdentifierGroupings) {
-                    providedIdentifierGroupings.push(grouping.toLowerCase());
-                }
-
-                if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
-                    providedIdentifierGroupings.push("super user");
-                }
-            }
-        }
-
-        if (!this.isAccessAllowed(operation, request.method, providedIdentifierGroupings)) {
+        if (!this.isAccessAllowed(operation, request.method, this.providedIdentifierGroupings)) {
             this.setResultNotAuthorized("Not authorized");
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
             // on a true response to know whether they can proceed
@@ -503,19 +471,51 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     /**
+     * Gets and sets all relevant current user information from the JWT
+     *
+     * @param {string|null} jwtToken
+     *
+     * On success, the following class variables will be populated
+     * - this.currentGlobalIdentifier
+     * - this.currentGlobalIdentifierGroupings
+     * - this.providedIdentifierGroupings
+     */
+    getCurrentInformationFromJwt(jwtToken) {
+        this.currentGlobalIdentifier = -1;
+        this.currentGlobalIdentifierGroupings = [];
+        this.providedIdentifierGroupings = ["anonymous"];
+
+        if (jwtToken === null) {
+            return;
+        }
+
+        this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
+        this.currentGlobalIdentifierGroupings =
+            this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+
+        for (const grouping of this.currentGlobalIdentifierGroupings) {
+            this.providedIdentifierGroupings.push(grouping.toLowerCase());
+        }
+
+        if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
+            this.providedIdentifierGroupings.push("super user");
+        }
+    }
+
+    /**
      * A wrapper function that executes the given operation
-     * @param {string} operation The operation to execute
-     * @param {*} request The received request object
+     * @param {string} operationName The operation to execute
+     * @param {import('express').Request} request The received request object
+     * @param {import('express').Response} response The received response object
      * @return {Promise<boolean>}
      */
-    async executeOperation(operation, request) {
-        const beforeSuccess = await this.onBeforeExecuteOperation(operation, request);
-
+    async executeOperation(operationName, request, response) {
+        const beforeSuccess = await this.onBeforeExecuteOperation(operationName, request, response);
         if (!beforeSuccess) {
             return false;
         }
 
-        switch (operation) {
+        switch (operationName) {
             case "echo":
                 await this.echo();
                 break;
@@ -545,6 +545,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     async echo() {
         this.forceResult({ timestamp: Date.now() }, 200);
     }
+
     //#endregion
 }
 
