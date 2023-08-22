@@ -97,8 +97,9 @@ class DivbloxWebService extends divbloxObjectBase {
 
         this.addRoute("/", path.join(path.resolve("./"), this.wwwRoot));
 
-        // Additional middlewares can be added by overriding setupMiddleWares() function
         this.jwtMiddleware();
+
+        // Additional middlewares can be added by overriding setupMiddleWares() function
         this.setupMiddleWares();
 
         this.setupApiRouters();
@@ -127,14 +128,9 @@ class DivbloxWebService extends divbloxObjectBase {
     }
 
     /**
-     * Gets and sets all relevant current user information from the JWT
-     * @param {import('express').Request} request The received request object
+     * Sets the jwtToken in the res.locals object (jwtToken)
+     * If found, value, else null
      *
-     * On success, the following class variables will be populated
-     * - this.currentRequest
-     * - this.currentGlobalIdentifier
-     * - this.currentGlobalIdentifierGroupings
-     * - this.providedIdentifierGroupings
      */
     jwtMiddleware() {
         this.dxApiRouter.use((req, res, next) => {
@@ -157,7 +153,6 @@ class DivbloxWebService extends divbloxObjectBase {
             }
 
             res.locals.jwtToken = jwtToken;
-            console.log("res.locals.jwtToken", res.locals.jwtToken);
             next();
         });
     }
@@ -212,7 +207,7 @@ class DivbloxWebService extends divbloxObjectBase {
                 this.dxApiRouter.all(finalPath, async (req, res, next) => {
                     // NOTE: Re-instantiating packageEndpoint to prevent cross-pollination of data between requests
                     const packageEndpoint = new PackageEndpoint(this.dxInstance);
-                    await packageEndpoint.executeOperation(operationName, req);
+                    await packageEndpoint.executeOperation(operationName, req, res);
                     this.sendResponse(packageEndpoint, operationName, req, res);
                 });
                 //endregion
@@ -224,7 +219,7 @@ class DivbloxWebService extends divbloxObjectBase {
                         this.dxApiRouter.all(finalPath, async (req, res, next) => {
                             // NOTE: Re-instantiating packageEndpoint to prevent cross-pollination of data between requests
                             const packageEndpoint = new PackageEndpoint(this.dxInstance);
-                            await packageEndpoint.executeOperation(operationName, req);
+                            await packageEndpoint.executeOperation(operationName, req, res);
                             this.sendResponse(packageEndpoint, operationName, req, res);
                         });
                     }
@@ -278,7 +273,7 @@ class DivbloxWebService extends divbloxObjectBase {
      */
     inlineFunctionMiddleware = (packageEndpoint, declaredOperation) => {
         return async (req, res, next) => {
-            const beforeSuccess = await packageEndpoint.onBeforeExecuteOperation(declaredOperation.operationName, req);
+            const beforeSuccess = await packageEndpoint.onBeforeExecuteOperation(declaredOperation.operationName, req, res);
             if (!beforeSuccess) {
                 this.sendResponse(packageEndpoint, declaredOperation.operationName, req, res);
                 return;

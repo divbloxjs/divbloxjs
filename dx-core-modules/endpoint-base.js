@@ -436,17 +436,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Handles necessary preamble before executing the requested operation.
-     * Parsed the JWT and checks whether the user has access to the requested operation.
-     * Resets the class variables for:
-     * - currentRequest
-     * - currentGlobalIdentifier
-     * - currentGlobalIdentifierGroupings
+     * This includes:
+     * - JWT handling
+     * - Setting class variables from JWT for currentIdentifier
+     * - Setting class variable this.currentRequest
      *
      * @param {string} operation The operation to execute
-     * @param {*} request The received request object
+     * @param {import('express').Request} request The received request object
+     * @param {import('express').Response} response The received response object
      * @returns {Promise<boolean>}
      */
-    async onBeforeExecuteOperation(operation, request) {
+    async onBeforeExecuteOperation(operation, request, response) {
         this.resetResultDetail();
 
         if (this.dxInstance === null) {
@@ -456,7 +456,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             return false;
         }
 
-        this.getCurrentInformationFromJwt(request);
+        this.currentRequest = request;
+
+        this.getCurrentInformationFromJwt(response?.locals?.jwtToken);
 
         if (!this.isAccessAllowed(operation, request.method, this.providedIdentifierGroupings)) {
             this.setResultNotAuthorized("Not authorized");
@@ -470,54 +472,33 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Gets and sets all relevant current user information from the JWT
-     * @param {import('express').Request} request The received request object
+     *
+     * @param {string|null} jwtToken
      *
      * On success, the following class variables will be populated
-     * - this.currentRequest
      * - this.currentGlobalIdentifier
      * - this.currentGlobalIdentifierGroupings
      * - this.providedIdentifierGroupings
      */
-    getCurrentInformationFromJwt(request) {
-        this.currentRequest = request;
-
+    getCurrentInformationFromJwt(jwtToken) {
         this.currentGlobalIdentifier = -1;
         this.currentGlobalIdentifierGroupings = [];
-
         this.providedIdentifierGroupings = ["anonymous"];
 
-        let jwtToken = null;
+        if (jwtToken === null) {
+            return;
+        }
 
-        if (typeof this.currentRequest["headers"] !== "undefined") {
-            if (typeof this.currentRequest["headers"]["authorization"] !== "undefined") {
-                jwtToken = this.currentRequest["headers"]["authorization"].replace("Bearer ", "");
-            } else if (typeof this.currentRequest["headers"]["cookie"] !== "undefined") {
-                const cookies = this.currentRequest["headers"]["cookie"].split(";");
+        this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
+        this.currentGlobalIdentifierGroupings =
+            this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
 
-                for (const cookie of cookies) {
-                    const cookieDecoded = decodeURIComponent(cookie);
-                    if (cookieDecoded.indexOf('jwt="') !== -1) {
-                        jwtToken = cookieDecoded.replace('jwt="', "");
-                        jwtToken = jwtToken.substring(0, jwtToken.length - 1).trim();
-                    }
-                }
-            }
+        for (const grouping of this.currentGlobalIdentifierGroupings) {
+            this.providedIdentifierGroupings.push(grouping.toLowerCase());
+        }
 
-            if (jwtToken === null) {
-                return;
-            }
-
-            this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
-            this.currentGlobalIdentifierGroupings =
-                this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
-
-            for (const grouping of this.currentGlobalIdentifierGroupings) {
-                this.providedIdentifierGroupings.push(grouping.toLowerCase());
-            }
-
-            if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
-                this.providedIdentifierGroupings.push("super user");
-            }
+        if (this.dxInstance.jwtWrapper.isSuperUser(jwtToken)) {
+            this.providedIdentifierGroupings.push("super user");
         }
     }
 
@@ -525,10 +506,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * A wrapper function that executes the given operation
      * @param {string} operationName The operation to execute
      * @param {import('express').Request} request The received request object
+     * @param {import('express').Response} response The received response object
      * @return {Promise<boolean>}
      */
-    async executeOperation(operationName, request) {
-        const beforeSuccess = await this.onBeforeExecuteOperation(operationName, request);
+    async executeOperation(operationName, request, response) {
+        const beforeSuccess = await this.onBeforeExecuteOperation(operationName, request, response);
         if (!beforeSuccess) {
             return false;
         }
