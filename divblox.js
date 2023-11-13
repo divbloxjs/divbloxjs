@@ -1095,10 +1095,10 @@ class DivbloxBase extends divbloxObjectBase {
      * @returns {{success:boolean, message:string}} True if successful. False if not with a message populated
      */
     pushProject(operation) {
-        // TODO: Implement this
         switch (operation) {
             case "complete":
                 console.log("Pushing project to divblox.app - COMPLETE (To be implemented)");
+                // TODO: Implement this
                 break;
             case "datamodel":
                 console.log("Pushing project to divblox.app - DATA MODEL (To be implemented)");
@@ -1113,6 +1113,7 @@ class DivbloxBase extends divbloxObjectBase {
      * @returns {{success:boolean, message:string}} True if successful. False if not with a message populated
      */
     pushDataModel() {
+        // TODO: Implement this
         return { success: false, message: "" };
     }
     //#endregion
