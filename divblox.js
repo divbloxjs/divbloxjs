@@ -1088,6 +1088,35 @@ class DivbloxBase extends divbloxObjectBase {
 
     //#endregion
 
+    //#region divblox.app integration
+    /**
+     *
+     * @param {string} operation The type of operation to perform: complete|datamodel (More to follow)
+     * @returns {{success:boolean, message:string}} True if successful. False if not with a message populated
+     */
+    pushProject(operation) {
+        // TODO: Implement this
+        switch (operation) {
+            case "complete":
+                console.log("Pushing project to divblox.app - COMPLETE (To be implemented)");
+                break;
+            case "datamodel":
+                console.log("Pushing project to divblox.app - DATA MODEL (To be implemented)");
+                return pushDataModel();
+            default:
+                return { success: false, message: "No operation provided" };
+        }
+        return { success: false, message: "Operation not implemented" };
+    }
+    /**
+     *
+     * @returns {{success:boolean, message:string}} True if successful. False if not with a message populated
+     */
+    pushDataModel() {
+        return { success: false, message: "" };
+    }
+    //#endregion
+
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
     /**
      * Performs a synchronization of the provided data model with the configured database(s) to ensure that the actual
