@@ -8,6 +8,8 @@ const divbloxWebServiceBase = require("./dx-core-modules/web-service");
 const divbloxJwtWrapperBase = require("./dx-core-modules/jwt-wrapper");
 const DIVBLOX_ROOT_DIR = path.join(__dirname, "..", "divbloxjs");
 
+const DIVBLOX_API_ROOT_URL = "https://api.divblox.app";
+
 /**
  * This class overrides the default divbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
  * meaning, the developer can create their own version of DivbloxDataLayer if they want to modify how it should work
@@ -1101,21 +1103,58 @@ class DivbloxBase extends divbloxObjectBase {
                 // TODO: Implement this
                 break;
             case "datamodel":
-                console.log("Pushing project to divblox.app - DATA MODEL (To be implemented)");
-                return pushDataModel();
+                return this.pushDataModel();
             default:
                 return { success: false, message: "No operation provided" };
         }
         return { success: false, message: "Operation not implemented" };
     }
+
     /**
      *
      * @returns {{success:boolean, message:string}} True if successful. False if not with a message populated
      */
-    pushDataModel() {
-        // TODO: Implement this
-        return { success: false, message: "" };
+    async pushDataModel() {
+        const dxApiKey = this.configObj.dxApiKey;
+        if (!dxApiKey) {
+            dxUtils.printErrorMessage("dxApiKey not configured in dx-config.json.");
+            return;
+        }
+
+        const environmentName = this.configObj.environment;
+        if (!environmentName) {
+            dxUtils.printErrorMessage("environment not configured in dx-config.json.");
+            return;
+        }
+
+        const playgroundName = process.argv[2];
+        const pushDataModelUrl = DIVBLOX_API_ROOT_URL + `/api/dataDesign/pushProjectDataModel`;
+
+        try {
+            const response = await fetch(pushDataModelUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    apiKey: dxApiKey,
+                    environmentName: environmentName,
+                    playgroundName: playgroundName,
+                    modelJson: this.dataModelObj,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                dxUtils.printErrorMessage(result.message ? result.message : "Something went wrong. <br>Please try again.");
+                return;
+            }
+
+            dxUtils.printSuccessMessage("Successfully pushed data model");
+        } catch (error) {
+            dxUtils.printErrorMessage(error);
+        }
     }
+
     //#endregion
 
     //#region Data Layer - Functions relating to the interaction with the database are grouped here
