@@ -8,6 +8,8 @@ const divbloxWebServiceBase = require("./dx-core-modules/web-service");
 const divbloxJwtWrapperBase = require("./dx-core-modules/jwt-wrapper");
 const DIVBLOX_ROOT_DIR = path.join(__dirname, "..", "divbloxjs");
 
+const DIVBLOX_API_ROOT_URL = "https://api.divblox.app";
+
 /**
  * This class overrides the default divbloxDataLayerBase class to ensure that we can always just call DivbloxDataLayer,
  * meaning, the developer can create their own version of DivbloxDataLayer if they want to modify how it should work
@@ -1126,7 +1128,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         const playgroundName = process.argv[2];
-        const pushDataModelUrl = `${this.configObj.environmentArray[environmentName].serverBaseUrl}/api/dataDesign/pushProjectDataModel`;
+        const pushDataModelUrl = DIVBLOX_API_ROOT_URL + `/api/dataDesign/pushProjectDataModel`;
 
         try {
             const response = await fetch(pushDataModelUrl, {
