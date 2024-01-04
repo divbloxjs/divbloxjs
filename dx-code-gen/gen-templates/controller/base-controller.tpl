@@ -7,8 +7,8 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         super(dxInstance, packageName);
     }
 
-    async get[EntityNamePascalCase]s(dataSeriesConfig = {}, additionalParams = {}) {
-        const [EntityNameCamelCase]DataSeries = await new [EntityNamePascalCase]DataSeries(
+    async get[EntityNamePascalCasePlural](dataSeriesConfig = {}, additionalParams = {}) {
+        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(
             this.dxInstance, dataSeriesConfig, additionalParams,
         );
 
@@ -29,8 +29,21 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         return { data: data, count: count };
     }
 
-    async get[EntityNamePascalCase](id, additionalParams) {
-        return {};
+    async get[EntityNamePascalCase](id = null, additionalParams = {}) {
+        additionalParams.[EntityNameCamelCase]Id = id;
+        
+        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(
+            this.dxInstance, {}, additionalParams,
+        );
+
+        const data = await [EntityNameCamelCase]DataSeries.getDataSeries();
+        if (data === null) {
+            [EntityNameCamelCase]DataSeries.printLastError();
+            this.populateError([EntityNameCamelCase]DataSeries.getLastError());
+            return null;
+        }
+
+        return data[0];
     }
 
     async create[EntityNamePascalCase]([EntityNameCamelCase]Data, additionalParams) {

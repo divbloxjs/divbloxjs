@@ -29,7 +29,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Gets the [EntityNameCamelCase] by ID",
         operationDescription: "Retrieves the [EntityNameCamelCase] details for given ID",
-        parameters: [this.getInputParameter({ name: "id", type: "query" })], // An array of this.getInputParameter()
+        parameters: [], // An array of this.getInputParameter()
         requestType: "GET", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
         requestSchema: {},
         responseSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
@@ -145,34 +145,28 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
             return;
         }
         
-        const [EntityNameCamelCase]Data = await this.controller.get[EntityNamePascalCase](
-            [EntityNameCamelCase]Id,
-            this.userManagementController.currentUserAccount,
-        );
+        const [EntityNameCamelCase]Data = await this.controller.get[EntityNamePascalCase]([EntityNameCamelCase]Id);
 
         if ([EntityNameCamelCase]Data === null) {
             this.setResult(false, this.controller.getLastError()?.message);
             return;
         }
-
-        this.addResultDetail({ [EntityNameCamelCase]Data: [EntityNameCamelCase]Data });
-        this.setResult(true);
+        this.forceResult([EntityNameCamelCase]Data, 200);
     }
 
-    async create[EntityNamePascalCasePlural]([EntityNameCamelCase]Detail = {}) {
-        const created[EntityNamePascalCasePlural] = await this.controller.create[EntityNamePascalCasePlural]([EntityNameCamelCase]Detail, currentUserAccountId);
+    async create[EntityNamePascalCase]([EntityNameCamelCase]Detail = {}) {
+        const created[EntityNamePascalCase] = await this.controller.create[EntityNamePascalCase]([EntityNameCamelCase]Detail, currentUserAccountId);
 
-        if (!created[EntityNamePascalCasePlural]) {
+        if (!created[EntityNamePascalCase]) {
             this.controller.printLastError();
             this.setResult(false, this.controller.getLastError()?.message);
             return;
         }
 
-        this.addResultDetail(created[EntityNamePascalCasePlural]);
-        this.setResult(true);
+        this.forceResult(created[EntityNamePascalCase], 200);
     }
 
-    async update[EntityNamePascalCasePlural]([EntityNameCamelCase]Id = null, [EntityNameCamelCase]Detail = {}) {
+    async update[EntityNamePascalCase]([EntityNameCamelCase]Id = null, [EntityNameCamelCase]Detail = {}) {
         if (![EntityNameCamelCase]Id) {
             this.setResult(false, "Invalid [EntityNameCamelCase] ID provided");
             return;
@@ -183,7 +177,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
             return;
         }
 
-        const updateResult = await this.controller.update[EntityNamePascalCasePlural](
+        const updateResult = await this.controller.update[EntityNamePascalCase](
             [EntityNameCamelCase]Id,
             [EntityNameCamelCase]Detail,
         );
