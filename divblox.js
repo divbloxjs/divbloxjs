@@ -7,6 +7,7 @@ const divbloxDataLayerBase = require("./dx-core-modules/data-layer");
 const divbloxWebServiceBase = require("./dx-core-modules/web-service");
 const divbloxJwtWrapperBase = require("./dx-core-modules/jwt-wrapper");
 const DIVBLOX_ROOT_DIR = path.join(__dirname, "..", "divbloxjs");
+const CodeGenerator = require("divbloxjs/code-generation.js");
 
 const DIVBLOX_API_ROOT_URL = "https://api.divblox.app";
 
@@ -340,7 +341,7 @@ class DivbloxBase extends divbloxObjectBase {
             const packageRoot = isRemote
                 ? "node_modules/" + packageToLoad
                 : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad;
-
+console.log("packageRoot", packageRoot);
             if (typeof this.packages[packageToLoad] === "undefined") {
                 this.packages[packageToLoad] = {
                     packageRoot: packageRoot,
@@ -381,11 +382,9 @@ class DivbloxBase extends divbloxObjectBase {
             const packageDataModelPath = isRemote
                 ? "node_modules/" + packageToLoad + "/data-model.json"
                 : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad + "/data-model.json";
-
             const packageDataModelDataStr = fs.readFileSync(packageDataModelPath, "utf-8");
 
             const packageDataModelObj = JSON.parse(packageDataModelDataStr);
-
             for (const entityName of Object.keys(packageDataModelObj)) {
                 const entityObj = packageDataModelObj[entityName];
 
@@ -401,7 +400,7 @@ class DivbloxBase extends divbloxObjectBase {
                         );
                     }
 
-                    this.dataModelObj[entityName].package = packageToLoad;
+                    this.dataModelObj[entityName].packageName = packageToLoad;
 
                     // The entity is already defined, let's add any relevant attributes/relationships from the base package
 
@@ -499,9 +498,9 @@ class DivbloxBase extends divbloxObjectBase {
                         }
                     }
 
-                    entityObj.package = packageToLoad;
-
+                    entityObj.packageName = packageToLoad;
                     this.dataModelObj[entityName] = entityObj;
+                    console.log("this.dataModelObj[entityName]", this.dataModelObj[entityName]);
                 }
             }
         }
@@ -659,6 +658,16 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
+        console.log(this.dataModelObj["organisation"]);
+        const codeGenerator = new CodeGenerator(this);
+        await codeGenerator.generateBaseSchemaAndModelClasses();
+        await codeGenerator.generateBaseDataSeriesClasses();
+        await codeGenerator.generateBaseEndpointClasses();
+        await codeGenerator.generateBaseControllerClasses();
+        await codeGenerator.generateDataSeriesSpecialisationClasses();
+        await codeGenerator.generateModelSpecialisationClasses();
+        await codeGenerator.generateEndpointSpecialisationClasses();
+        await codeGenerator.generateControllerSpecialisationClasses();
         if (!(await this.checkOrmBaseClassesComplete())) {
             await this.generateOrmBaseClasses();
             await this.generateEntityDataSeriesBaseClasses();
@@ -1192,6 +1201,7 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("Synchronization cancelled. Cannot continue.");
         }
     }
+
 
     /**
      * Checks whether the expected base object model classes exist

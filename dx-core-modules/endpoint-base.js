@@ -1,5 +1,6 @@
 const divbloxObjectBase = require("./object-base");
 const DivbloxBase = require("../divblox");
+const dxUtils = require("dx-utilities");
 
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
@@ -14,6 +15,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         super();
         this.endpointName = null;
         this.endpointDescription = "";
+        this.DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again";
+        this.DEFAULT_SUCCESS_MESSAGE = "Successfully completed operation";
         this.result = {
             success: false,
             message: "none",
@@ -28,6 +31,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.currentGlobalIdentifier = -1;
         this.currentGlobalIdentifierGroupings = [];
         this.disableSwaggerDocs = false;
+        this.hiddenOperations = [];
+        this.operationAccess = {};
 
         if (typeof this.dxInstance === "undefined" || this.dxInstance === null) {
             throw new Error("Divblox instance was not provided");
@@ -157,6 +162,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         for (const key of Object.keys(properties)) {
             let type = "string";
             let format = "";
+            let example;
             const isObject = typeof properties[key] === "object" && properties[key] !== null;
 
             if (!isObject) {
@@ -188,12 +194,26 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                     case "boolean":
                         type = "boolean";
                         break;
+                    case "array":
+                        type = "array";
+                        format = "array";
+                        example = [];
+                        break;
+                    case "object":
+                        type = "object";
+                        format = "object";
+                        example = {};
+                        break;
                 }
 
                 schema.properties[key] = {
                     type: type,
                     format: format,
                 };
+
+                if (example) {
+                    schema.properties[key].example = example;
+                }
             } else {
                 schema.properties[key] = properties[key];
             }
@@ -217,10 +237,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             };
             return returnSchema;
         }
-        return {
+
+        const returnObj = {
             type: "array",
             items: itemSchema,
         };
+
+        if (!itemSchema) {
+            returnObj.example = [];
+        }
+
+        return returnObj;
     }
 
     /**
@@ -253,8 +280,16 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result["success"] = isSuccess;
 
         delete this.result["message"];
-        if (typeof message !== "undefined") {
+
+        if (typeof message !== undefined && message?.length > 0) {
             this.result["message"] = message;
+            return;
+        }
+
+        if (isSuccess) {
+            this.result["message"] = this.DEFAULT_SUCCESS_MESSAGE;
+        } else {
+            this.result["message"] = this.DEFAULT_ERROR_MESSAGE;
         }
     }
 
@@ -266,7 +301,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * Sets the current result to false and forces a 401 http error code
      * @param {string} message An optional message to return
      */
-    setResultNotAuthorized(message) {
+    setResultNotAuthorized(message = "Not authorized") {
         this.result["success"] = false;
         this.result["unauthorized"] = true;
         this.statusCode = 401;
@@ -461,9 +496,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.getCurrentInformationFromJwt(response?.locals?.jwtToken);
 
         if (!this.isAccessAllowed(operation, request.method, this.providedIdentifierGroupings)) {
-            this.setResultNotAuthorized("Not authorized");
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
             // on a true response to know whether they can proceed
+            this.setResultNotAuthorized();
             return false;
         }
 
@@ -490,8 +525,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
 
         this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
-        this.currentGlobalIdentifierGroupings =
-            this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+        this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
 
         for (const grouping of this.currentGlobalIdentifierGroupings) {
             this.providedIdentifierGroupings.push(grouping.toLowerCase());
