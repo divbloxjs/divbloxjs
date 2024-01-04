@@ -467,6 +467,33 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         return false;
     }
 
+    getConstraintDataInputParameter() {
+        return this.getInputParameter({
+            name: "constraintData",
+            required: false,
+            type: "query",
+            schema: this.getConstraintDataSchema(),
+        });
+    }
+
+    getConstraintDataSchema() {
+        return this.getSchema({
+            searchValue: "string",
+            limit: "integer",
+            offset: "integer",
+            columns: this.getArraySchema(this.getSchema({
+                isSorting: "boolean",
+                isSortDescending: "boolean",
+                filterBy: this.getSchema({
+                    "filterText": "string",
+                    "filterDropdown": "string",
+                    fromDate: "date",
+                    toDate: "date",
+                }),
+            }), "columnName"),
+        });
+    }
+
     //#region Operations implemented.
 
     /**

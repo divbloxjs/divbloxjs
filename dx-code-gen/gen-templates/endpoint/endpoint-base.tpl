@@ -1,13 +1,13 @@
 const DivbloxBase = require("divbloxjs/divblox");
 const EndpointBase = require('divbloxjs/dx-core-modules/endpoint-base');
-const [EntityNamePascalCasePlural]Controller = require('../controllers/[EntityNameLowerCaseSplitted].controller');
+const [EntityNamePascalCasePlural]Controller = require('../controllers/[EntityNameLowerCaseSplitted].controller-base');
 
 class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
     //#region CRUD endpoint definitions
     get[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]",
-        allowedAccess: ["basic user"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Lists all possible [EntityNameCamelCasePlural]",
         operationDescription: "Returns an array of all possible [EntityNameCamelCasePlural]",
         parameters: [this.getConstraintDataInputParameter()], // An array of this.getInputParameter()
@@ -24,9 +24,9 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         },
     });
 
-    get[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
+    get[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
-        allowedAccess: ["user"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Gets the [EntityNameCamelCase] by ID",
         operationDescription: "Retrieves the [EntityNameCamelCase] details for given ID",
         parameters: [this.getInputParameter({ name: "id", type: "query" })], // An array of this.getInputParameter()
@@ -37,13 +37,13 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
 
-            await this.get[EntityNamePascalCasePlural]([EntityNameCamelCase]Id);
+            await this.get[EntityNamePascalCase]([EntityNameCamelCase]Id);
         }
     });
 
-    create[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
+    create[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]",
-        allowedAccess: ["user"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Creates a new [EntityNameCamelCase] for the current user",
         operationDescription:
             "A new [EntityNameCamelCase] is created and liked to the current user. " +
@@ -52,33 +52,49 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         requestType: "POST", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
         requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
         responseSchema: this.getSchema({ id: "integer" }),
+        f: async (req, res) => {
+            const { params: routeParams, query: queryParams, body } = req;
+            const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
+
+            await this.create[EntityNamePascalCase]([EntityNameCamelCase]Id);
+        }
     });
 
-    update[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
+    update[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
-        allowedAccess: ["user"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Updates an [EntityNameCamelCase] by ID",
         operationDescription: "Updates the [EntityNameCamelCase] with details provided for given ID",
         parameters: [this.getInputParameter({ name: "id", type: "query" })], // An array of this.getInputParameter()
         requestType: "PATCH",
         requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
         responseSchema: this.getSchema({ message: "string" }),
-        disableSwaggerDoc: this.hiddenOperations.indexOf("update[EntityNamePascalCasePlural]") !== -1,
+        disableSwaggerDoc: this.hiddenOperations.indexOf("update[EntityNamePascalCase]") !== -1,
+        f: async (req, res) => {
+            const { params: routeParams, query: queryParams, body } = req;
+            const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
+
+            await this.update[EntityNamePascalCase]([EntityNameCamelCase]Id);
+        }
     });
 
-    delete[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
+    delete[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
-        allowedAccess: ["user"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Deletes a [EntityNameCamelCase]",
         operationDescription:
             "Deletes a [EntityNameCamelCase] matching the provided id, removing all associated projects and configured [EntityNameCamelCase] roles as well.",
         parameters: [this.getInputParameter({ name: "id", type: "query" })], // An array of this.getInputParameter()
         requestType: "DELETE", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
-        requestSchema: this.getSchema({
-            password: "string",
-        }),
+        requestSchema: {},
         responseSchema: this.getSchema({ message: "string" }),
         disableSwaggerDoc: this.hiddenOperations.indexOf("delete[EntityNamePascalCasePlural]") !== -1,
+        f: async (req, res) => {
+            const { params: routeParams, query: queryParams, body } = req;
+            const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
+
+            await this.delete[EntityNamePascalCase]([EntityNameCamelCase]Id);
+        }
     });
     //#endregion
 
@@ -92,6 +108,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         super(dxInstance);
 
         this.controller = new [EntityNamePascalCasePlural]Controller(dxInstance);
+        this.endpointName = "[EntityNameCamelCasePlural]";
 
         if (this.controller?.packageOptions?.["hiddenOperations"]) {
             this.hiddenOperations = this.controller.packageOptions["hiddenOperations"];
@@ -103,10 +120,10 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
         this.declareOperations([
             this.get[EntityNamePascalCasePlural]OperationDeclaration,
-            this.get[EntityNamePascalCasePlural]OperationDeclaration,
-            this.create[EntityNamePascalCasePlural]OperationDeclaration,
-            this.update[EntityNamePascalCasePlural]OperationDeclaration,
-            this.delete[EntityNamePascalCasePlural]OperationDeclaration,
+            this.get[EntityNamePascalCase]OperationDeclaration,
+            this.create[EntityNamePascalCase]OperationDeclaration,
+            this.update[EntityNamePascalCase]OperationDeclaration,
+            this.delete[EntityNamePascalCase]OperationDeclaration,
 [RelationshipDeclaredOperationList]
         ]);
     }

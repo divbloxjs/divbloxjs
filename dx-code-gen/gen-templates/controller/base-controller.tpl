@@ -3,7 +3,7 @@ const [EntityNamePascalCase] = require('../models/[EntityNameLowerCaseSplitted].
 const [EntityNamePascalCase]DataSeries = require('../data-series/[EntityNameLowerCaseSplitted].data-series-base');
 
 class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
-    constructor(dxInstance = null, packageName = '[PackageNameLowerCaseSplitted]') {
+    constructor(dxInstance = null, packageName = '[PackageNameCamelCase]') {
         super(dxInstance, packageName);
     }
 

@@ -538,7 +538,6 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     async getDataSeries(options = {}) {
         const { whereClauses, orderByClause } = await this.#getPrebuiltClauses();
 
-        console.log("whereClauses.values", whereClauses.values);
         this.setAdditionalWhereSql();
         if (this.searchAndFilterWhereSql) {
             // Overloaded search and filter clauses provided

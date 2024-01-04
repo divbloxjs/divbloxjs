@@ -319,10 +319,10 @@ class DivbloxBase extends divbloxObjectBase {
             return false;
         }
 
-        const packagesToLoad = definedPackages[packagesLocation];
+        const packageNamesToLoad = definedPackages[packagesLocation];
 
-        const duplicatePackages = packagesToLoad.filter((packageName, index) => {
-            return packagesToLoad.indexOf(packageName) !== index;
+        const duplicatePackages = packageNamesToLoad.filter((packageName, index) => {
+            return packageNamesToLoad.indexOf(packageName) !== index;
         });
 
         if (duplicatePackages.length > 0) {
@@ -335,22 +335,25 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("Configuration invalid");
         }
 
-        for (const packageToLoad of packagesToLoad) {
+        for (const packageNameToLoad of packageNamesToLoad) {
             // If a package is already defined, it means we are specializing this package within a child package,
             // so its package root should be redeclared.
             const packageRoot = isRemote
-                ? "node_modules/" + packageToLoad
-                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad;
-console.log("packageRoot", packageRoot);
-            if (typeof this.packages[packageToLoad] === "undefined") {
-                this.packages[packageToLoad] = {
+                ? "node_modules/" + packageNameToLoad
+                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageNameToLoad;
+            if (typeof this.packages[packageNameToLoad] === "undefined") {
+                this.packages[packageNameToLoad] = {
                     packageRoot: packageRoot,
+                    packageNameKebabCase: packageNameToLoad,
+                    packageNameCamelCase: dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-"),
                 };
             } else if (!isRemote) {
                 // This will ensure that the local package's root path is stored when it is intended as
                 // a specialization of the remote package with the same name
-                this.packages[packageToLoad] = {
+                this.packages[packageNameToLoad] = {
                     packageRoot: packageRoot,
+                    packageNameKebabCase: packageNameToLoad,
+                    packageNameCamelCase: dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-"),
                 };
             }
 
@@ -358,8 +361,8 @@ console.log("packageRoot", packageRoot);
                 this.packageOptions[process.env.NODE_ENV] = {};
             }
 
-            if (typeof this.packageOptions[process.env.NODE_ENV][packageToLoad] === "undefined") {
-                this.packageOptions[process.env.NODE_ENV][packageToLoad] = {};
+            if (typeof this.packageOptions[process.env.NODE_ENV][packageNameToLoad] === "undefined") {
+                this.packageOptions[process.env.NODE_ENV][packageNameToLoad] = {};
             }
 
             const packageOptionsPath = packageRoot + "/options.json";
@@ -371,17 +374,18 @@ console.log("packageRoot", packageRoot);
 
                 for (const packageOption of Object.keys(packageOptions)) {
                     if (
-                        typeof this.packageOptions[process.env.NODE_ENV][packageToLoad][packageOption] === "undefined"
+                        typeof this.packageOptions[process.env.NODE_ENV][packageNameToLoad][packageOption] ===
+                        "undefined"
                     ) {
-                        this.packageOptions[process.env.NODE_ENV][packageToLoad][packageOption] =
+                        this.packageOptions[process.env.NODE_ENV][packageNameToLoad][packageOption] =
                             packageOptions[packageOption];
                     }
                 }
             }
 
             const packageDataModelPath = isRemote
-                ? "node_modules/" + packageToLoad + "/data-model.json"
-                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad + "/data-model.json";
+                ? "node_modules/" + packageNameToLoad + "/data-model.json"
+                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageNameToLoad + "/data-model.json";
             const packageDataModelDataStr = fs.readFileSync(packageDataModelPath, "utf-8");
 
             const packageDataModelObj = JSON.parse(packageDataModelDataStr);
@@ -400,7 +404,11 @@ console.log("packageRoot", packageRoot);
                         );
                     }
 
-                    this.dataModelObj[entityName].packageName = packageToLoad;
+                    this.dataModelObj[entityName].packageName = packageNameToLoad;
+                    this.dataModelObj[entityName].packageNameCamelCase = dxUtils.convertLowerCaseToCamelCase(
+                        packageNameToLoad,
+                        "-",
+                    );
 
                     // The entity is already defined, let's add any relevant attributes/relationships from the base package
 
@@ -498,9 +506,9 @@ console.log("packageRoot", packageRoot);
                         }
                     }
 
-                    entityObj.packageName = packageToLoad;
+                    entityObj.packageName = packageNameToLoad;
+                    entityObj.packageNameCamelCase = dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-");
                     this.dataModelObj[entityName] = entityObj;
-                    console.log("this.dataModelObj[entityName]", this.dataModelObj[entityName]);
                 }
             }
         }
@@ -658,7 +666,6 @@ console.log("packageRoot", packageRoot);
             await dxUtils.sleep(1000);
         }
 
-        console.log(this.dataModelObj["organisation"]);
         const codeGenerator = new CodeGenerator(this);
         await codeGenerator.generateBaseSchemaAndModelClasses();
         await codeGenerator.generateBaseDataSeriesClasses();
@@ -1154,7 +1161,9 @@ console.log("packageRoot", packageRoot);
             const result = await response.json();
 
             if (!response.ok) {
-                dxUtils.printErrorMessage(result.message ? result.message : "Something went wrong. <br>Please try again.");
+                dxUtils.printErrorMessage(
+                    result.message ? result.message : "Something went wrong. <br>Please try again.",
+                );
                 return;
             }
 
@@ -1201,7 +1210,6 @@ console.log("packageRoot", packageRoot);
             throw new Error("Synchronization cancelled. Cannot continue.");
         }
     }
-
 
     /**
      * Checks whether the expected base object model classes exist
