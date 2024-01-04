@@ -1,10 +1,10 @@
 
-    async setAdditionalWhereSql() { 
+    async setAdditionalWhereSql() {
         super.setAdditionalWhereSql();
 
-        if (this.additionalParams.[EntityNamePascalCase]Id) {
+        if (this.additionalParams.[EntityNameCamelCase]Id) {
             this.additionalWhereSql += `${[EntityNamePascalCase].id} = ?`;
-            this.additionalWhereValues.push(this.additionalParams.[EntityNamePascalCase]Id);
+            this.additionalWhereValues.push(this.additionalParams.[EntityNameCamelCase]Id);
         }
 [constraintBlocks]
 	}

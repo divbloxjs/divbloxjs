@@ -382,6 +382,7 @@ class CodeGenerator extends DivbloxObjectBase {
 
             let relationshipTokenReplacementString = fileContentDataSeriesConstraintFunctionBaseStr;
             relationshipTokenReplacementString = relationshipTokenReplacementString.replaceAll("[EntityNamePascalCase]", entityNamePascalCase)
+            relationshipTokenReplacementString = relationshipTokenReplacementString.replaceAll("[EntityNameCamelCase]", entityNameCamelCase)
             let constraintBlocksStr = "";
 
             if (relationshipNames.length > 0) {

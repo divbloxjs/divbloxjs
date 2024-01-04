@@ -12,13 +12,6 @@ class [EntityNamePascalCase]BaseDataSeries extends DxBaseDataSeries {
     constructor(dxInstance, dataSeriesConfig = {}, additionalParams = {}) {
         dataSeriesConfig.moduleName = [EntityNamePascalCase].__moduleName;
         dataSeriesConfig.entityName = [EntityNamePascalCase].__entityName;
-        dataSeriesConfig.RELATIONSHIP_TREE_LIMIT = 3;
-
-        // Keep empty to include all fields
-        dataSeriesConfig.includedAttributes = [];
-
-        // Update to filter which attributes get searched on
-        dataSeriesConfig.searchAttributes = [];
 
         super(dxInstance, dataSeriesConfig, additionalParams);
     }

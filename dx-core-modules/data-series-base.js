@@ -72,11 +72,11 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.entityName = dataSeriesConfig?.entityName ?? undefined;
 
         this.includedAttributes = dataSeriesConfig?.includedAttributes ?? [];
-        this.includedAttributes.forEach(includedAttribute => {
+        this.includedAttributes.forEach((includedAttribute) => {
             return dxQ.getSqlReadyName(includedAttribute);
         });
         this.searchAttributes = dataSeriesConfig?.searchAttributes ?? [];
-        this.searchAttributes.forEach(searchAttribute => {
+        this.searchAttributes.forEach((searchAttribute) => {
             return dxQ.getSqlReadyName(searchAttribute);
         });
 
@@ -84,7 +84,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.additionalParams = additionalParams;
 
         if (dataSeriesConfig.hasOwnProperty("RELATIONSHIP_TREE_LIMIT")) {
-            this.#RELATIONSHIP_TREE_LIMIT = dataSeriesConfig.RELATIONSHIP_TREE_LIMIT;
+            this.#RELATIONSHIP_TREE_LIMIT = dataSeriesConfig?.RELATIONSHIP_TREE_LIMIT;
         }
 
         if (dataSeriesConfig.hasOwnProperty("DEFAULT_JOIN_TYPE")) {
@@ -103,8 +103,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
          * @type {Object.<string, clauseConstraint>}
          */
         this.clauseConstraints = {};
-        if (dataSeriesConfig.hasOwnProperty("columns") &&
-            dxUtils.isValidObject(dataSeriesConfig.columns)) {
+        if (dataSeriesConfig.hasOwnProperty("columns") && dxUtils.isValidObject(dataSeriesConfig.columns)) {
             Object.keys(dataSeriesConfig.columns ?? []).forEach((attributeName) => {
                 this.clauseConstraints[dxQ.getSqlReadyName(attributeName)] = dataSeriesConfig.columns[attributeName];
             });
@@ -114,7 +113,6 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     #setDefaultSql() {
         this.dataSeriesSelectSql = `SELECT *`;
         if (this.includedAttributes.length > 0) {
-
             this.dataSeriesSelectSql = `SELECT ${this.includedAttributes.join(",")}`;
         }
         this.dataSeriesValues = [];
@@ -132,13 +130,19 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             if (Object.keys(relationships).length > 0) {
                 Object.keys(relationships).forEach((relatedEntityName, idx) => {
                     const relationshipName = `${relatedEntityName}_${relationships[relatedEntityName][0]}`;
-                    if (typeof treeSplitCount[idx] === 'undefined') {
+                    if (typeof treeSplitCount[idx] === "undefined") {
                         treeSplitCount[idx] = 1;
                     }
 
-                    joinSql += `${this.#DEFAULT_JOIN_TYPE} JOIN ${dxQ.getSqlReadyName(relatedEntityName)} ON ${dxQ.getSqlReadyName(entityName)}.${dxQ.getSqlReadyName(`${relationshipName}`)} = ${dxQ.getSqlReadyName(`${relatedEntityName}.id`)}\n`;
-                    if (Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships).length > 0 &&
-                        treeSplitCount[idx] < recursionDepth) {
+                    joinSql += `${this.#DEFAULT_JOIN_TYPE} JOIN ${dxQ.getSqlReadyName(
+                        relatedEntityName,
+                    )} ON ${dxQ.getSqlReadyName(entityName)}.${dxQ.getSqlReadyName(
+                        `${relationshipName}`,
+                    )} = ${dxQ.getSqlReadyName(`${relatedEntityName}.id`)}\n`;
+                    if (
+                        Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships).length > 0 &&
+                        treeSplitCount[idx] < recursionDepth
+                    ) {
                         treeSplitCount[idx]++;
                         recursivelyAddRelationships(relatedEntityName);
                     }
@@ -146,7 +150,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             }
         };
 
-        recursivelyAddRelationships(this.entityName);
+        if (this.#RELATIONSHIP_TREE_LIMIT > 0) {
+            recursivelyAddRelationships(this.entityName);
+        }
 
         this.joinSql = joinSql;
         this.joinValues = [];
@@ -209,7 +215,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      */
     setAdditionalWhereSql() {
         this.additionalWhereSql = ``;
-        this.additionalWhereValues = ``;
+        this.additionalWhereValues = [];
     }
 
     /**
@@ -307,7 +313,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      */
     async #getOrderByClauses() {
         // Defaults to the first provided attribute in descending order
-        const orderColumnName = Object.keys(this.clauseConstraints)[0] ?? "id";
+        const orderColumnName = Object.keys(this.clauseConstraints)[0] ?? `${this.entityName}.id`;
         if (!orderColumnName) {
             return {};
         }
@@ -405,7 +411,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @returns {Promise<{whereClauses: {preparedStatement: string, values:[]}, orderByClause: {field: string, isDescending: boolean }}>} the populated where and order by clauses
      */
     async #getPrebuiltClauses() {
-        let whereClauses = dxQ.all();
+        let whereClauses = { preparedStatement: "", values: [] };
 
         if (!this.searchWhereSql) {
             // No search clause manually overridden - generate default one
@@ -437,7 +443,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         // TODO Overwrite to include whichever attributes are needed
         if (this.searchAttributes.length > 0) {
             const searchClauses = [];
-            this.searchAttributes.forEach(searchAttribute => {
+            this.searchAttributes.forEach((searchAttribute) => {
                 searchClauses.push(dxQ.like(`${this.entityName}.${searchAttribute}`, "%" + searchValue + "%"));
             });
             return dxQ.andCondition(...searchClauses);
@@ -506,10 +512,14 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         console.log("this.fullCountSql", this.fullCountSql);
-        const result = await this.dxInstance.getDataLayer().executeQuery(
-            { sql: this.fullCountSql, nestTables: false },
-            this.moduleName, this.countValues, options?.transaction ?? null,
-        );
+        const result = await this.dxInstance
+            .getDataLayer()
+            .executeQuery(
+                { sql: this.fullCountSql, nestTables: false },
+                this.moduleName,
+                this.countValues,
+                options?.transaction ?? null,
+            );
         if (result === null) {
             this.populateError(this.dxInstance.getDataLayer().getLastError());
             return null;
@@ -541,23 +551,23 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.setAdditionalWhereSql();
         if (this.searchAndFilterWhereSql) {
             // Overloaded search and filter clauses provided
-            this.whereSql = ` ${this.whereSql ? 'AND' : 'WHERE'} ${this.searchAndFilterWhereSql}`;
+            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${this.searchAndFilterWhereSql}`;
             this.whereValues = this.searchAndFilterWhereValues;
-        } else {
+        } else if (whereClauses.preparedStatement) {
             // Default clauses used
-            this.whereSql = ` ${this.whereSql ? 'AND' : 'WHERE'} ${whereClauses.preparedStatement}`;
+            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${whereClauses.preparedStatement}`;
             this.whereValues = whereClauses.values;
         }
 
         if (this.additionalWhereSql) {
             // Use any further provided where clauses
-            this.whereSql = ` ${this.whereSql ? 'AND' : 'WHERE'} ${this.additionalWhereSql}`;
+            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${this.additionalWhereSql}`;
             this.whereValues = [...this.whereValues, ...this.additionalWhereValues];
         }
 
         if (!this.orderBySql) {
             // No overwritten order by clause = use default one
-            this.orderBySql = ` ORDER BY ${orderByClause.field} ${orderByClause.isDescending ? 'DESC' : 'ASC'}`;
+            this.orderBySql = ` ORDER BY ${orderByClause.field} ${orderByClause.isDescending ? "DESC" : "ASC"}`;
         }
 
         if (!this.dataSeriesFullSql) {
@@ -566,10 +576,14 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         // console.log("this.dataSeriesFullSql", this.dataSeriesFullSql);
-        const result = await this.dxInstance.getDataLayer().getArrayFromDatabase(
-            { sql: this.dataSeriesFullSql, nestTables: true },
-            this.moduleName, this.dataSeriesValues, options?.transaction ?? null,
-        );
+        const result = await this.dxInstance
+            .getDataLayer()
+            .getArrayFromDatabase(
+                { sql: this.dataSeriesFullSql, nestTables: true },
+                this.moduleName,
+                this.dataSeriesValues,
+                options?.transaction ?? null,
+            );
 
         if (result === null) {
             this.populateError(this.dxInstance.getDataLayer().getLastError());
@@ -577,11 +591,14 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         // Replaces objects for undefined FK relationships with 'null'
-        result.forEach(dataRow => {
-            Object.keys(dataRow).forEach(entityName => {
-                if (!dataRow[entityName].id) {
-                    dataRow[entityName] = null;
-                }
+        result.forEach((dataRow) => {
+            Object.keys(dataRow).forEach((entityName) => {
+                let areAllAttributesNull = true;
+                Object.values(dataRow[entityName]).forEach((attributeValue) => {
+                    areAllAttributesNull &&= attributeValue ? false : true;
+                });
+
+                dataRow[entityName] = areAllAttributesNull ? null : dataRow[entityName];
             });
         });
 
@@ -589,8 +606,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     }
 
     buildFinalDataSeriesSql() {
-        this.dataSeriesFullSql =
-            `${this.dataSeriesSelectSql}
+        this.dataSeriesFullSql = `${this.dataSeriesSelectSql}
             FROM ${dxQ.getSqlReadyName(this.entityName)}
             ${this.joinSql} 
             ${this.whereSql}
@@ -600,17 +616,16 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             ${this.limitSql} 
             ${this.offsetSql}`;
 
-
         console.log(this.joinValues);
         console.log(this.whereValues);
         console.log(this.groupByValues);
         console.log(this.havingValues);
         console.log(this.orderByValues);
         this.dataSeriesValues = this.joinValues
-        .concat(this.whereValues)
-        .concat(this.groupByValues)
-        .concat(this.havingValues)
-        .concat(this.orderByValues);
+            .concat(this.whereValues)
+            .concat(this.groupByValues)
+            .concat(this.havingValues)
+            .concat(this.orderByValues);
 
         if (this.limitValue) {
             this.dataSeriesValues = this.dataSeriesValues.push(this.limitValue);
@@ -632,14 +647,12 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         // console.log("this.countFullSql", this.countFullSql);
         this.countValues = this.joinValues
-        .concat(this.whereValues)
-        .concat(this.groupByValues)
-        .concat(this.havingValues);
+            .concat(this.whereValues)
+            .concat(this.groupByValues)
+            .concat(this.havingValues);
 
         // console.log("this.countValues", this.countValues);
     }
-
-
 }
 
 module.exports = DxBaseDataSeries;

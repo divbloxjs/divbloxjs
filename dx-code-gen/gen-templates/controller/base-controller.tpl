@@ -1,6 +1,6 @@
 const PackageControllerBase = require('divbloxjs/dx-core-modules/package-controller-base');
 const [EntityNamePascalCase] = require('../models/[EntityNameLowerCaseSplitted].model-base');
-const [EntityNamePascalCase]DataSeries = require('../data-series/[EntityNameLowerCaseSplitted].data-series-base');
+const [EntityNamePascalCase]DataSeries = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/data-series/[EntityNameLowerCaseSplitted].data-series');
 
 class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
     constructor(dxInstance = null, packageName = '[PackageNameCamelCase]') {

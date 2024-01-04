@@ -439,7 +439,9 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.databaseConnector.queryDB(query, moduleName, values, transaction);
 
         if (queryResult === null) {
-            this.populateError("Could not execute query", this.databaseConnector.getLastError());
+            this.databaseConnector.printLastError();
+            const errorMessage = this.databaseConnector.getLastError()?.message ?? "Could not execute query";
+            this.populateError(errorMessage, this.databaseConnector.getLastError());
             return null;
         }
 
