@@ -1,7 +1,9 @@
 const DivbloxBase = require("divbloxjs/divblox");
+
 const ModelBase = require('divbloxjs/dx-orm/object-model-base');
-const entitySchema = require('divbloxjs/dx-orm/generated/schemas/[EntityNameLowerCaseSplitted].schema');
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
+
+const entitySchema = require('divbloxjs/dx-code-gen/generated-base/schemas/[EntityNameLowerCaseSplitted].schema');
 [linkedEntityRequires]
 /**
  * An object model class used to describe the entity [EntityNameCamelCase] in an OOP manner
@@ -10,6 +12,7 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
 
     // [EntityNamePascalCase] Model Specification
     [EntityModelSpec]
+    [UserEditableFields]
     /**
      * Basic initialization for the [EntityNameCamelCase] object model class.
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer

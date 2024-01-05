@@ -81,6 +81,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 "_",
             );
             const entityNameCamelCase = entityName;
+            const entityNameSqlCase = this.dataLayer.getSqlReadyName(entityNameCamelCase);
             let entityData = "";
             let entitySchemaData = {
                 id: {
@@ -89,7 +90,9 @@ class CodeGenerator extends DivbloxObjectBase {
                 },
             };
 
-            let entityModelSpec = 'static id = "' + this.dataLayer.getSqlReadyName(entityNameCamelCase) + '.id";\n';
+            let entityModelSpec = 'static id = "' + entityNameSqlCase + '.id";\n';
+
+            let userEditableFields = 'static userEditableFields = [\n';
 
             const attributes = this.dataModelObj[entityName]["attributes"];
             const relationships = this.dataModelObj[entityName]["relationships"];
@@ -128,11 +131,12 @@ class CodeGenerator extends DivbloxObjectBase {
             };
 
             for (const attributeName of Object.keys(attributes)) {
+                const attributeNameSqlCase = this.dataLayer.getSqlReadyName(attributeName);
                 if (entityData.length > 0) {
                     entityData += "\n        ";
                 }
 
-                entityData += 'this.data["' + attributeName + '"] = ';
+                entityData += `this.data["${attributeName}"] = `;
                 const entityAttributeType =
                     typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined"
                         ? "string"
@@ -142,14 +146,8 @@ class CodeGenerator extends DivbloxObjectBase {
                     type: entityAttributeType,
                 };
 
-                entityModelSpec +=
-                    "    static " +
-                    attributeName +
-                    ' = "' +
-                    this.dataLayer.getSqlReadyName(entityNameCamelCase) +
-                    "." +
-                    this.dataLayer.getSqlReadyName(attributeName) +
-                    '";\n';
+                entityModelSpec += `    static ${attributeName} = "${entityNameSqlCase}.${attributeNameSqlCase}";\n`
+                userEditableFields += `        "${attributeName}",\n`;
 
                 switch (attributes[attributeName]["type"]) {
                     case "date":
@@ -215,8 +213,10 @@ class CodeGenerator extends DivbloxObjectBase {
                     );
 
                     const finalRelationshipName = this.dataLayer.convertSqlNameToProperty(
-                        sqlReadyRelationshipName + "_" + sqlReadyRelationshipUniqueName,
+                        `${sqlReadyRelationshipName}_${sqlReadyRelationshipUniqueName}`,
                     );
+
+                    const finalRelationshipNameSqlCase = this.dataLayer.getSqlReadyName(finalRelationshipName);
 
                     if (entityData.length > 0) {
                         entityData += "\n        ";
@@ -227,24 +227,13 @@ class CodeGenerator extends DivbloxObjectBase {
                         type: "integer",
                         format: "int32",
                     };
-
-                    entityModelSpec +=
-                        "    static " +
-                        finalRelationshipName +
-                        ' = "' +
-                        this.dataLayer.getSqlReadyName(entityNameCamelCase) +
-                        "." +
-                        this.dataLayer.getSqlReadyName(finalRelationshipName) +
-                        '";\n';
+     
+                    entityModelSpec += `    static ${relationshipName} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`
+                    userEditableFields += `        "${relationshipName}",\n`;
 
                     if (linkedEntityRequiresForRelationship === "") {
                         linkedEntityRequiresForRelationship +=
-                            "const " +
-                            relationshipNamePascalCase +
-                            " " +
-                            ' = require("divbloxjs/dx-orm/generated/models/' +
-                            lowerCaseSplitterRelationshipName +
-                            '.model-base");\n';
+                            `const ${relationshipNamePascalCase} = require("divbloxjs/dx-code-gen/generated-base/models/${lowerCaseSplitterRelationshipName}.model-base");\n`
                     }
 
                     if (linkedEntityGettersForRelationship === "") {
@@ -273,9 +262,10 @@ class CodeGenerator extends DivbloxObjectBase {
 
             schemaComplete[entityName] = entitySchemaData;
 
-            entityModelSpec += "    static __entityName" + ' = "' + entityNameCamelCase + '";\n';
-            entityModelSpec +=
-                "    static __moduleName" + ' = "' + this.dataLayer.getModuleNameFromEntityName(entityName) + '";\n';
+            entityModelSpec += `\n    static __entityName = "${entityNameCamelCase}";\n`;
+            entityModelSpec += `    static __moduleName = "${this.dataLayer.getModuleNameFromEntityName(entityName)}";\n`;
+
+            userEditableFields += `    ]\n`;
 
             const tokensToReplace = {
                 EntityNamePascalCase: entityNamePascalCase,
@@ -284,6 +274,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 EntityData: entityData,
                 EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
                 EntityModelSpec: entityModelSpec,
+                UserEditableFields: userEditableFields,
                 linkedEntityRequires: linkedEntityRequires,
                 linkedEntityGetters: linkedEntityGetters,
             };
@@ -735,7 +726,7 @@ class CodeGenerator extends DivbloxObjectBase {
         })
 
         for (const entityName of Object.keys(this.dataModelObj)) {
-            const packageNameKebabCase = this.dataModelObj[entityName].packageNameKebabCase;
+            const packageNameKebabCase = this.dataModelObj[entityName].packageName;
             if (!packageNameKebabCase) continue;
 
             const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(

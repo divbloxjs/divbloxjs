@@ -1,6 +1,6 @@
 const DivbloxBase = require("divbloxjs/divblox");
 const EndpointBase = require('divbloxjs/dx-core-modules/endpoint-base');
-const [EntityNamePascalCasePlural]Controller = require('../controllers/[EntityNameLowerCaseSplitted].controller-base');
+const [EntityNamePascalCasePlural]Controller = require('../../../../../divblox-packages-local/test-package/controllers/[EntityNameLowerCaseSplitted].controller');
 
 class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
@@ -83,8 +83,8 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Deletes a [EntityNameCamelCase]",
         operationDescription:
-            "Deletes a [EntityNameCamelCase] matching the provided id, removing all associated projects and configured [EntityNameCamelCase] roles as well.",
-        parameters: [this.getInputParameter({ name: "id", type: "query" })], // An array of this.getInputParameter()
+            "Deletes a [EntityNameCamelCase] matching the provided ID.",
+        parameters: [], // An array of this.getInputParameter()
         requestType: "DELETE", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
         requestSchema: {},
         responseSchema: this.getSchema({ message: "string" }),
@@ -155,7 +155,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
     }
 
     async create[EntityNamePascalCase]([EntityNameCamelCase]Detail = {}) {
-        const created[EntityNamePascalCase] = await this.controller.create[EntityNamePascalCase]([EntityNameCamelCase]Detail, currentUserAccountId);
+        const created[EntityNamePascalCase] = await this.controller.create[EntityNamePascalCase]([EntityNameCamelCase]Detail);
 
         if (!created[EntityNamePascalCase]) {
             this.controller.printLastError();
