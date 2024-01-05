@@ -173,7 +173,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null) {
@@ -202,7 +202,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null || queryResult.length === 0) {
@@ -238,7 +238,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null || queryResult.length === 0) {
@@ -295,7 +295,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlUpdateValues,
-            transaction
+            transaction,
         );
 
         return queryResult !== null;
@@ -321,7 +321,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         return queryResult !== null;
@@ -368,7 +368,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName("auditLogEntry"),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null) {
@@ -403,7 +403,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult.length === 0) {

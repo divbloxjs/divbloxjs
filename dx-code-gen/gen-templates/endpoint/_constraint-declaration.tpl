@@ -1,6 +1,6 @@
     get[EntityNamePascalCasePlural]By[RelatedEntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/[RelatedEntityNameCamelCasePlural]/:id",
-        allowedAccess: ["user"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Lists a subset of [EntityNameCamelCasePlural]",
         operationDescription: "Lists all [EntityNameCamelCasePlural] constrained by a given [RelatedEntityNameCamelCase] ID",
         parameters: [], // An array of this.getInputParameter()

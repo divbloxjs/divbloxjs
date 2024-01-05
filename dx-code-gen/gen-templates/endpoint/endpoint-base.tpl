@@ -54,9 +54,8 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         responseSchema: this.getSchema({ id: "integer" }),
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
-            const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
 
-            await this.create[EntityNamePascalCase]([EntityNameCamelCase]Id);
+            await this.create[EntityNamePascalCase](body);
         }
     });
 
@@ -65,7 +64,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Updates an [EntityNameCamelCase] by ID",
         operationDescription: "Updates the [EntityNameCamelCase] with details provided for given ID",
-        parameters: [this.getInputParameter({ name: "id", type: "query" })], // An array of this.getInputParameter()
+        parameters: [], // An array of this.getInputParameter()
         requestType: "PATCH",
         requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
         responseSchema: this.getSchema({ message: "string" }),
@@ -73,8 +72,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
-
-            await this.update[EntityNamePascalCase]([EntityNameCamelCase]Id);
+            await this.update[EntityNamePascalCase]([EntityNameCamelCase]Id, body);
         }
     });
 
@@ -132,7 +130,8 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         const { data, count } = await this.controller.get[EntityNamePascalCasePlural](constraintData, additionalParams);
 
         if (data === null || count === null) {
-            this.setResult(false, this.controller.getLastError()?.message);
+            this.controller.printLastError();
+            this.forceResult({message: this.controller.getLastError()?.message}, 400);
             return;
         }
 
@@ -141,16 +140,18 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
     async get[EntityNamePascalCase]([EntityNameCamelCase]Id = null) {
         if (![EntityNameCamelCase]Id) {
-            this.setResult(false, "Invalid [EntityNameCamelCase] ID provided");
+            this.forceResult({message: "Invalid [EntityNameCamelCase] ID provided"}, 400);
             return;
         }
         
         const [EntityNameCamelCase]Data = await this.controller.get[EntityNamePascalCase]([EntityNameCamelCase]Id);
 
         if ([EntityNameCamelCase]Data === null) {
-            this.setResult(false, this.controller.getLastError()?.message);
+            this.controller.printLastError();
+            this.forceResult({message: this.controller.getLastError()?.message}, 400);
             return;
         }
+
         this.forceResult([EntityNameCamelCase]Data, 200);
     }
 
@@ -159,7 +160,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
         if (!created[EntityNamePascalCase]) {
             this.controller.printLastError();
-            this.setResult(false, this.controller.getLastError()?.message);
+            this.forceResult({message: this.controller.getLastError()?.message}, 400);
             return;
         }
 
@@ -167,13 +168,14 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
     }
 
     async update[EntityNamePascalCase]([EntityNameCamelCase]Id = null, [EntityNameCamelCase]Detail = {}) {
+        console.log([EntityNameCamelCase]Detail);
         if (![EntityNameCamelCase]Id) {
-            this.setResult(false, "Invalid [EntityNameCamelCase] ID provided");
+            this.forceResult({message: "Invalid [EntityNameCamelCase] ID provided"}, 400);
             return;
         }
 
-        if (![EntityNameCamelCase]Detail || Object.keys([EntityNameCamelCase]Detail)) {
-            this.setResult(false, "No [EntityNameCamelCase] detail provided to update");
+        if (![EntityNameCamelCase]Detail || Object.keys([EntityNameCamelCase]Detail).length < 1) {
+            this.forceResult({message: "No [EntityNameCamelCase] detail provided"}, 400);
             return;
         }
 
@@ -183,27 +185,27 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         );
 
         if (!updateResult) {
-            this.setResult(false, this.controller.getLastError()?.message);
+            this.forceResult({message: this.controller.getLastError()?.message}, 400);
             return;
         }
 
-        this.setResult(true, `Updated [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}`);
+        this.forceResult({message: `Updated [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}`}, 200);
     }
 
-    async delete[EntityNamePascalCasePlural]([EntityNameCamelCase]Id = null) {
+    async delete[EntityNamePascalCase]([EntityNameCamelCase]Id = null) {
         if (![EntityNameCamelCase]Id) {
-            this.setResult(false, "Invalid [EntityNameCamelCase] ID provided");
+            this.forceResult({message: "Invalid [EntityNameCamelCase] ID provided"}, 400);
             return;
         }
 
-        const deleteResult = await this.controller.delete[EntityNamePascalCasePlural]([EntityNameCamelCase]Id);
+        const deleteResult = await this.controller.delete[EntityNamePascalCase]([EntityNameCamelCase]Id);
 
         if (!deleteResult) {
-            this.setResult(false, this.controller.getLastError()?.message);
+            this.forceResult({message: this.controller.getLastError()?.message}, 400);
             return;
         } 
 
-        this.setResult(true, `Deleted [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}`);
+        this.forceResult({message: `Deleted [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}`}, 200);
     }
 }
 

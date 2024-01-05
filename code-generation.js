@@ -229,7 +229,7 @@ class CodeGenerator extends DivbloxObjectBase {
                     };
      
                     entityModelSpec += `    static ${relationshipName} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`
-                    userEditableFields += `        "${relationshipName}",\n`;
+                    userEditableFields += `        "${finalRelationshipName}",\n`;
 
                     if (linkedEntityRequiresForRelationship === "") {
                         linkedEntityRequiresForRelationship +=

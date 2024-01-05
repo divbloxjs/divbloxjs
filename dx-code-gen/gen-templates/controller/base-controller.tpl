@@ -1,5 +1,5 @@
 const PackageControllerBase = require('divbloxjs/dx-core-modules/package-controller-base');
-const [EntityNamePascalCase] = require('../models/[EntityNameLowerCaseSplitted].model-base');
+const [EntityNamePascalCase] = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/models/[EntityNameLowerCaseSplitted].model');
 const [EntityNamePascalCase]DataSeries = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/data-series/[EntityNameLowerCaseSplitted].data-series');
 
 class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
@@ -46,16 +46,59 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         return data[0];
     }
 
-    async create[EntityNamePascalCase]([EntityNameCamelCase]Data, additionalParams) {
-        return {};
+    async create[EntityNamePascalCase]([EntityNameCamelCase]Data = {}, additionalParams = {}) {
+        const [EntityNameCamelCase] = new [EntityNamePascalCase](this.dxInstance);
+
+        Object.keys([EntityNameCamelCase]Data).forEach((attributeName) => {
+            if (![EntityNamePascalCase].userEditableFields.includes(attributeName)) {
+                this.populateError(`Invalid attribute provided: ${attributeName}`);
+                return null;
+            }
+
+            [EntityNameCamelCase].data[attributeName] = [EntityNameCamelCase]Data[attributeName];
+        });
+
+        const createResult = await [EntityNameCamelCase].save();
+
+        if (!createResult) {
+            this.populateError([EntityNameCamelCase].getLastError());
+            return null;
+        }
+
+        return [EntityNameCamelCase].data;
+    } 
+
+    async update[EntityNamePascalCase]([EntityNameCamelCase]Id, [EntityNameCamelCase]Data, additionalParams) {
+        const [EntityNameCamelCase] = new [EntityNamePascalCase](this.dxInstance);
+
+        for (const attributeName of Object.keys([EntityNameCamelCase]Data)) {
+            if (![EntityNamePascalCase].userEditableFields.includes(attributeName)) {
+                this.populateError(`Invalid attribute provided: ${attributeName}`);
+                return null;
+            }
+
+            [EntityNameCamelCase].data[attributeName] = [EntityNameCamelCase]Data[attributeName];
+        }
+
+        const updateResult = await [EntityNameCamelCase].updateById([EntityNameCamelCase]Id, [EntityNameCamelCase]Data);
+
+        if (!updateResult) {
+            this.populateError([EntityNameCamelCase].getLastError());
+        }
+
+        return updateResult;
     }
 
-    async patch[EntityNamePascalCase](id, [EntityNameCamelCase]Data, additionalParams) {
-        return {};
-    }
+    async delete[EntityNamePascalCase]([EntityNameCamelCase]Id = null, additionalParams = {}) {
+        const [EntityNameCamelCase] = new [EntityNamePascalCase](this.dxInstance);
 
-    async delete[EntityNamePascalCase](id, additionalParams) {
-        return {};
+        const deleteResult = await [EntityNameCamelCase].deleteById([EntityNameCamelCase]Id);
+
+        if (!deleteResult) {
+            this.populateError([EntityNameCamelCase].getLastError());
+        }
+
+        return deleteResult;
     }
 }
 

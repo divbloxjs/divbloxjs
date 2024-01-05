@@ -1293,7 +1293,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const objId = await this.dataLayer.create(entityName, data, transaction);
         if (objId === -1) {
-            this.populateError(this.dataLayer.getLastError().message, this.dataLayer.getLastError());
+            this.populateError(this.dataLayer.getLastError());
         }
 
         return objId;
@@ -1377,7 +1377,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.dataLayer.delete(entityName, id, transaction))) {
-            this.populateError(this.dataLayer.getLastError().message, this.dataLayer.getLastError());
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 

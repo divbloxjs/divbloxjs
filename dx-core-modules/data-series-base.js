@@ -83,6 +83,8 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         // Used for any additional values needed in the query
         this.additionalParams = additionalParams;
 
+        console.log("dataSeriesConfig", dataSeriesConfig);
+        console.log("additionalParams", additionalParams);
         if (dataSeriesConfig.hasOwnProperty("RELATIONSHIP_TREE_LIMIT")) {
             this.#RELATIONSHIP_TREE_LIMIT = dataSeriesConfig?.RELATIONSHIP_TREE_LIMIT;
         }
@@ -495,7 +497,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @returns {Promise<number|null>} The total count, or null if error occurred
      */
     async getTotalCount(options = {}) {
-        const { whereClauses, orderByClause } = await this.#getPrebuiltClauses();
+        const { whereClauses } = await this.#getPrebuiltClauses();
         // console.log("where", whereClauses);
         // console.log("orderByClause", orderByClause);
 
@@ -511,7 +513,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             this.buildFinalCountSql();
         }
 
-        console.log("this.fullCountSql", this.fullCountSql);
+        // console.log("this.fullCountSql", this.fullCountSql);
         const result = await this.dxInstance
             .getDataLayer()
             .executeQuery(
@@ -565,6 +567,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             this.whereValues = [...this.whereValues, ...this.additionalWhereValues];
         }
 
+        console.log("this.whereSql", this.whereSql);
+
+        console.log("orderByClause", orderByClause);
         if (!this.orderBySql) {
             // No overwritten order by clause = use default one
             this.orderBySql = ` ORDER BY ${orderByClause.field} ${orderByClause.isDescending ? "DESC" : "ASC"}`;
@@ -575,7 +580,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             this.buildFinalDataSeriesSql();
         }
 
-        // console.log("this.dataSeriesFullSql", this.dataSeriesFullSql);
+        console.log("this.dataSeriesFullSql", this.dataSeriesFullSql);
         const result = await this.dxInstance
             .getDataLayer()
             .getArrayFromDatabase(
