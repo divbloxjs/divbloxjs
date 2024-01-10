@@ -1,13 +1,13 @@
 const DivbloxBase = require("divbloxjs/divblox");
 const EndpointBase = require('divbloxjs/dx-core-modules/endpoint-base');
-const [EntityNamePascalCasePlural]Controller = require('../../../../../divblox-packages-local/test-package/controllers/[EntityNameLowerCaseSplitted].controller');
+const [EntityNamePascalCase]Controller = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/[EntityNameKebabCase]/[EntityNameKebabCase].controller');
 
 class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
     //#region CRUD endpoint definitions
     get[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]",
-        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Lists all possible [EntityNameCamelCasePlural]",
         operationDescription: "Returns an array of all possible [EntityNameCamelCasePlural]",
         parameters: [this.getConstraintDataInputParameter()], // An array of this.getInputParameter()
@@ -26,24 +26,32 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
     get[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
-        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Gets the [EntityNameCamelCase] by ID",
         operationDescription: "Retrieves the [EntityNameCamelCase] details for given ID",
-        parameters: [], // An array of this.getInputParameter()
+        parameters: [
+            this.getInputParameter({
+                name: "showRelationshipOptions",
+                description: "Boolean value stating whether or not to return a list of options for every foreign key relationship",
+                required: false,
+                type: "query"
+            })
+        ], // An array of this.getInputParameter()
         requestType: "GET", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
         requestSchema: {},
         responseSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
+            const showRelationshipOptions = queryParams.showRelationshipOptions ?? false;
 
-            await this.get[EntityNamePascalCase]([EntityNameCamelCase]Id);
+            await this.get[EntityNamePascalCase]([EntityNameCamelCase]Id, showRelationshipOptions);
         }
     });
 
     create[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]",
-        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Creates a new [EntityNameCamelCase] for the current user",
         operationDescription:
             "A new [EntityNameCamelCase] is created and liked to the current user. " +
@@ -61,7 +69,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
     update[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
-        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Updates an [EntityNameCamelCase] by ID",
         operationDescription: "Updates the [EntityNameCamelCase] with details provided for given ID",
         parameters: [], // An array of this.getInputParameter()
@@ -72,13 +80,14 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
+            console.log(body)
             await this.update[EntityNamePascalCase]([EntityNameCamelCase]Id, body);
         }
     });
 
     delete[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
-        allowedAccess: ["anonymous"], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
+        allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Deletes a [EntityNameCamelCase]",
         operationDescription:
             "Deletes a [EntityNameCamelCase] matching the provided ID.",
@@ -105,7 +114,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
     constructor(dxInstance = null) {
         super(dxInstance);
 
-        this.controller = new [EntityNamePascalCasePlural]Controller(dxInstance);
+        this.controller = new [EntityNamePascalCase]Controller(dxInstance);
         this.endpointName = "[EntityNameCamelCasePlural]";
 
         if (this.controller?.packageOptions?.["hiddenOperations"]) {
@@ -138,13 +147,13 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         this.forceResult({ data: data, count: count }, 200);
     }
 
-    async get[EntityNamePascalCase]([EntityNameCamelCase]Id = null) {
+    async get[EntityNamePascalCase]([EntityNameCamelCase]Id = null, showRelationshipOptions = false) {
         if (![EntityNameCamelCase]Id) {
             this.forceResult({message: "Invalid [EntityNameCamelCase] ID provided"}, 400);
             return;
         }
         
-        const [EntityNameCamelCase]Data = await this.controller.get[EntityNamePascalCase]([EntityNameCamelCase]Id);
+        const [EntityNameCamelCase]Data = await this.controller.get[EntityNamePascalCase]([EntityNameCamelCase]Id, showRelationshipOptions);
 
         if ([EntityNameCamelCase]Data === null) {
             this.controller.printLastError();

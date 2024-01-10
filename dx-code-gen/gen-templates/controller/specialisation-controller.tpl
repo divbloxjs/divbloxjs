@@ -1,5 +1,5 @@
 const DivbloxBase = require("divbloxjs/divblox");
-const [EntityNamePascalCase]ControllerBase = require('divbloxjs/dx-code-gen/generated-base/controllers/[EntityNameLowerCaseSplitted].controller-base');
+const [EntityNamePascalCase]ControllerBase = require('divbloxjs/dx-code-gen/generated-base/[EntityNameKebabCase]/[EntityNameKebabCase].controller-base');
 
 class [EntityNamePascalCase]Controller extends [EntityNamePascalCase]ControllerBase {
     /**

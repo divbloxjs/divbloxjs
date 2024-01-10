@@ -58,6 +58,7 @@ class DivbloxBase extends divbloxObjectBase {
         this.initOptions = options;
         this.isInitFinished = false;
         this.configRoot = "";
+        this.corePackageName = "_core";
 
         this.initPrerequisites();
 
@@ -404,7 +405,7 @@ class DivbloxBase extends divbloxObjectBase {
                         );
                     }
 
-                    this.dataModelObj[entityName].packageName = packageNameToLoad;
+                    this.dataModelObj[entityName].packageName = packageNameToLoad ?? this.corePackageName;
                     this.dataModelObj[entityName].packageNameCamelCase = dxUtils.convertLowerCaseToCamelCase(
                         packageNameToLoad,
                         "-",
@@ -506,7 +507,7 @@ class DivbloxBase extends divbloxObjectBase {
                         }
                     }
 
-                    entityObj.packageName = packageNameToLoad;
+                    entityObj.packageName = packageNameToLoad ?? this.corePackageName;
                     entityObj.packageNameCamelCase = dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-");
                     this.dataModelObj[entityName] = entityObj;
                 }
@@ -666,16 +667,11 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
-        const codeGenerator = new CodeGenerator(this);
-        await codeGenerator.generateBaseSchemaAndModelClasses();
-        await codeGenerator.generateBaseDataSeriesClasses();
-        await codeGenerator.generateBaseEndpointClasses();
-        await codeGenerator.generateBaseControllerClasses();
-        await codeGenerator.generateDataSeriesSpecialisationClasses();
-        await codeGenerator.generateModelSpecialisationClasses();
-        await codeGenerator.generateEndpointSpecialisationClasses();
-        await codeGenerator.generateControllerSpecialisationClasses();
 
+        const generateCrud = this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
+        if (generateCrud) {
+            this.generateCrud();
+        }
         if (!(await this.ensureGlobalSuperUserPresent())) {
             dxUtils.printErrorMessage("Could not create super user grouping");
             this.printLastError();
@@ -689,7 +685,7 @@ class DivbloxBase extends divbloxObjectBase {
         );
 
         //It is important that this is called before starting the webserver, otherwise the schemas will not be available
-        this.dataModelSchema = require("./dx-code-gen/generated-base/schemas/data-model.schema.js");
+        this.dataModelSchema = require("./dx-code-gen/generated-base/data-model.schema.js");
 
         if (!this.disableWebServer) {
             const webServerPort = this.#getFinalConfigVariable("webServerPort", "number")
@@ -1097,6 +1093,13 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         return this.configObj["environmentArray"][process.env.NODE_ENV][variableName];
+    }
+
+    async generateCrud() {
+        const codeGenerator = new CodeGenerator(this);
+        await codeGenerator.checkAndCreateNecessaryFolders();
+        await codeGenerator.generateBaseClasses();
+        await codeGenerator.generateSpecialisationClasses();
     }
 
     //#endregion

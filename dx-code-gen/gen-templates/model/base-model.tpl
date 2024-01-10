@@ -3,8 +3,8 @@ const DivbloxBase = require("divbloxjs/divblox");
 const ModelBase = require('divbloxjs/dx-orm/object-model-base');
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
 
-const entitySchema = require('divbloxjs/dx-code-gen/generated-base/schemas/[EntityNameLowerCaseSplitted].schema');
-[linkedEntityRequires]
+const entitySchema = require('divbloxjs/dx-code-gen/generated-base/[EntityNameKebabCase]/[EntityNameKebabCase].schema-base');
+[LinkedEntityRequires]
 /**
  * An object model class used to describe the entity [EntityNameCamelCase] in an OOP manner
  */
@@ -12,6 +12,7 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
 
     // [EntityNamePascalCase] Model Specification
     [EntityModelSpec]
+    // Only fields defined here are allowed in the generated create/update operations
     [UserEditableFields]
     /**
      * Basic initialization for the [EntityNameCamelCase] object model class.
@@ -35,7 +36,7 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
         [EntityData]
     }
 
-    [linkedEntityGetters]
+    [LinkedEntityGetters]
     
     /**
      * Performs a SELECT query on the database with the provided clauses

@@ -1,7 +1,7 @@
 const PackageControllerBase = require('divbloxjs/dx-core-modules/package-controller-base');
-const [EntityNamePascalCase] = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/models/[EntityNameLowerCaseSplitted].model');
-const [EntityNamePascalCase]DataSeries = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/data-series/[EntityNameLowerCaseSplitted].data-series');
-
+const [EntityNamePascalCase] = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/[EntityNameLowerCaseSplitted]/[EntityNameLowerCaseSplitted].model');
+const [EntityNamePascalCase]DataSeries = require('../../../../../divblox-packages-local/[PackageNameKebabCase]/[EntityNameLowerCaseSplitted]/[EntityNameLowerCaseSplitted].data-series');
+[ShowRelationshipDeclarations]
 class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
     constructor(dxInstance = null, packageName = '[PackageNameCamelCase]') {
         super(dxInstance, packageName);
@@ -14,14 +14,12 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
 
         const data = await [EntityNameCamelCase]DataSeries.getDataSeries();
         if (data === null) {
-            [EntityNameCamelCase]DataSeries.printLastError();
             this.populateError([EntityNameCamelCase]DataSeries.getLastError());
             return { data: null, count: null };
         }
 
         const count = await [EntityNameCamelCase]DataSeries.getTotalCount();
         if (count === null) {
-            [EntityNameCamelCase]DataSeries.printLastError();
             this.populateError([EntityNameCamelCase]DataSeries.getLastError());
             return { data: null, count: null };
         }
@@ -29,21 +27,27 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         return { data: data, count: count };
     }
 
-    async get[EntityNamePascalCase](id = null, additionalParams = {}) {
+    async get[EntityNamePascalCase](id = null, showRelationshipOptions = false, additionalParams = {}) {
         additionalParams.[EntityNameCamelCase]Id = id;
         
         const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(
             this.dxInstance, {}, additionalParams,
         );
 
-        const data = await [EntityNameCamelCase]DataSeries.getDataSeries();
-        if (data === null) {
-            [EntityNameCamelCase]DataSeries.printLastError();
+        const [EntityNameCamelCase]DataArr = await [EntityNameCamelCase]DataSeries.getDataSeries();
+        if ([EntityNameCamelCase]DataArr === null) {
             this.populateError([EntityNameCamelCase]DataSeries.getLastError());
             return null;
         }
 
-        return data[0];
+        if (!showRelationshipOptions) {
+            return [EntityNameCamelCase]DataArr[0];
+        }
+
+[RelationshipOptions]
+        return {
+            data: [EntityNameCamelCase]DataArr[0],
+[RelationshipReturnOptions]        };
     }
 
     async create[EntityNamePascalCase]([EntityNameCamelCase]Data = {}, additionalParams = {}) {

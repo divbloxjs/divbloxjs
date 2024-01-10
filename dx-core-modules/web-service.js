@@ -157,6 +157,24 @@ class DivbloxWebService extends divbloxObjectBase {
         });
     }
 
+    getFilesByExtensionRecursive(rootDir, ext, filePaths, result) {
+        filePaths = filePaths || fs.readdirSync(rootDir);
+        result = result || [];
+
+        filePaths.forEach((filePath) => {
+            const newRootDir = path.join(rootDir, filePath);
+            if (fs.statSync(newRootDir).isDirectory()) {
+                result = this.getFilesByExtensionRecursive(newRootDir, ext, fs.readdirSync(newRootDir), result);
+                return;
+            }
+
+            if (filePath.endsWith(ext)) {
+                result.push(newRootDir);
+            }
+        });
+        return result;
+    }
+
     /**
      * Handles the setup of the routers for the api endpoints. Iterates over all provided packages and installs routing
      * for each endpoint and operation
@@ -169,26 +187,13 @@ class DivbloxWebService extends divbloxObjectBase {
         for (const packageNameKebabCase of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageNameKebabCase];
             const packageName = packageObj.packageNameCamelCase;
-            // const packageConfigInstance = new PackageEndpoint(this.dxInstance);
-            // instantiatedPackages[packageName] = packageConfigInstance;
 
-            const endpointsRootDirPath = path.join(path.resolve("./"), packageObj.packageRoot + "/endpoints");
             let filePaths = [];
 
-            if (fs.existsSync(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint.js"))) {
-                filePaths.push(path.join(path.resolve("./"), packageObj.packageRoot + "/endpoint.js"));
-            }
-
-            if (fs.existsSync(endpointsRootDirPath)) {
-                function getAllFilesInDir(dirName) {
-                    fs.readdirSync(dirName).forEach((fileName) => {
-                        const absPath = path.join(dirName, fileName);
-                        if (fs.statSync(absPath).isDirectory()) return getAllFilesInDir(absPath);
-                        else return filePaths.push(absPath);
-                    });
-                }
-                getAllFilesInDir(endpointsRootDirPath);
-            }
+            filePaths = this.getFilesByExtensionRecursive(
+                path.join(path.resolve("./"), packageObj.packageRoot),
+                "endpoint.js",
+            );
 
             filePaths.forEach((filePath) => {
                 const PackageEndpoint = require(filePath);
@@ -597,7 +602,7 @@ class DivbloxWebService extends divbloxObjectBase {
             }
         }
 
-        let dataModelSchema = require(DIVBLOX_ROOT_DIR + "/dx-code-gen/generated-base/schemas/data-model.schema.js");
+        let dataModelSchema = require(DIVBLOX_ROOT_DIR + "/dx-code-gen/generated-base/data-model.schema.js");
 
         let schemas = {};
 

@@ -1,5 +1,5 @@
 const DivbloxBase = require("divbloxjs/divblox");
-const [EntityNamePascalCase]ModelBase = require("divbloxjs/dx-code-gen/generated-base/models/[EntityNameLowerCaseSplitted].model-base");
+const [EntityNamePascalCase]ModelBase = require("divbloxjs/dx-code-gen/generated-base/[EntityNameKebabCase]/[EntityNameKebabCase].model-base");
 
 /**
  * An object model class used to describe the entity [EntityNamePascalCase] in an OOP manner

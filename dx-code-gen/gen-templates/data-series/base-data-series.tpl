@@ -1,6 +1,5 @@
 const DxBaseDataSeries = require("divbloxjs/dx-core-modules/data-series-base");
-// TODO update to local version of model class
-const [EntityNamePascalCase] = require("../models/[EntityNameLowerCaseSplitted].model-base");
+const [EntityNamePascalCase] = require("../../../../../divblox-packages-local/[PackageNameKebabCase]/[EntityNameKebabCase]/[EntityNameKebabCase].model");
 
 /**
  * Base [EntityNamePascalCase] entity Data series class.

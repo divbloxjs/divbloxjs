@@ -333,7 +333,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
 
         for (const clause of clauses) {
             // If falsy, invalid clause provided, skip
-            if (!clause) {
+            if (!clause || !clause.preparedStatement) {
                 continue;
             }
 
@@ -518,7 +518,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                             "findArray() does not support multiple JOINs on the same foreign table.' " +
                                 linkedEntity.entityName +
                                 "' is defined more than once. To achieve this functionality, please create" +
-                                " a custom query."
+                                " a custom query.",
                         );
 
                         throw new Error("Fatal error in findArray()");
@@ -577,14 +577,14 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
                 { sql: query, nestTables: true },
                 dataLayer.getModuleNameFromEntityName(entity),
                 values,
-                transaction
+                transaction,
             );
         } else {
             queryResult = await dataLayer.executeQuery(
                 { sql: query },
                 dataLayer.getModuleNameFromEntityName(entity),
                 values,
-                transaction
+                transaction,
             );
 
             if (queryResult !== null) {
