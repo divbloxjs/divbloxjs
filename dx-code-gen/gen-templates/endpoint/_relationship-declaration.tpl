@@ -1,4 +1,4 @@
-    get[EntityNamePascalCasePlural]By[RelatedEntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
+    get[EntityNamePascalCasePlural]By[RelatedEntityNamePascalCase]Operation = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/[RelatedEntityNameCamelCasePlural]/:id",
         allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Lists a subset of [EntityNameCamelCasePlural]",
@@ -6,7 +6,10 @@
         parameters: [], // An array of this.getInputParameter()
         requestType: "GET", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
         requestSchema: {},
-        responseSchema: { organisationDataArray: [] }, // this.getSchema()
+        responseSchema: this.getSchema({
+            data: this.getArraySchema(this.dxInstance.getEntitySchema("[EntityNameCamelCase]")), 
+            count: "integer" 
+        }),
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
 

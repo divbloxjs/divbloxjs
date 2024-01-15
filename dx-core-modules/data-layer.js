@@ -439,7 +439,6 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.databaseConnector.queryDB(query, moduleName, values, transaction);
 
         if (queryResult === null) {
-            this.databaseConnector.printLastError();
             const errorMessage = this.databaseConnector.getLastError()?.message ?? "Could not execute query";
             this.populateError(errorMessage, this.databaseConnector.getLastError());
             return null;
@@ -534,6 +533,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @return {{}} The resulting object with the correct case for its properties
      */
     transformSqlObjectToJs(sqlObject = {}) {
+        if (!sqlObject) {
+            return null;
+        }
+
         let returnObject = {};
 
         for (const key of Object.keys(sqlObject)) {

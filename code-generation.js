@@ -109,7 +109,7 @@ class CodeGenerator extends DivbloxObjectBase {
             },
         };
 
-        let entityModelSpec = `static id = "${entityNameSqlCase}'.id";\n`;
+        let entityModelSpec = `static id = "${entityNameSqlCase}.id";\n`;
 
         let userEditableFields = `static userEditableFields = [\n`;
 
@@ -309,11 +309,20 @@ class CodeGenerator extends DivbloxObjectBase {
         const packageNameKebabCase = entityDataModel.packageName ?? this.corePackageName;
         const packageNameCamelCase = entityDataModel.packageNameCamelCase;
 
+        const attributes = entityDataModel["attributes"];
+        let searchAttributesStr = `\t\t\tdataSeriesConfig.searchAttributes = [\n`;
+        for (const attributeNameCamelCase of Object.keys(attributes)) {
+            searchAttributesStr += `\t\t\t\t${entityNamePascalCase}.${attributeNameCamelCase},\n`;
+        }
+
+        searchAttributesStr += `\t\t\t]`;
+
         const tokensToReplace = {
             EntityNameCamelCase: entityNameCamelCase,
             EntityNamePascalCase: entityNamePascalCase,
             EntityNameKebabCase: entityNameKebabCase,
             PackageNameKebabCase: packageNameKebabCase,
+            SearchAttributesStr: searchAttributesStr,
         };
 
         let fileBaseStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/data-series/base-data-series.tpl`, "utf-8");
@@ -353,7 +362,7 @@ class CodeGenerator extends DivbloxObjectBase {
 
     async #generateBaseEndpointClassForEntity(entityNameCamelCase, entityDataModel) {
         entityNameCamelCase = entityDataModel.singularEntityName ?? entityNameCamelCase;
-        const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(entityNameCamelCase, "-");
+        const entityNamePascalCase = dxUtils.convertCamelCaseToPascalCase(entityNameCamelCase);
         const entityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(entityNameCamelCase, "-");
 
         const entityNameCamelCasePlural = entityDataModel.pluralEntityName ?? this.pluralize(entityNameCamelCase);
@@ -375,7 +384,6 @@ class CodeGenerator extends DivbloxObjectBase {
             }
         }
 
-        console.log("allowedAccessStr", allowedAccessStr);
         const tokensToReplace = {
             EntityNameCamelCase: entityNameCamelCase,
             EntityNamePascalCase: entityNamePascalCase,
@@ -420,7 +428,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 relationshipConstraintDeclarationStr = relationshipConstraintDeclarationStr.replaceAll(search, innerTokensToReplace[token]);
             }
 
-            tokensToReplace.RelationshipDeclaredOperationList += `\t\t\tthis.get${tokensToReplace.EntityNamePascalCasePlural}By${innerTokensToReplace.RelatedEntityNamePascalCase}OperationDeclaration,\n`
+            tokensToReplace.RelationshipDeclaredOperationList += `\t\t\tthis.get${tokensToReplace.EntityNamePascalCasePlural}By${innerTokensToReplace.RelatedEntityNamePascalCase}Operation,\n`
             allRelationshipsDeclarationsStr += relationshipConstraintDeclarationStr;
         })
 

@@ -8,9 +8,7 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
     }
 
     async get[EntityNamePascalCasePlural](dataSeriesConfig = {}, additionalParams = {}) {
-        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(
-            this.dxInstance, dataSeriesConfig, additionalParams,
-        );
+        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(this.dxInstance, dataSeriesConfig, additionalParams);
 
         const data = await [EntityNameCamelCase]DataSeries.getDataSeries();
         if (data === null) {
@@ -37,6 +35,11 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         const [EntityNameCamelCase]DataArr = await [EntityNameCamelCase]DataSeries.getDataSeries();
         if ([EntityNameCamelCase]DataArr === null) {
             this.populateError([EntityNameCamelCase]DataSeries.getLastError());
+            return null;
+        }
+
+        if ([EntityNameCamelCase]DataArr.length !== 1) {
+            this.populateError("404", [EntityNameCamelCase].getLastError());
             return null;
         }
 
@@ -85,8 +88,12 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         }
 
         const updateResult = await [EntityNameCamelCase].updateById([EntityNameCamelCase]Id, [EntityNameCamelCase]Data);
-
         if (!updateResult) {
+            if ([EntityNameCamelCase].getLastError()?.message === "No rows were affected") {
+                this.populateError("404", [EntityNameCamelCase].getLastError());
+                return null;
+            }
+
             this.populateError([EntityNameCamelCase].getLastError());
         }
 
@@ -99,6 +106,11 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
         const deleteResult = await [EntityNameCamelCase].deleteById([EntityNameCamelCase]Id);
 
         if (!deleteResult) {
+            if ([EntityNameCamelCase].getLastError()?.message === "No rows were affected") {
+                this.populateError("404", [EntityNameCamelCase].getLastError());
+                return null;
+            }
+            
             this.populateError([EntityNameCamelCase].getLastError());
         }
 

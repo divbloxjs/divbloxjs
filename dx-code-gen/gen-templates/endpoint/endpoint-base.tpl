@@ -5,30 +5,29 @@ const [EntityNamePascalCase]Controller = require('../../../../../divblox-package
 class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
     //#region CRUD endpoint definitions
-    get[EntityNamePascalCasePlural]OperationDeclaration = this.getOperationDefinition({
+    get[EntityNamePascalCasePlural]Operation = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]",
         allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
-        operationSummary: "Lists all possible [EntityNameCamelCasePlural]",
-        operationDescription: "Returns an array of all possible [EntityNameCamelCasePlural]",
-        parameters: [this.getConstraintDataInputParameter()], // An array of this.getInputParameter()
-        requestType: "GET", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
+        operationSummary: "Returns list of [EntityNameCamelCasePlural]",
+        operationDescription: "Returns a subset of [EntityNameCamelCasePlural] based on the provided constraints, as well as a total of the non-limited dataset.",
+        parameters: this.getDataSeriesQueryParamDefinitions(), // An array of this.getInputParameter()
+        requestType: "GET",
         requestSchema: {},
-        responseSchema: this.getSchema({ data: "array", count: "integer" }), // this.getSchema()
+        responseSchema: this.getSchema({ 
+            data: this.getArraySchema(this.dxInstance.getEntitySchema("[EntityNameCamelCase]")), 
+            count: "integer" 
+        }),
+        disableSwaggerDoc: this.hiddenOperations.indexOf("get[EntityNamePascalCasePlural]") !== -1,
         f: async (req, res) => {
-            const { params: routeParams, query: queryParams, body } = req;
-
-            const constraintData = queryParams.constraintData;
-            const additionalParams = {};
-
-            await this.get[EntityNamePascalCasePlural](constraintData, additionalParams);
+            await this.get[EntityNamePascalCasePlural](req, res);
         },
     });
 
-    get[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
+    get[EntityNamePascalCase]Operation = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
         allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Gets the [EntityNameCamelCase] by ID",
-        operationDescription: "Retrieves the [EntityNameCamelCase] details for given ID",
+        operationDescription: "Retrieves the [EntityNameCamelCase] data for given ID",
         parameters: [
             this.getInputParameter({
                 name: "showRelationshipOptions",
@@ -37,9 +36,10 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
                 type: "query"
             })
         ], // An array of this.getInputParameter()
-        requestType: "GET", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
+        requestType: "GET",
         requestSchema: {},
-        responseSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
+        responseSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]"),
+        disableSwaggerDoc: this.hiddenOperations.indexOf("get[EntityNamePascalCase]") !== -1,
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
@@ -49,17 +49,18 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         }
     });
 
-    create[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
+    create[EntityNamePascalCase]Operation = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]",
         allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
-        operationSummary: "Creates a new [EntityNameCamelCase] for the current user",
-        operationDescription:
-            "A new [EntityNameCamelCase] is created and liked to the current user. " +
-            "The current user is set as the owner. Default [EntityNameCamelCase] roles are automatically generated",
+        operationSummary: "Creates a new [EntityNameCamelCase]",
+        operationDescription: "Creates a new [EntityNameCamelCase] for the given data",
         parameters: [], // An array of this.getInputParameter()
-        requestType: "POST", // GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH|TRACE
-        requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
-        responseSchema: this.getSchema({ id: "integer" }),
+        requestType: "POST",
+        requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true),
+        responseSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]"),
+        disableSwaggerDoc: this.hiddenOperations.indexOf("create[EntityNamePascalCase]") !== -1,
+        successStatusCode: 201,
+        successMessage: "Created",
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
 
@@ -67,16 +68,18 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         }
     });
 
-    update[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
+    update[EntityNamePascalCase]Operation = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
         allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
-        operationSummary: "Updates an [EntityNameCamelCase] by ID",
-        operationDescription: "Updates the [EntityNameCamelCase] with details provided for given ID",
+        operationSummary: "Updates [EntityNameCamelCase] by ID",
+        operationDescription: "Updates the [EntityNameCamelCase] with data provided for a given ID",
         parameters: [], // An array of this.getInputParameter()
         requestType: "PATCH",
-        requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true), // this.getSchema()
+        requestSchema: this.dxInstance.getEntitySchema("[EntityNameCamelCase]", true),
         responseSchema: this.getSchema({ message: "string" }),
         disableSwaggerDoc: this.hiddenOperations.indexOf("update[EntityNamePascalCase]") !== -1,
+        successStatusCode: 204,
+        successMessage: "No Content",
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
@@ -85,7 +88,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         }
     });
 
-    delete[EntityNamePascalCase]OperationDeclaration = this.getOperationDefinition({
+    delete[EntityNamePascalCase]Operation = this.getOperationDefinition({
         operationName: "[EntityNameCamelCasePlural]/:id",
         allowedAccess: [AllowedAccess], // If this array does not contain "anonymous", a JWT token will be expected in the Auth header
         operationSummary: "Deletes a [EntityNameCamelCase]",
@@ -96,6 +99,8 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         requestSchema: {},
         responseSchema: this.getSchema({ message: "string" }),
         disableSwaggerDoc: this.hiddenOperations.indexOf("delete[EntityNamePascalCasePlural]") !== -1,
+        successStatusCode: 204,
+        successMessage: "No Content",
         f: async (req, res) => {
             const { params: routeParams, query: queryParams, body } = req;
             const [EntityNameCamelCase]Id = routeParams.id ?? undefined;
@@ -125,22 +130,24 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
             this.operationAccess = this.controller.packageOptions["operationAccess"];
         }
 
+        this.declareEntitySchemas(["[EntityNameCamelCase]"]);
+
         this.declareOperations([
-            this.get[EntityNamePascalCasePlural]OperationDeclaration,
-            this.get[EntityNamePascalCase]OperationDeclaration,
-            this.create[EntityNamePascalCase]OperationDeclaration,
-            this.update[EntityNamePascalCase]OperationDeclaration,
-            this.delete[EntityNamePascalCase]OperationDeclaration,
+            this.get[EntityNamePascalCasePlural]Operation,
+            this.get[EntityNamePascalCase]Operation,
+            this.create[EntityNamePascalCase]Operation,
+            this.update[EntityNamePascalCase]Operation,
+            this.delete[EntityNamePascalCase]Operation,
 [RelationshipDeclaredOperationList]
         ]);
     }
 
-    async get[EntityNamePascalCasePlural](constraintData = {}, additionalParams = {}) {
-        const { data, count } = await this.controller.get[EntityNamePascalCasePlural](constraintData, additionalParams);
+    async get[EntityNamePascalCasePlural](req, res) {
+        const { data, count } = await this.controller.get[EntityNamePascalCasePlural](req.query);
 
         if (data === null || count === null) {
             this.controller.printLastError();
-            this.forceResult({message: this.controller.getLastError()?.message}, 400);
+            this.forceResult({ message: this.controller.getLastError()?.message }, 400);
             return;
         }
 
@@ -154,10 +161,14 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         }
         
         const [EntityNameCamelCase]Data = await this.controller.get[EntityNamePascalCase]([EntityNameCamelCase]Id, showRelationshipOptions);
-
         if ([EntityNameCamelCase]Data === null) {
             this.controller.printLastError();
-            this.forceResult({message: this.controller.getLastError()?.message}, 400);
+            if (this.controller.getLastError()?.message === "404") {
+                this.forceResult(undefined, 404);
+                return;
+            }
+
+            this.forceResult({ message: this.controller.getLastError()?.message }, 400);
             return;
         }
 
@@ -169,7 +180,7 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
 
         if (!created[EntityNamePascalCase]) {
             this.controller.printLastError();
-            this.forceResult({message: this.controller.getLastError()?.message}, 400);
+            this.forceResult({ message: this.controller.getLastError()?.message }, 400);
             return;
         }
 
@@ -194,11 +205,17 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         );
 
         if (!updateResult) {
-            this.forceResult({message: this.controller.getLastError()?.message}, 400);
+            this.controller.printLastError();
+            if (this.controller.getLastError()?.message === "404") {
+                this.forceResult(undefined, 404);
+                return;
+            }
+            
+            this.forceResult({ message: this.controller.getLastError()?.message }, 400);
             return;
         }
 
-        this.forceResult({message: `Updated [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}`}, 200);
+        this.forceResult({ message: `Updated [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}` }, 200);
     }
 
     async delete[EntityNamePascalCase]([EntityNameCamelCase]Id = null) {
@@ -210,11 +227,17 @@ class [EntityNamePascalCasePlural]EndpointBase extends EndpointBase {
         const deleteResult = await this.controller.delete[EntityNamePascalCase]([EntityNameCamelCase]Id);
 
         if (!deleteResult) {
-            this.forceResult({message: this.controller.getLastError()?.message}, 400);
+            this.controller.printLastError();
+            if (this.controller.getLastError()?.message === "404") {
+                this.forceResult(undefined, 404);
+                return;
+            }
+
+            this.forceResult({ message: this.controller.getLastError()?.message }, 400);
             return;
         } 
 
-        this.forceResult({message: `Deleted [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}`}, 200);
+        this.forceResult({ message: `Deleted [EntityNameCamelCase] with ID: ${[EntityNameCamelCase]Id}` }, 200);
     }
 }
 

@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "/api/",
-      "description": "The server api root"
+      "url": "/api",
+      "description": "The server API root"
     }
   ],
   "tags": [Tags],

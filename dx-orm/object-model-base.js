@@ -162,9 +162,10 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
         if (!updateResult) {
             this.populateError(this.dxInstance.getLastError());
+            return null;
         }
 
-        return updateResult;
+        return this.dxInstance.getDataLayer().transformSqlObjectToJs(updateResult);
     }
 
     /**

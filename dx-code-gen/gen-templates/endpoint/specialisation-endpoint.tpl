@@ -11,6 +11,12 @@ class [EntityNamePascalCase]Endpoint extends [EntityNamePascalCase]EndpointBase 
      */
     constructor(dxInstance = null) {
         super(dxInstance);
+
+        // TODO Remember to declare/redeclare any custom operation definitions here
+        this.declareOperations([
+            // this.newEntityOperation,
+            // this.redefinedCrudEntityOperation
+        ]);
     }
 
     // TODO: Add implementations for each declared operation below

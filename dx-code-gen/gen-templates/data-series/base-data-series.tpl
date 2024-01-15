@@ -12,6 +12,10 @@ class [EntityNamePascalCase]BaseDataSeries extends DxBaseDataSeries {
         dataSeriesConfig.moduleName = [EntityNamePascalCase].__moduleName;
         dataSeriesConfig.entityName = [EntityNamePascalCase].__entityName;
 
+        if (!dataSeriesConfig.hasOwnProperty("searchAttributes")) {
+[SearchAttributesStr]
+        }
+
         super(dxInstance, dataSeriesConfig, additionalParams);
     }
     [relationshipConstraints]

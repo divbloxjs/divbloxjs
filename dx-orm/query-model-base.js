@@ -327,7 +327,7 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
      * @returns A sql valid string, e.g (name <= 'John' OR name != 'Doe')
      */
     static buildCondition(operator = "AND", clauses = []) {
-        let queryComponent = "(";
+        let queryStr = "";
         let hasStarted = false;
         let localValues = [];
 
@@ -338,19 +338,21 @@ class DivbloxQueryModelBase extends divbloxObjectBase {
             }
 
             if (hasStarted) {
-                queryComponent += " " + operator + " ";
+                queryStr += " " + operator + " ";
             } else {
                 hasStarted = true;
             }
 
-            queryComponent += clause.preparedStatement;
+            queryStr += clause.preparedStatement;
             localValues.push(...clause.values);
         }
 
-        queryComponent += ")";
+        if (queryStr) {
+            queryStr = `(${queryStr})`;
+        }
 
         return {
-            preparedStatement: queryComponent,
+            preparedStatement: queryStr,
             values: localValues,
         };
     }
