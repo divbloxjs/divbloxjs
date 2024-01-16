@@ -7,6 +7,7 @@ const divbloxDataLayerBase = require("./dx-core-modules/data-layer");
 const divbloxWebServiceBase = require("./dx-core-modules/web-service");
 const divbloxJwtWrapperBase = require("./dx-core-modules/jwt-wrapper");
 const DIVBLOX_ROOT_DIR = path.join(__dirname, "..", "divbloxjs");
+const CodeGenerator = require("./code-generation.js");
 
 const DIVBLOX_API_ROOT_URL = "https://api.divblox.app";
 
@@ -57,6 +58,7 @@ class DivbloxBase extends divbloxObjectBase {
         this.initOptions = options;
         this.isInitFinished = false;
         this.configRoot = "";
+        this.corePackageName = "_core";
 
         this.initPrerequisites();
 
@@ -318,10 +320,10 @@ class DivbloxBase extends divbloxObjectBase {
             return false;
         }
 
-        const packagesToLoad = definedPackages[packagesLocation];
+        const packageNamesToLoad = definedPackages[packagesLocation];
 
-        const duplicatePackages = packagesToLoad.filter((packageName, index) => {
-            return packagesToLoad.indexOf(packageName) !== index;
+        const duplicatePackages = packageNamesToLoad.filter((packageName, index) => {
+            return packageNamesToLoad.indexOf(packageName) !== index;
         });
 
         if (duplicatePackages.length > 0) {
@@ -334,22 +336,25 @@ class DivbloxBase extends divbloxObjectBase {
             throw new Error("Configuration invalid");
         }
 
-        for (const packageToLoad of packagesToLoad) {
+        for (const packageNameToLoad of packageNamesToLoad) {
             // If a package is already defined, it means we are specializing this package within a child package,
             // so its package root should be redeclared.
             const packageRoot = isRemote
-                ? "node_modules/" + packageToLoad
-                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad;
-
-            if (typeof this.packages[packageToLoad] === "undefined") {
-                this.packages[packageToLoad] = {
+                ? "node_modules/" + packageNameToLoad
+                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageNameToLoad;
+            if (typeof this.packages[packageNameToLoad] === "undefined") {
+                this.packages[packageNameToLoad] = {
                     packageRoot: packageRoot,
+                    packageNameKebabCase: packageNameToLoad,
+                    packageNameCamelCase: dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-"),
                 };
             } else if (!isRemote) {
                 // This will ensure that the local package's root path is stored when it is intended as
                 // a specialization of the remote package with the same name
-                this.packages[packageToLoad] = {
+                this.packages[packageNameToLoad] = {
                     packageRoot: packageRoot,
+                    packageNameKebabCase: packageNameToLoad,
+                    packageNameCamelCase: dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-"),
                 };
             }
 
@@ -357,8 +362,8 @@ class DivbloxBase extends divbloxObjectBase {
                 this.packageOptions[process.env.NODE_ENV] = {};
             }
 
-            if (typeof this.packageOptions[process.env.NODE_ENV][packageToLoad] === "undefined") {
-                this.packageOptions[process.env.NODE_ENV][packageToLoad] = {};
+            if (typeof this.packageOptions[process.env.NODE_ENV][packageNameToLoad] === "undefined") {
+                this.packageOptions[process.env.NODE_ENV][packageNameToLoad] = {};
             }
 
             const packageOptionsPath = packageRoot + "/options.json";
@@ -370,22 +375,21 @@ class DivbloxBase extends divbloxObjectBase {
 
                 for (const packageOption of Object.keys(packageOptions)) {
                     if (
-                        typeof this.packageOptions[process.env.NODE_ENV][packageToLoad][packageOption] === "undefined"
+                        typeof this.packageOptions[process.env.NODE_ENV][packageNameToLoad][packageOption] ===
+                        "undefined"
                     ) {
-                        this.packageOptions[process.env.NODE_ENV][packageToLoad][packageOption] =
+                        this.packageOptions[process.env.NODE_ENV][packageNameToLoad][packageOption] =
                             packageOptions[packageOption];
                     }
                 }
             }
 
             const packageDataModelPath = isRemote
-                ? "node_modules/" + packageToLoad + "/data-model.json"
-                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageToLoad + "/data-model.json";
-
+                ? "node_modules/" + packageNameToLoad + "/data-model.json"
+                : this.configObj["divbloxPackagesRootLocal"] + "/" + packageNameToLoad + "/data-model.json";
             const packageDataModelDataStr = fs.readFileSync(packageDataModelPath, "utf-8");
 
             const packageDataModelObj = JSON.parse(packageDataModelDataStr);
-
             for (const entityName of Object.keys(packageDataModelObj)) {
                 const entityObj = packageDataModelObj[entityName];
 
@@ -401,7 +405,11 @@ class DivbloxBase extends divbloxObjectBase {
                         );
                     }
 
-                    this.dataModelObj[entityName].package = packageToLoad;
+                    this.dataModelObj[entityName].packageName = packageNameToLoad ?? this.corePackageName;
+                    this.dataModelObj[entityName].packageNameCamelCase = dxUtils.convertLowerCaseToCamelCase(
+                        packageNameToLoad,
+                        "-",
+                    );
 
                     // The entity is already defined, let's add any relevant attributes/relationships from the base package
 
@@ -499,8 +507,8 @@ class DivbloxBase extends divbloxObjectBase {
                         }
                     }
 
-                    entityObj.package = packageToLoad;
-
+                    entityObj.packageName = packageNameToLoad ?? this.corePackageName;
+                    entityObj.packageNameCamelCase = dxUtils.convertLowerCaseToCamelCase(packageNameToLoad, "-");
                     this.dataModelObj[entityName] = entityObj;
                 }
             }
@@ -659,12 +667,11 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
-        if (!(await this.checkOrmBaseClassesComplete())) {
-            await this.generateOrmBaseClasses();
-            await this.generateEntityDataSeriesBaseClasses();
-            await this.generateEntityModelSpecialisationClasses();
-        }
 
+        const generateCrud = this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
+        if (generateCrud) {
+            this.generateCrud();
+        }
         if (!(await this.ensureGlobalSuperUserPresent())) {
             dxUtils.printErrorMessage("Could not create super user grouping");
             this.printLastError();
@@ -678,7 +685,7 @@ class DivbloxBase extends divbloxObjectBase {
         );
 
         //It is important that this is called before starting the webserver, otherwise the schemas will not be available
-        this.dataModelSchema = require("./dx-orm/generated/schemas/data-model.schema.js");
+        this.dataModelSchema = require("./dx-code-gen/generated-base/data-model.schema.js");
 
         if (!this.disableWebServer) {
             const webServerPort = this.#getFinalConfigVariable("webServerPort", "number")
@@ -1088,6 +1095,13 @@ class DivbloxBase extends divbloxObjectBase {
         return this.configObj["environmentArray"][process.env.NODE_ENV][variableName];
     }
 
+    async generateCrud(overwriteSpecialisationClasses = false) {
+        const codeGenerator = new CodeGenerator(this);
+        await codeGenerator.checkAndCreateNecessaryFolders();
+        await codeGenerator.generateBaseClasses();
+        await codeGenerator.generateSpecialisationClasses(overwriteSpecialisationClasses);
+    }
+
     //#endregion
 
     //#region divblox.app integration
@@ -1145,7 +1159,9 @@ class DivbloxBase extends divbloxObjectBase {
             const result = await response.json();
 
             if (!response.ok) {
-                dxUtils.printErrorMessage(result.message ? result.message : "Something went wrong. <br>Please try again.");
+                dxUtils.printErrorMessage(
+                    result.message ? result.message : "Something went wrong. <br>Please try again.",
+                );
                 return;
             }
 
@@ -1190,466 +1206,6 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printWarningMessage("Synchronization cancelled");
         } else {
             throw new Error("Synchronization cancelled. Cannot continue.");
-        }
-    }
-
-    /**
-     * Checks whether the expected base object model classes exist
-     * @return {Promise<boolean>} True if all expected classes exists, false otherwise
-     */
-    async checkOrmBaseClassesComplete() {
-        // TODO: Optimise this to only regenerate what is missing, when it is missing
-        if (
-            !fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated") ||
-            !fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas") ||
-            !fs.existsSync("/divblox-orm") ||
-            !fs.existsSync("/divblox-orm/data-series") ||
-            !fs.existsSync("/divblox-orm/models")
-        ) {
-            return false;
-        }
-
-        for (const entityName of Object.keys(this.dataModelObj)) {
-            const casedEntityName = dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-");
-            const modelBasePath = DIVBLOX_ROOT_DIR + "/dx-orm/generated/models/" + casedEntityName + ".model-base.js";
-            const schemaPath = DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/" + casedEntityName + ".schema.js";
-            const dataSeriesPath = "/divblox-orm/data-series/" + casedEntityName + ".data-series.js";
-            const modelSpecialisationPath = "/divblox-orm/models/" + casedEntityName + ".model.js";
-
-            if (
-                !fs.existsSync(modelBasePath) ||
-                !fs.existsSync(schemaPath) ||
-                !fs.existsSync(dataSeriesPath) ||
-                !fs.existsSync(modelSpecialisationPath)
-            ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Generates the base object model classes, based on the project's complete data model
-     * @return {Promise<void>}
-     */
-    async generateOrmBaseClasses() {
-        dxUtils.printSubHeadingMessage("Generating ORM base classes from data model specification");
-
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated")) {
-            dxUtils.printInfoMessage("Creating /dx-orm/generated/ directory...");
-            fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated");
-        }
-
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas")) {
-            dxUtils.printInfoMessage("Creating /dx-orm/generated/schemas directory...");
-            fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas");
-        }
-
-        if (!fs.existsSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/models")) {
-            dxUtils.printInfoMessage("Creating /dx-orm/generated/models directory...");
-            fs.mkdirSync(DIVBLOX_ROOT_DIR + "/dx-orm/generated/models");
-        }
-
-        const schemaComplete = {};
-
-        for (const entityName of Object.keys(this.dataModelObj)) {
-            dxUtils.printInfoMessage("Generating base object model class for '" + entityName + "'...");
-
-            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
-                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
-                "_",
-            );
-            const entityNameCamelCase = entityName;
-            let entityData = "";
-            let entitySchemaData = {
-                id: {
-                    type: "integer",
-                    format: "int32",
-                },
-            };
-
-            let entityModelSpec = 'static id = "' + this.dataLayer.getSqlReadyName(entityNameCamelCase) + '.id";\n';
-
-            const attributes = this.dataModelObj[entityName]["attributes"];
-            const relationships = this.dataModelObj[entityName]["relationships"];
-
-            const attributeTypeMapping = {
-                char: "string",
-                varchar: "string",
-                tinytext: "string",
-                text: "string",
-                mediumtext: "string",
-                longtext: "string",
-                binary: "string",
-                varbinary: "string",
-                tinyblob: "string",
-                mediumblob: "string",
-                blob: "string",
-                longblob: "string",
-                enum: "string",
-                json: "string",
-                date: "string",
-                datetime: "string",
-                timestamp: "integer",
-                year: "integer",
-                tinyint: "integer",
-                smallint: "integer",
-                mediumint: "integer",
-                int: "integer",
-                bigint: "integer",
-                decimal: "number",
-                float: "number",
-                double: "number",
-                real: "number",
-                bit: "integer",
-                boolean: "boolean",
-                serial: "integer",
-            };
-
-            for (const attributeName of Object.keys(attributes)) {
-                if (entityData.length > 0) {
-                    entityData += "\n        ";
-                }
-
-                entityData += 'this.data["' + attributeName + '"] = ';
-                const entityAttributeType =
-                    typeof attributeTypeMapping[attributes[attributeName]["type"]] === "undefined"
-                        ? "string"
-                        : attributeTypeMapping[attributes[attributeName]["type"]];
-
-                entitySchemaData[attributeName] = {
-                    type: entityAttributeType,
-                };
-
-                entityModelSpec +=
-                    "    static " +
-                    attributeName +
-                    ' = "' +
-                    this.dataLayer.getSqlReadyName(entityNameCamelCase) +
-                    "." +
-                    this.dataLayer.getSqlReadyName(attributeName) +
-                    '";\n';
-
-                switch (attributes[attributeName]["type"]) {
-                    case "date":
-                        entitySchemaData[attributeName]["format"] = "date";
-                        break;
-                    case "datetime":
-                        entitySchemaData[attributeName]["format"] = "date-time";
-                        break;
-                    case "float":
-                        entitySchemaData[attributeName]["format"] = "float";
-                        break;
-                    case "double":
-                        entitySchemaData[attributeName]["format"] = "double";
-                        break;
-                    case "enum":
-                        const enumOptionsStr = attributes[attributeName].lengthOrValues;
-                        const enumOptions = enumOptionsStr.replaceAll("'", "").split(",");
-                        entitySchemaData[attributeName]["enum"] = enumOptions;
-                        break;
-                }
-
-                if (typeof attributes[attributeName]["default"] === "undefined") {
-                    entityData += "null;";
-                    continue;
-                }
-
-                if (
-                    attributes[attributeName]["default"] === null ||
-                    attributes[attributeName]["default"] === "CURRENT_TIMESTAMP"
-                ) {
-                    entityData += "null;";
-                    continue;
-                }
-
-                entityData +=
-                    isNaN(attributes[attributeName]["default"]) || attributes[attributeName]["default"].length === 0
-                        ? "'" + attributes[attributeName]["default"] + "';"
-                        : attributes[attributeName]["default"].toString();
-            }
-
-            let linkedEntityRequires = "";
-            let linkedEntityGetters = "";
-
-            let fileContentObjectModelGettersStr = fs.readFileSync(
-                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-getters.tpl",
-                "utf-8",
-            );
-
-            for (const relationshipName of Object.keys(relationships)) {
-                let linkedEntityRequiresForRelationship = "";
-                let linkedEntityGettersForRelationship = "";
-
-                for (const relationshipUniqueName of relationships[relationshipName]) {
-                    const sqlReadyRelationshipName = this.dataLayer.getSqlReadyName(relationshipName);
-                    const sqlReadyRelationshipUniqueName = this.dataLayer.getSqlReadyName(relationshipUniqueName);
-                    const relationshipNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
-                        sqlReadyRelationshipName,
-                        "_",
-                    );
-                    const lowerCaseSplitterRelationshipName = dxUtils.getCamelCaseSplittedToLowerCase(
-                        relationshipName,
-                        "-",
-                    );
-
-                    const finalRelationshipName = this.dataLayer.convertSqlNameToProperty(
-                        sqlReadyRelationshipName + "_" + sqlReadyRelationshipUniqueName,
-                    );
-
-                    if (entityData.length > 0) {
-                        entityData += "\n        ";
-                    }
-
-                    entityData += 'this.data["' + finalRelationshipName + '"] = null;';
-                    entitySchemaData[finalRelationshipName] = {
-                        type: "integer",
-                        format: "int32",
-                    };
-
-                    entityModelSpec +=
-                        "    static " +
-                        finalRelationshipName +
-                        ' = "' +
-                        this.dataLayer.getSqlReadyName(entityNameCamelCase) +
-                        "." +
-                        this.dataLayer.getSqlReadyName(finalRelationshipName) +
-                        '";\n';
-
-                    if (linkedEntityRequiresForRelationship === "") {
-                        linkedEntityRequiresForRelationship +=
-                            "const " +
-                            relationshipNamePascalCase +
-                            " " +
-                            ' = require("divbloxjs/dx-orm/generated/models/' +
-                            lowerCaseSplitterRelationshipName +
-                            '.model-base");\n';
-                    }
-
-                    if (linkedEntityGettersForRelationship === "") {
-                        linkedEntityGettersForRelationship = fileContentObjectModelGettersStr;
-                    }
-
-                    const tokensToReplace = {
-                        RelationshipNameCamelCase: relationshipName,
-                        FinalRelationshipName: finalRelationshipName,
-                        RelationshipNamePascalCase: relationshipNamePascalCase,
-                        EntityNameCamelCase: entityNameCamelCase,
-                    };
-
-                    for (const token of Object.keys(tokensToReplace)) {
-                        const search = "[" + token + "]";
-                        linkedEntityGettersForRelationship = linkedEntityGettersForRelationship.replaceAll(
-                            search,
-                            tokensToReplace[token],
-                        );
-                    }
-                }
-
-                linkedEntityRequires += linkedEntityRequiresForRelationship;
-                linkedEntityGetters += linkedEntityGettersForRelationship;
-            }
-
-            schemaComplete[entityName] = entitySchemaData;
-
-            entityModelSpec += "    static __entityName" + ' = "' + entityNameCamelCase + '";\n';
-            entityModelSpec +=
-                "    static __moduleName" + ' = "' + this.dataLayer.getModuleNameFromEntityName(entityName) + '";\n';
-
-            const tokensToReplace = {
-                EntityNamePascalCase: entityNamePascalCase,
-                EntityNameCamelCase: entityNameCamelCase,
-                EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
-                EntityData: entityData,
-                EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
-                EntityModelSpec: entityModelSpec,
-                linkedEntityRequires: linkedEntityRequires,
-                linkedEntityGetters: linkedEntityGetters,
-            };
-
-            let fileContentObjectModelStr = fs.readFileSync(
-                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model.tpl",
-                "utf-8",
-            );
-            let fileContentObjectSchemaStr = fs.readFileSync(
-                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-schema.tpl",
-                "utf-8",
-            );
-
-            for (const token of Object.keys(tokensToReplace)) {
-                const search = "[" + token + "]";
-                fileContentObjectModelStr = fileContentObjectModelStr.replaceAll(search, tokensToReplace[token]);
-                fileContentObjectSchemaStr = fileContentObjectSchemaStr.replaceAll(search, tokensToReplace[token]);
-            }
-
-            fs.writeFileSync(
-                DIVBLOX_ROOT_DIR +
-                    "/dx-orm/generated/models/" +
-                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".model-base.js",
-                fileContentObjectModelStr,
-            );
-
-            fs.writeFileSync(
-                DIVBLOX_ROOT_DIR +
-                    "/dx-orm/generated/schemas/" +
-                    dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                    ".schema.js",
-                fileContentObjectSchemaStr,
-            );
-        }
-
-        let fileContentDataModelSchemaStr = fs.readFileSync(
-            DIVBLOX_ROOT_DIR + "/dx-orm/templates/data-model-schema.tpl",
-            "utf-8",
-        );
-
-        const search = "[SchemaData]";
-        const replace = JSON.stringify(schemaComplete, null, 2);
-        fileContentDataModelSchemaStr = fileContentDataModelSchemaStr.replaceAll(search, replace);
-
-        fs.writeFileSync(
-            DIVBLOX_ROOT_DIR + "/dx-orm/generated/schemas/data-model.schema.js",
-            fileContentDataModelSchemaStr,
-        );
-    }
-
-    /**
-     * Generates the base object data series classes, based on the project's complete data model
-     * This is only generated ONCE!
-     * @return {Promise<void>}
-     */
-    async generateEntityDataSeriesBaseClasses() {
-        dxUtils.printSubHeadingMessage("Generating data series base classes from data model specification");
-
-        if (!fs.existsSync("divblox-orm")) {
-            dxUtils.printInfoMessage("Creating /divblox-orm/ directory...");
-            fs.mkdirSync("divblox-orm");
-        }
-
-        if (!fs.existsSync("divblox-orm/data-series")) {
-            dxUtils.printInfoMessage("Creating /divblox-orm/data-series/ directory...");
-            fs.mkdirSync("divblox-orm/data-series");
-        }
-
-        for (const entityName of Object.keys(this.dataModelObj)) {
-            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
-                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
-                "_",
-            );
-            const entityNameCamelCase = entityName;
-            const attributes = this.dataModelObj[entityName]["attributes"];
-
-            let entityAttributesStr = "";
-            for (const attributeName of Object.keys(attributes)) {
-                entityAttributesStr += entityNamePascalCase + "." + attributeName + ", ";
-            }
-
-            entityAttributesStr = entityAttributesStr.slice(0, -2);
-
-            const tokensToReplace = {
-                EntityNamePascalCase: entityNamePascalCase,
-                EntityNameCamelCase: entityNameCamelCase,
-                EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
-                EntityAttributesStr: entityAttributesStr,
-            };
-
-            let fileContentDataSeriesBaseStr = fs.readFileSync(
-                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-data-series-base.tpl",
-                "utf-8",
-            );
-
-            for (const token of Object.keys(tokensToReplace)) {
-                const search = "[" + token + "]";
-                fileContentDataSeriesBaseStr = fileContentDataSeriesBaseStr.replaceAll(search, tokensToReplace[token]);
-            }
-
-            if (
-                !fs.existsSync(
-                    "divblox-orm/data-series/" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".data-series.js",
-                )
-            ) {
-                dxUtils.printInfoMessage(
-                    "Generating " +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".data-series.js file...",
-                );
-                fs.writeFileSync(
-                    "divblox-orm/data-series/" +
-                        dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") +
-                        ".data-series.js",
-                    fileContentDataSeriesBaseStr,
-                );
-            }
-        }
-    }
-
-    /**
-     * Generates the specialisation object model classes, based on the project's complete data model
-     * This is only generated ONCE!
-     * @return {Promise<void>}
-     */
-    async generateEntityModelSpecialisationClasses() {
-        dxUtils.printSubHeadingMessage("Generating specialisation model classes from data model specification");
-
-        if (!fs.existsSync("divblox-orm")) {
-            dxUtils.printInfoMessage("Creating /divblox-orm/ directory...");
-            fs.mkdirSync("divblox-orm");
-        }
-
-        if (!fs.existsSync("divblox-orm/models")) {
-            dxUtils.printInfoMessage("Creating /divblox-orm/models/ directory...");
-            fs.mkdirSync("divblox-orm/models");
-        }
-
-        for (const entityName of Object.keys(this.dataModelObj)) {
-            const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(
-                dxUtils.getCamelCaseSplittedToLowerCase(entityName, "_"),
-                "_",
-            );
-            const entityNameCamelCase = entityName;
-            const attributes = this.dataModelObj[entityName]["attributes"];
-
-            let entityAttributesStr = "";
-            for (const attributeName of Object.keys(attributes)) {
-                entityAttributesStr += entityNamePascalCase + "." + attributeName + ", ";
-            }
-
-            entityAttributesStr = entityAttributesStr.slice(0, -2);
-
-            const tokensToReplace = {
-                EntityNamePascalCase: entityNamePascalCase,
-                EntityNameCamelCase: entityNameCamelCase,
-                EntityNameLowerCaseSplitted: dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-"),
-                EntityAttributesStr: entityAttributesStr,
-            };
-
-            let fileContentModelBaseStr = fs.readFileSync(
-                DIVBLOX_ROOT_DIR + "/dx-orm/templates/object-model-specialisation.tpl",
-                "utf-8",
-            );
-
-            for (const token of Object.keys(tokensToReplace)) {
-                const search = "[" + token + "]";
-                fileContentModelBaseStr = fileContentModelBaseStr.replaceAll(search, tokensToReplace[token]);
-            }
-
-            if (
-                !fs.existsSync(
-                    "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js",
-                )
-            ) {
-                dxUtils.printInfoMessage(
-                    "Creating " + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js file...",
-                );
-                fs.writeFileSync(
-                    "divblox-orm/models/" + dxUtils.getCamelCaseSplittedToLowerCase(entityName, "-") + ".model.js",
-                    fileContentModelBaseStr,
-                );
-            }
         }
     }
 
@@ -1740,7 +1296,7 @@ class DivbloxBase extends divbloxObjectBase {
 
         const objId = await this.dataLayer.create(entityName, data, transaction);
         if (objId === -1) {
-            this.populateError(this.dataLayer.getLastError().message, this.dataLayer.getLastError());
+            this.populateError(this.dataLayer.getLastError());
         }
 
         return objId;
@@ -1824,7 +1380,7 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         if (!(await this.dataLayer.delete(entityName, id, transaction))) {
-            this.populateError(this.dataLayer.getLastError().message, this.dataLayer.getLastError());
+            this.populateError(this.dataLayer.getLastError());
             return false;
         }
 

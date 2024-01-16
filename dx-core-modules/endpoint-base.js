@@ -1,5 +1,6 @@
 const divbloxObjectBase = require("./object-base");
 const DivbloxBase = require("../divblox");
+const dxUtils = require("dx-utilities");
 
 /**
  * DivbloxEndpointBase provides a blueprint for how api endpoints should be implemented
@@ -14,6 +15,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         super();
         this.endpointName = null;
         this.endpointDescription = "";
+        this.DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again";
+        this.DEFAULT_SUCCESS_MESSAGE = "Successfully completed operation";
         this.result = {
             success: false,
             message: "none",
@@ -28,6 +31,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.currentGlobalIdentifier = -1;
         this.currentGlobalIdentifierGroupings = [];
         this.disableSwaggerDocs = false;
+        this.hiddenOperations = [];
+        this.operationAccess = {};
 
         if (typeof this.dxInstance === "undefined" || this.dxInstance === null) {
             throw new Error("Divblox instance was not provided");
@@ -141,6 +146,14 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         return operationDefinition;
     }
 
+    getEnumSchema(options = []) {
+        let schema = {
+            type: "string",
+            enum: options,
+        };
+
+        return schema;
+    }
     /**
      * Formats the properties provided into a schema that is acceptable for openapi 3
      * @param {{}} properties An array of keys and values where the keys represent the property and the values represent
@@ -157,6 +170,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         for (const key of Object.keys(properties)) {
             let type = "string";
             let format = "";
+            let example;
             const isObject = typeof properties[key] === "object" && properties[key] !== null;
 
             if (!isObject) {
@@ -188,12 +202,26 @@ class DivbloxEndpointBase extends divbloxObjectBase {
                     case "boolean":
                         type = "boolean";
                         break;
+                    case "array":
+                        type = "array";
+                        format = "array";
+                        example = [];
+                        break;
+                    case "object":
+                        type = "object";
+                        format = "object";
+                        example = {};
+                        break;
                 }
 
                 schema.properties[key] = {
                     type: type,
                     format: format,
                 };
+
+                if (example) {
+                    schema.properties[key].example = example;
+                }
             } else {
                 schema.properties[key] = properties[key];
             }
@@ -217,10 +245,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             };
             return returnSchema;
         }
-        return {
+
+        const returnObj = {
             type: "array",
             items: itemSchema,
         };
+
+        if (!itemSchema) {
+            returnObj.example = [];
+        }
+
+        return returnObj;
     }
 
     /**
@@ -241,6 +276,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             required: typeof options["required"] !== "undefined" ? options["required"] : false,
             description: typeof options["description"] !== "undefined" ? options["description"] : "",
             schema: typeof options["schema"] !== "undefined" ? options["schema"] : {},
+            example: typeof options["example"] !== "undefined" ? options["example"] : undefined,
         };
     }
 
@@ -253,8 +289,16 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.result["success"] = isSuccess;
 
         delete this.result["message"];
-        if (typeof message !== "undefined") {
+
+        if (typeof message !== undefined && message?.length > 0) {
             this.result["message"] = message;
+            return;
+        }
+
+        if (isSuccess) {
+            this.result["message"] = this.DEFAULT_SUCCESS_MESSAGE;
+        } else {
+            this.result["message"] = this.DEFAULT_ERROR_MESSAGE;
         }
     }
 
@@ -266,7 +310,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      * Sets the current result to false and forces a 401 http error code
      * @param {string} message An optional message to return
      */
-    setResultNotAuthorized(message) {
+    setResultNotAuthorized(message = "Not authorized") {
         this.result["success"] = false;
         this.result["unauthorized"] = true;
         this.statusCode = 401;
@@ -333,22 +377,38 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         };
     }
 
+    initEndpointOperations() {
+        console.log("BASE?");
+        // TODO Overwrite in base class
+    }
+
     /**
      * Declares the operations provided as available to the api endpoint
-     * @param {[{operationDefinition}]} operations An array of operation definitions as provided by getOperationDefinition()
+     * @param {[{operationDefinition}]} newOperations An array of operation definitions as provided by getOperationDefinition()
      */
-    declareOperations(operations = []) {
-        if (operations.length === 0) {
+    declareOperations(newOperations = []) {
+        if (newOperations.length === 0) {
             return;
         }
-        for (const operation of operations) {
+
+        for (let newOperation of newOperations) {
             if (
-                typeof operation["operationName"] === "undefined" ||
-                typeof operation["allowedAccess"] === "undefined"
+                typeof newOperation["operationName"] === "undefined" ||
+                typeof newOperation["allowedAccess"] === "undefined"
             ) {
                 continue;
             }
-            this.declaredOperations.push(operation);
+
+            const foundDeclaredOperationIndex = this.declaredOperations.findIndex(
+                (declaredOperation) => declaredOperation.operationName === newOperation.operationName &&  declaredOperation.requestType === newOperation.requestType
+            )
+            
+            newOperation = this.getOperationDefinition(newOperation);
+            if (foundDeclaredOperationIndex !== -1) {
+                this.declaredOperations[foundDeclaredOperationIndex] = newOperation;
+            } else {
+                this.declaredOperations.push(newOperation);
+            }
         }
     }
 
@@ -384,14 +444,17 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
     /**
      * Declares the entities that should be provided as schemas to the api endpoint
-     * @param {[string]} entities A list of entity names to declare
+     * @param {[string]} entityNames A list of entity names to declare
      */
-    declareEntitySchemas(entities = []) {
-        if (entities.length === 0) {
+    declareEntitySchemas(entityNames = []) {
+        if (entityNames.length === 0) {
             return;
         }
-        for (const entity of entities) {
-            this.declaredSchemas.push(entity);
+
+        for (const entityName of entityNames) {
+            if (!this.declaredSchemas.includes(entityName)) {
+                this.declaredSchemas.push(entityName);
+            }
         }
     }
 
@@ -432,6 +495,36 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         return false;
     }
 
+    getDataSeriesQueryParamDefinitions() {
+        return [
+            this.getInputParameter({
+                name: "searchValue", 
+                description: "String value that will be searched on",
+            }),
+            this.getInputParameter({
+                name: "limit", 
+                description: "Maximum entries to load for the given query",
+                example: 10
+            }),
+            this.getInputParameter({
+                name: "offset", 
+                description: "Number of entries to skip before starting return result",
+            }),
+            this.getInputParameter({
+                name: "sort", 
+                description: "Defined attributes to sort by (including direction)\n```\n{\n  \"sort\": {\n    \"attributeName\": \"asc\",\n    \"attributeNameTwo\": \"asc\"\n  }\n}\n```\n", 
+                schema: { "$ref": "#/components/schemas/dataSeriesSort"},
+                example: ""
+            }),
+            this.getInputParameter({
+                name: "filter", 
+                "description": "Defined attributes to filter by (including type of filter)\n```\n{\n  \"filter\": {\n    \"attributeNameOne\": {\n      \"like\": \"string\",\n      \"eq\": \"string\",\n      \"ne\": \"string\"\n    },\n    \"attributeNameTwo\": {\n      \"lt\": \"string\",\n      \"lte\": \"string\"\n    },\n    \"attributeNameThree\": {\n      \"gt\": \"string\",\n      \"gte\": \"string\"\n    }\n  }\n}\n```\n",
+                schema: { "$ref": "#/components/schemas/dataSeriesFilter"},
+                example: ""
+            }),
+        ]
+    }
+
     //#region Operations implemented.
 
     /**
@@ -461,9 +554,9 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         this.getCurrentInformationFromJwt(response?.locals?.jwtToken);
 
         if (!this.isAccessAllowed(operation, request.method, this.providedIdentifierGroupings)) {
-            this.setResultNotAuthorized("Not authorized");
             // IMPORTANT: We only ever return false if authorization failed. This ensures that child functions can rely
             // on a true response to know whether they can proceed
+            this.setResultNotAuthorized();
             return false;
         }
 
@@ -490,8 +583,7 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         }
 
         this.currentGlobalIdentifier = this.dxInstance.jwtWrapper.getJwtGlobalIdentifier(jwtToken);
-        this.currentGlobalIdentifierGroupings =
-            this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
+        this.currentGlobalIdentifierGroupings = this.dxInstance.jwtWrapper.getJwtGlobalIdentifierGroupings(jwtToken);
 
         for (const grouping of this.currentGlobalIdentifierGroupings) {
             this.providedIdentifierGroupings.push(grouping.toLowerCase());
@@ -544,6 +636,68 @@ class DivbloxEndpointBase extends divbloxObjectBase {
      */
     async echo() {
         this.forceResult({ timestamp: Date.now() }, 200);
+    }
+
+    validateConfig(constraintData = {}) {
+        if (constraintData.hasOwnProperty("searchValue") && 
+            typeof constraintData.searchValue !== "string") {
+                this.populateError("'searchValue' property should be of type string");
+                return false;
+        }
+
+        if (constraintData.hasOwnProperty("limit") && 
+            typeof constraintData.limit !== "string") {
+                this.populateError("'limit' property should be of type string");
+                return false;
+        }   
+
+        if (constraintData.hasOwnProperty("offset") && 
+            typeof constraintData.offset !== "string") {
+                this.populateError("'offset' property should be of type string");
+                return false;
+        }
+
+        if (constraintData.sort) {
+            if (!dxUtils.isValidObject(constraintData.sort)) {
+                this.populateError("'sort' property provided is not a valid object");
+                return false;
+            }
+
+            const allowedSortOptions = ["asc", "desc"];
+            for (const sortAttributeName of Object.keys(constraintData.sort)) {
+                if (!allowedSortOptions.includes(constraintData.sort[sortAttributeName])) {
+                    this.populateError(`Invalid 'sort' type provided for ${sortAttributeName}: ${constraintData.sort[sortAttributeName]}. Allowed options: ${allowedSortOptions.join(", ")}`);
+                    return false;
+                }
+            }
+        }
+
+        if (constraintData.filter) {
+            if (!dxUtils.isValidObject(constraintData.filter)) {
+                this.populateError("'filter' property provided is not a valid object");
+                return false;
+            } 
+
+            if (!dxUtils.isValidObject(constraintData.filter)) {
+                const allowedFilterTypes = ["like", "eq", "ne", "gt", "gte", "lt", "lte"];
+                for (const filterAttributeName of Object.keys(constraintData.filter)) {
+                    const { filterTypeKeys, filterValues } = Object.entries(constraintData.filter[filterAttributeName]);
+                    if (!allowedFilterTypes.includes(filterTypeKeys)) {
+                        this.populateError(`Invalid 'filter' type provided for ${filterAttributeName}: ${constraintData.filter[filterAttributeName]}. Allowed options: ${allowedFilterTypes.join(", ")}`);
+                        return false;
+                    }
+
+                    for (const filterValue of filterValues) {
+                        if (typeof filterValue !== "string") {
+                            this.populateError(`Invalid 'filter' value provided for ${filterAttributeName}: ${filterValue}. Should be of type string`);
+                            return false;
+                        }
+                    }
+                }
+            } 
+        }
+
+        return true;
     }
 
     //#endregion

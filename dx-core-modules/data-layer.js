@@ -173,7 +173,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null) {
@@ -202,7 +202,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null || queryResult.length === 0) {
@@ -238,7 +238,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null || queryResult.length === 0) {
@@ -295,7 +295,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlUpdateValues,
-            transaction
+            transaction,
         );
 
         return queryResult !== null;
@@ -321,7 +321,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         return queryResult !== null;
@@ -368,7 +368,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName("auditLogEntry"),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult === null) {
@@ -403,7 +403,7 @@ class DivbloxDataLayer extends divbloxObjectBase {
             query,
             this.getModuleNameFromEntityName(entityName),
             sqlValues,
-            transaction
+            transaction,
         );
 
         if (queryResult.length === 0) {
@@ -439,7 +439,8 @@ class DivbloxDataLayer extends divbloxObjectBase {
         const queryResult = await this.databaseConnector.queryDB(query, moduleName, values, transaction);
 
         if (queryResult === null) {
-            this.populateError("Could not execute query", this.databaseConnector.getLastError());
+            const errorMessage = this.databaseConnector.getLastError()?.message ?? "Could not execute query";
+            this.populateError(errorMessage, this.databaseConnector.getLastError());
             return null;
         }
 
@@ -532,6 +533,10 @@ class DivbloxDataLayer extends divbloxObjectBase {
      * @return {{}} The resulting object with the correct case for its properties
      */
     transformSqlObjectToJs(sqlObject = {}) {
+        if (!sqlObject) {
+            return null;
+        }
+
         let returnObject = {};
 
         for (const key of Object.keys(sqlObject)) {

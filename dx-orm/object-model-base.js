@@ -145,6 +145,29 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         return false;
     }
 
+    async deleteById(id = -1, transaction = null, additionalParams = {}) {
+        const deleteResult = await this.dxInstance.delete(this.entityName, id, transaction);
+
+        if (!deleteResult) {
+            this.populateError(this.dxInstance.getLastError());
+        }
+
+        return deleteResult;
+    }
+
+    async updateById(id = -1, data = {}, transaction = null, additionalParams = {}) {
+        data.id = id;
+
+        const updateResult = await this.dxInstance.update(this.entityName, data, transaction);
+
+        if (!updateResult) {
+            this.populateError(this.dxInstance.getLastError());
+            return null;
+        }
+
+        return this.dxInstance.getDataLayer().transformSqlObjectToJs(updateResult);
+    }
+
     /**
      * Partial function to be overwritten for custom logic that needs to run before loading an entity model object
      * @param {number} id ID of entity you are trying to load
@@ -311,7 +334,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
 
         const createdObjectId = await this.dxInstance.create(this.entityName, this.data, transaction);
         if (createdObjectId === -1) {
-            this.populateError("Could not create '" + this.entityName + "'", this.dxInstance.getLastError());
+            this.populateError(this.dxInstance.getLastError());
             return false;
         }
 
