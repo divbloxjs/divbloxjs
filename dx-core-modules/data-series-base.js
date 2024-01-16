@@ -49,12 +49,12 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.entityNameSqlCase = dxQ.getSqlReadyName(this.entityName);
 
         this.includedAttributes = dataSeriesConfig?.includedAttributes ?? [];
-        this.includedAttributes.forEach(includedAttribute => {
+        this.includedAttributes.forEach((includedAttribute) => {
             return dxQ.getSqlReadyName(includedAttribute);
         });
 
         this.searchAttributes = dataSeriesConfig?.searchAttributes ?? [];
-        this.searchAttributes.forEach(searchAttribute => {
+        this.searchAttributes.forEach((searchAttribute) => {
             return dxQ.getSqlReadyName(searchAttribute);
         });
 
@@ -70,7 +70,8 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         // console.log("this.#searchValue", this.#searchValue);
 
         if (dataSeriesConfig.hasOwnProperty("limit")) {
-            this.#limit = parseInt(dataSeriesConfig.limit) < this.#MAX_LIMIT ? parseInt(dataSeriesConfig.limit) : this.#MAX_LIMIT;
+            this.#limit =
+                parseInt(dataSeriesConfig.limit) < this.#MAX_LIMIT ? parseInt(dataSeriesConfig.limit) : this.#MAX_LIMIT;
         }
 
         if (dataSeriesConfig.hasOwnProperty("offset")) {
@@ -84,7 +85,6 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         if (dataSeriesConfig.hasOwnProperty("filter")) {
             this.#filter = dataSeriesConfig.filter ?? {};
         }
-
     }
 
     #validateConfig() {
@@ -111,7 +111,11 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         const allowedSortOptions = ["asc", "desc"];
         for (const sortAttributeName of Object.keys(this.#sort)) {
             if (!allowedSortOptions.includes(this.#sort[sortAttributeName])) {
-                this.populateError(`Invalid 'sort' type provided for ${sortAttributeName}: ${this.#sort[sortAttributeName]}. Allowed options: ${allowedSortOptions.join(", ")}`);
+                this.populateError(
+                    `Invalid 'sort' type provided for ${sortAttributeName}: ${
+                        this.#sort[sortAttributeName]
+                    }. Allowed options: ${allowedSortOptions.join(", ")}`,
+                );
                 return false;
             }
         }
@@ -119,21 +123,27 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         if (!dxUtils.isValidObject(this.#filter)) {
             this.populateError("'filter' property provided is not a valid object");
             return false;
-        } 
+        }
 
         for (const filterAttributeName of Object.keys(this.#filter)) {
             const filterTypeKeys = Object.keys(this.#filter[filterAttributeName]);
             const filterValues = Object.values(this.#filter[filterAttributeName]);
             for (const filterTypeKey of filterTypeKeys) {
                 if (!this.#ALLOWED_FILTER_TYPES.includes(filterTypeKey)) {
-                    this.populateError(`Invalid 'filter' type provided for ${filterAttributeName}: '${filterTypeKey}'. Allowed options: ${this.#ALLOWED_FILTER_TYPES.join(", ")}`);
+                    this.populateError(
+                        `Invalid 'filter' type provided for ${filterAttributeName}: '${filterTypeKey}'. Allowed options: ${this.#ALLOWED_FILTER_TYPES.join(
+                            ", ",
+                        )}`,
+                    );
                     return false;
                 }
             }
-            
+
             for (const filterValue of filterValues) {
                 if (typeof filterValue !== "string") {
-                    this.populateError(`Invalid 'filter' value provided for ${filterAttributeName}: ${filterValue}. Should be of type string`);
+                    this.populateError(
+                        `Invalid 'filter' value provided for ${filterAttributeName}: ${filterValue}. Should be of type string`,
+                    );
                     return false;
                 }
             }
@@ -154,26 +164,35 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         //#region JOINs
         let defaultJoinSql = "";
-        let relationshipDepthCount = {};
 
-        const recursivelyAddRelationships = (entityName, recursionDepth = this.#relationshipDepth) => {
+        const recursivelyAddRelationships = (
+            entityName,
+            currentDepthCount = 0,
+            recursionDepth = this.#relationshipDepth,
+        ) => {
             const relationships = this.dxInstance.dataModelObj[entityName].relationships;
-
             if (Object.keys(relationships).length < 1) {
+                return;
+            }
+
+            if (currentDepthCount >= recursionDepth) {
                 return;
             }
 
             Object.keys(relationships).forEach((relatedEntityName, idx) => {
                 const relationshipName = `${relatedEntityName}_${relationships[relatedEntityName][0]}`;
-                if (typeof relationshipDepthCount[idx] === 'undefined') {
-                    relationshipDepthCount[idx] = 1;
+                if (idx === 0) {
+                    // Multiple relationships from same table count as same depth away (idx > 0)
+                    currentDepthCount++;
                 }
 
-                defaultJoinSql += `${this.#jointType} JOIN ${dxQ.getSqlReadyName(relatedEntityName)} ON ${dxQ.getSqlReadyName(entityName)}.${dxQ.getSqlReadyName(`${relationshipName}`)} = ${dxQ.getSqlReadyName(`${relatedEntityName}.id`)}\n`;
-                if (Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships).length > 0 &&
-                    relationshipDepthCount[idx] < recursionDepth) {
-                    relationshipDepthCount[idx]++;
-                    recursivelyAddRelationships(relatedEntityName);
+                defaultJoinSql += `${this.#jointType} JOIN ${dxQ.getSqlReadyName(
+                    relatedEntityName,
+                )} ON ${dxQ.getSqlReadyName(entityName)}.${dxQ.getSqlReadyName(
+                    `${relationshipName}`,
+                )} = ${dxQ.getSqlReadyName(`${relatedEntityName}.id`)}\n`;
+                if (Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships).length > 0) {
+                    recursivelyAddRelationships(relatedEntityName, currentDepthCount);
                 }
             });
         };
@@ -201,7 +220,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.limitValue = this.#limit;
     }
 
-    //#region resetXyzSql() 
+    //#region resetXyzSql()
     /**
      * Overwrites the select part of the query with any custom string
      * @param {string} sql
@@ -382,7 +401,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             if (Object.keys(filterConfig).length < 1) {
                 continue;
             }
-            
+
             filterByInfo[attributeToFilterName] = {};
 
             for (const [filterType, filterValue] of Object.entries(filterConfig)) {
@@ -462,7 +481,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @returns {Promise<{whereClauses: {preparedStatement: string, values:[]}, orderByClause: {field: string, isDescending: boolean }}>} the populated where and order by clauses
      */
     async #getPrebuiltClauses() {
-        let whereClauses = {preparedStatement: "", values: []};
+        let whereClauses = { preparedStatement: "", values: [] };
 
         if (!this.searchWhereSql) {
             // No search clause manually overridden - generate default one
@@ -494,7 +513,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         // TODO Overwrite to include whichever attributes are needed
         if (this.searchAttributes.length > 0) {
             const searchClauses = [];
-            this.searchAttributes.forEach(searchAttribute => {
+            this.searchAttributes.forEach((searchAttribute) => {
                 searchClauses.push(dxQ.like(`${searchAttribute}`, "%" + searchValue + "%"));
             });
             return dxQ.orCondition(...searchClauses);
@@ -546,7 +565,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
      * @returns {Promise<number|null>} The total count, or null if error occurred
      */
     async getTotalCount(options = {}) {
-        if (!await this.#doValidation()) return null;
+        if (!(await this.#doValidation())) return null;
 
         const { whereClauses } = await this.#getPrebuiltClauses();
 
@@ -562,10 +581,14 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             this.buildFinalCountSql();
         }
 
-        const result = await this.dxInstance.getDataLayer().executeQuery(
-            { sql: this.fullCountSql, nestTables: false },
-            this.moduleName, this.countValues, options?.transaction ?? null,
-        );
+        const result = await this.dxInstance
+            .getDataLayer()
+            .executeQuery(
+                { sql: this.fullCountSql, nestTables: false },
+                this.moduleName,
+                this.countValues,
+                options?.transaction ?? null,
+            );
         if (result === null) {
             this.populateError(this.dxInstance.getDataLayer().getLastError());
             return null;
@@ -598,24 +621,24 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         if (this.searchAndFilterWhereSql) {
             // Overloaded search and filter clauses provided
-            this.whereSql = ` ${this.whereSql ? 'AND' : 'WHERE'} ${this.searchAndFilterWhereSql}`;
+            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${this.searchAndFilterWhereSql}`;
             this.whereValues = this.searchAndFilterWhereValues;
         } else if (whereClauses.preparedStatement) {
             // Default-built clauses used
-            this.whereSql =  ` ${this.whereSql ? 'AND' : 'WHERE'} ${whereClauses.preparedStatement}`;
+            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${whereClauses.preparedStatement}`;
             this.whereValues = whereClauses.values;
         }
 
         this.setAdditionalWhereSql();
         if (this.additionalWhereSql) {
             // Use any further provided where clauses
-            this.whereSql = ` ${this.whereSql ? 'AND' : 'WHERE'} ${this.additionalWhereSql}`;
+            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${this.additionalWhereSql}`;
             this.whereValues = [...this.whereValues, ...this.additionalWhereValues];
         }
 
         if (!this.orderBySql) {
             // No overwritten order by clause = use default one
-            this.orderBySql = ` ORDER BY ${orderByClause.field} ${orderByClause.isDescending ? 'DESC' : 'ASC'}`;
+            this.orderBySql = ` ORDER BY ${orderByClause.field} ${orderByClause.isDescending ? "DESC" : "ASC"}`;
         }
 
         if (!this.dataSeriesFullSql) {
@@ -623,11 +646,14 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             this.buildFinalDataSeriesSql();
         }
 
-        const result = await this.dxInstance.getDataLayer().getArrayFromDatabase(
-            { sql: this.dataSeriesFullSql, nestTables: true },
-            this.moduleName, this.dataSeriesValues, options?.transaction ?? null,
-        );
-
+        const result = await this.dxInstance
+            .getDataLayer()
+            .getArrayFromDatabase(
+                { sql: this.dataSeriesFullSql, nestTables: true },
+                this.moduleName,
+                this.dataSeriesValues,
+                options?.transaction ?? null,
+            );
 
         if (this.enableDebugMode || options.logQuery) {
             dxUtils.printSubHeadingMessage(`\n Debug output:`);
@@ -635,10 +661,6 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             dxUtils.printInfoMessage(`${this.dataSeriesFullSql}`);
             dxUtils.printWarningMessage(`SQL query values:`);
             dxUtils.printInfoMessage(`${JSON.stringify(this.dataSeriesValues)}`);
-
-            // if (result === null) {
-            //     this.dxInstance.getDataLayer().printLastError();
-            // }
         }
 
         if (result === null) {
@@ -647,201 +669,62 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         // Replaces objects for undefined FK relationships with 'null'
-        result.forEach(dataRow => {
-            Object.keys(dataRow).forEach(entityName => {
+        result.forEach((dataRow) => {
+            Object.keys(dataRow).forEach((entityName) => {
                 let areAllAttributesNull = true;
-                Object.values(dataRow[entityName]).forEach(attributeValue => {
-                    areAllAttributesNull &&= attributeValue ? false : true; 
-                })
+                Object.values(dataRow[entityName]).forEach((attributeValue) => {
+                    areAllAttributesNull &&= attributeValue ? false : true;
+                });
 
                 dataRow[entityName] = areAllAttributesNull ? null : dataRow[entityName];
             });
         });
 
-        let counter = 0;
-        let finalResult = {};
-        console.log("Start");
-
-        let relationshipDepthCount = {};
-
-        let initialResult = JSON.parse(JSON.stringify(result[0]));
-
-        let ha = {
-            id: 1,
-            organisationName: "OrgName",
-            parentOrganisation: {
-                id: 1,
-                grandParentOrganisation: {
-                    id: 1,
-                    grandGpo: { id: 1 }
-                }
-            },
-            place : {
-                id: 1,
-                parentPlace: { id: 1 }
-            }
-        }
-
-        // console.log("initialResult", initialResult);
-
-        const recursivelyAddRelationships = (entityName, initialResult = {}, finalResult = {}, relationshipStack = [], recursionDepth = this.#relationshipDepth) => {
-            console.log("---------------------------------------------");
-            console.log("---------------------------------------------");
+        const buildStack = (entityName = "", nestedResult = {}, index = 0) => {
             const relationships = this.dxInstance.dataModelObj[entityName].relationships;
-            
-            console.log("relationships", Object.keys(relationships));
-            if (Object.keys(relationships).length > 0) {
-                Object.keys(relationships).forEach((relatedEntityName, idx) => {
-                    console.log("BEGIN LOOP: ", relatedEntityName);
-                    const relationshipName = `${relatedEntityName}${dxUtils.convertCamelCaseToPascalCase(relationships[relatedEntityName][0])}`;
-                    if (typeof relationshipDepthCount[idx] === 'undefined') {
-                        relationshipDepthCount[idx] = 1;
-                        relationshipStack = [];
 
-                        // finalResult[relatedEntityName] = initialResult[relatedEntityName];
-                        // delete initialResult[relatedEntityName];
-                    }
+            Object.keys(relationships).forEach((relatedEntityName) => {
+                const sqlRelationshipNameCamelCase = `${relatedEntityName}${dxUtils.convertCamelCaseToPascalCase(
+                    entityName,
+                )}`;
 
-                    console.log("relationshipStack", relationshipStack);
-                    console.log("relationshipName", relationshipName);
-                    switch (relationshipStack.length) {
-                        case 0:
-                            // Base entity
-                            console.log("case0: ", relationshipStack);
-                            if (initialResult[entityName]) {
-                                Object.keys(initialResult[entityName]).forEach(attributeName => {
-                                    finalResult[attributeName] = initialResult[entityName][attributeName];
-                                })
-                                delete finalResult[relationshipName];
-                                delete initialResult[entityName];
-                            }
-                            break;
-                        case 1: 
-                            // Direct foreign key relationships
-                            console.log("case1: ", relationshipStack[0]);
-                            delete initialResult[relationshipStack[0]][relationshipName];
-                            finalResult[relationshipStack[0]] = initialResult[relationshipStack[0]];
-                            delete initialResult[relationshipStack[0]];
-                            break;
-                        case 2: 
-                            console.log("case2: ", relationshipStack[0], relationshipStack[1]);
-                            delete initialResult[relationshipStack[1]][relationshipName];
-                            finalResult[relationshipStack[0]][relationshipStack[1]] = initialResult[relationshipStack[1]];
-                            delete initialResult[relationshipStack[1]];
-                            break;
-                        case 3: 
-                            console.log("case3: ", relationshipStack[0], relationshipStack[1], relationshipStack[2]);
-                            delete initialResult[relationshipStack[2]][relationshipName];
-                            finalResult[relationshipStack[0]][relationshipStack[1]][relationshipStack[2]] = initialResult[relationshipStack[2]];
-                            delete initialResult[relationshipStack[2]];
-                            break;
-                        case 4: 
-                            console.log("case4: ", relationshipStack[0], relationshipStack[1], relationshipStack[2], relationshipStack[3]);
-                            delete initialResult[relationshipStack[3]][relationshipName];
-                            finalResult[relationshipStack[0]][relationshipStack[1]][relationshipStack[2]][relationshipStack[3]] = initialResult[relationshipStack[3]];
-                            delete initialResult[relationshipStack[3]];
-                            break;
-                    }
-                    console.log("Finalised initial: ", initialResult);
-                    console.log("Finalised final: ", finalResult);
-    
-                    console.log("NEW relationships", Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships));
-                    console.log("relationshipDepthCount[idx]", relationshipDepthCount[idx]);
-                    if (Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships).length > 0 &&
-                        relationshipDepthCount[idx] < recursionDepth) {
-                        relationshipStack.push(relatedEntityName);
-                        relationshipDepthCount[idx]++;
-                        console.log("recursing: ", relationshipStack);
-                        recursivelyAddRelationships(relatedEntityName, initialResult, finalResult, relationshipStack);
-                    } else {
-                        console.log("END OF THE ROAD");
-                    }
+                // Default tp NULL FK relationship
+                let relatedEntity = null;
+                let endChain = false;
+                if (nestedResult?.[sqlRelationshipNameCamelCase]) {
+                    // Data for relationship not queried: Just add ID in object format
+                    relatedEntity = { id: nestedResult[sqlRelationshipNameCamelCase] };
+                }
 
-                });
-            }
+                if (result[index][relatedEntityName] !== undefined) {
+                    // Defined FK relationship
+                    relatedEntity = result[index][relatedEntityName];
+                } else {
+                    // Undefined FK relationship - make sure we do not run the function again creating a null entry for the FK
+                    endChain = true;
+                }
+
+                delete nestedResult?.[sqlRelationshipNameCamelCase];
+                delete relatedEntity?.[sqlRelationshipNameCamelCase];
+                if (!endChain || relatedEntity) {
+                    nestedResult[relatedEntityName] = relatedEntity;
+                }
+
+                if (!endChain && nestedResult[relatedEntityName]) {
+                    buildStack(relatedEntityName, nestedResult[relatedEntityName]);
+                }
+            });
         };
 
-        const getNestedValue = (obj, keys = []) => {
-            let value = obj;
-            for (let i = 0; i < keys.length; i++) {
-                value = value[keys[i]];
-                if (!value) {
-                    break;
-                }
-            }
+        const nestedResultArr = [];
+        result.forEach((resultRow, index) => {
+            if (index !== 0) return;
+            const nestedResult = result[index][this.entityName];
+            buildStack(this.entityName, nestedResult, index);
+            nestedResultArr.push(JSON.parse(JSON.stringify(nestedResult)));
+        });
 
-            return value;
-        };
-
-        recursivelyAddRelationships(this.entityName, initialResult, finalResult)
- 
-        console.log("finalResult", finalResult);
-        // console.log("finalResult", finalResult);
-        console.log("End");
-
-        return await this.getFinalResult([finalResult]);
-    }
-
-
-    recursivelyAppendRelationshipsAsObjects(data, baseName = "", result = {}, counter) {
-        console.log("counter-------------------------", counter);
-        if (counter > 3) {
-            return;
-        }
-
-        counter++;
-        Object.keys(data).forEach(entityName => {
-
-            // console.log("entityName", entityName);
-            if (entityName === baseName) {
-                console.log("MATCHED BASE", entityName);
-                Object.keys(data[baseName]).forEach(attributeName => {
-                    result[attributeName] = data[baseName][attributeName];
-                })
-
-                delete data[baseName];
-                console.log("result", result);
-                console.log("data", data);
-                console.log("-------------");
-                console.log("-------------");
-                console.log("-------------");
-                console.log("-------------");
-                console.log("-------------");
-                console.log("-------------");
-                return;
-            }
-            
-            Object.keys(result).forEach(attributeName => {
-                // console.log("attributeName", attributeName);
-                // console.log("entityName", entityName);
-                if (attributeName.includes(entityName)) {
-                    console.log("MATCHED OTHER ROOT", entityName);
-                    result[entityName] = data[entityName];
-                    result[attributeName] = data[entityName]?.id;
-    
-                    delete data[entityName];
-                    console.log("result", result);
-                    console.log("data", data);
-                    console.log("------------------");
-                    console.log("------------------");
-                    console.log("------------------");
-                    console.log("------------------");
-                    console.log("------------------");
-                    console.log("------------------");
-                }
-            })
-
-            if (dxUtils.isValidObject(data[entityName])) {
-                this.recursivelyAppendRelationshipsAsObjects(data[entityName], baseName, result, counter)
-                return;
-            }
-        })
-
-        if (Object.keys(data).length > 0) {
-            console.log("Recursively called", Object.keys(data));
-            console.log("RESULT", result);
-            this.recursivelyAppendRelationshipsAsObjects(data, baseName, result, counter);
-        }
+        return await this.getFinalResult(nestedResultArr);
     }
 
     buildFinalDataSeriesSql() {
@@ -857,10 +740,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.dataSeriesFullSql += this.offsetSql ? `\n${this.offsetSql}` : ``;
 
         this.dataSeriesValues = this.joinValues
-        .concat(this.whereValues)
-        .concat(this.groupByValues)
-        .concat(this.havingValues)
-        .concat(this.orderByValues);
+            .concat(this.whereValues)
+            .concat(this.groupByValues)
+            .concat(this.havingValues)
+            .concat(this.orderByValues);
 
         if (this.limitValue) {
             this.dataSeriesValues.push(this.limitValue);
@@ -881,9 +764,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.fullCountSql += this.havingSql ? `\n${this.havingSql}` : ``;
 
         this.countValues = this.joinValues
-        .concat(this.whereValues)
-        .concat(this.groupByValues)
-        .concat(this.havingValues);
+            .concat(this.whereValues)
+            .concat(this.groupByValues)
+            .concat(this.havingValues);
     }
 }
 

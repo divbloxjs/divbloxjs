@@ -12,6 +12,13 @@ class CodeGenerator extends DivbloxObjectBase {
     constructor(dxInstance) {
         super();
         this.dxInstance = dxInstance;
+
+        Object.keys(this.dxInstance.dataModelObj).forEach((entityNameCamelCase) => {
+            if (this.dxInstance.dataModelObj[entityNameCamelCase]?.generateCrud) {
+                this.entityNamesToGenerateCrudFor.push(entityNameCamelCase);
+            }
+        });
+
         this.dataModelObj = this.dxInstance.dataModelObj;
         this.dataLayer = this.dxInstance.dataLayer;
         this.packages = this.dxInstance.packages;
@@ -33,7 +40,7 @@ class CodeGenerator extends DivbloxObjectBase {
             dxUtils.printInfoMessage(`Skipped divblox-packages-local/${this.corePackageName} directory (exists)`);
         }
 
-        Object.keys(this.packages).forEach(packageNameKebabCase => {
+        Object.keys(this.packages).forEach((packageNameKebabCase) => {
             // Package folder
             if (!fs.existsSync(`divblox-packages-local/${packageNameKebabCase}`)) {
                 fs.mkdirSync(`divblox-packages-local/${packageNameKebabCase}`);
@@ -41,8 +48,7 @@ class CodeGenerator extends DivbloxObjectBase {
             } else {
                 dxUtils.printInfoMessage(`Skipped /divblox-packages-local/${packageNameKebabCase} directory (exists)`);
             }
-        })
-
+        });
 
         for (const entityNameCamelCase of Object.keys(this.dataModelObj)) {
             const entityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(entityNameCamelCase, "-");
@@ -56,15 +62,21 @@ class CodeGenerator extends DivbloxObjectBase {
                 fs.mkdirSync(`${BASE_GEN_FILES_DIR}/${entityNameKebabCase}`);
                 dxUtils.printSuccessMessage(`Created /dx-code-gen/generated-base/${entityNameKebabCase} directory`);
             } else {
-                dxUtils.printInfoMessage(`Skipped /dx-code-gen/generated-base/${entityNameKebabCase} directory (exists)`);
+                dxUtils.printInfoMessage(
+                    `Skipped /dx-code-gen/generated-base/${entityNameKebabCase} directory (exists)`,
+                );
             }
 
             // Specialisation entity folder
             if (!fs.existsSync(`divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase}`)) {
                 fs.mkdirSync(`divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase}`);
-                dxUtils.printSuccessMessage(`Created divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase} directory`);
+                dxUtils.printSuccessMessage(
+                    `Created divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase} directory`,
+                );
             } else {
-                dxUtils.printInfoMessage(`Skipped divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase} directory (exists)`);
+                dxUtils.printInfoMessage(
+                    `Skipped divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase} directory (exists)`,
+                );
             }
         }
     }
@@ -74,12 +86,25 @@ class CodeGenerator extends DivbloxObjectBase {
 
         const schemaComplete = {};
         for (const entityNameCamelCase of Object.keys(this.dataModelObj)) {
-            await this.#generateBaseModelAndSchemaClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase], schemaComplete);
+            await this.#generateBaseModelAndSchemaClassForEntity(
+                entityNameCamelCase,
+                this.dataModelObj[entityNameCamelCase],
+                schemaComplete,
+            );
             await this.#generateDataSeriesClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            await this.#generateBaseEndpointClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            await this.#generateBaseControllerClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
+            dxUtils.printSuccessMessage(`Generated base data-series|model|schema classes for '${entityNameCamelCase}'`);
 
-            dxUtils.printSuccessMessage(`Generated base controller|data-series|endpoint|model|schema classes for '${entityNameCamelCase}'`);
+            if (this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
+                await this.#generateBaseEndpointClassForEntity(
+                    entityNameCamelCase,
+                    this.dataModelObj[entityNameCamelCase],
+                );
+                await this.#generateBaseControllerClassForEntity(
+                    entityNameCamelCase,
+                    this.dataModelObj[entityNameCamelCase],
+                );
+                dxUtils.printSuccessMessage(`Generated base controller|endpoint| classes for '${entityNameCamelCase}'`);
+            }
         }
 
         let fileContentDataModelSchemaStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/model/data-model-schema.tpl`, "utf-8");
@@ -94,7 +119,7 @@ class CodeGenerator extends DivbloxObjectBase {
 
     //#region Base class generators
     async #generateBaseModelAndSchemaClassForEntity(entityNameCamelCase, entityDataModel, schemaComplete) {
-        const entityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(entityNameCamelCase, "-")
+        const entityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(entityNameCamelCase, "-");
         const entityNamePascalCase = dxUtils.convertLowerCaseToPascalCase(entityNameKebabCase, "-");
         const entityNameSqlCase = this.dataLayer.getSqlReadyName(entityNameCamelCase);
 
@@ -162,7 +187,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 type: entityAttributeType,
             };
 
-            entityModelSpec += `    static ${attributeNameCamelCase} = "${entityNameSqlCase}.${attributeNameSqlCase}";\n`
+            entityModelSpec += `    static ${attributeNameCamelCase} = "${entityNameSqlCase}.${attributeNameSqlCase}";\n`;
             userEditableFields += `        "${attributeNameCamelCase}",\n`;
 
             switch (attributes[attributeNameCamelCase]["type"]) {
@@ -195,10 +220,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 continue;
             }
 
-            if (
-                attributeDefault === null ||
-                attributeDefault === "CURRENT_TIMESTAMP"
-            ) {
+            if (attributeDefault === null || attributeDefault === "CURRENT_TIMESTAMP") {
                 entityData += "null;";
                 continue;
             }
@@ -212,7 +234,10 @@ class CodeGenerator extends DivbloxObjectBase {
         let linkedEntityRequires = "";
         let linkedEntityGetters = "";
 
-        let fileContentObjectModelGettersStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/model/_base-model-getters.tpl`, "utf-8");
+        let fileContentObjectModelGettersStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/model/_base-model-getters.tpl`,
+            "utf-8",
+        );
 
         for (const relationshipNameCamelCase of Object.keys(relationships)) {
             const relationshipNameSqlCase = this.dataLayer.getSqlReadyName(relationshipNameCamelCase);
@@ -223,7 +248,9 @@ class CodeGenerator extends DivbloxObjectBase {
             let linkedEntityGettersForRelationship = "";
 
             for (const relationshipUniqueNameCamelCase of relationships[relationshipNameCamelCase]) {
-                const relationshipUniqueNamePascalCase = dxUtils.convertCamelCaseToPascalCase(relationshipUniqueNameCamelCase);
+                const relationshipUniqueNamePascalCase = dxUtils.convertCamelCaseToPascalCase(
+                    relationshipUniqueNameCamelCase,
+                );
                 const finalRelationshipNameCamelCase = `${relationshipNameCamelCase}${relationshipUniqueNamePascalCase}`;
                 const finalRelationshipNameSqlCase = this.dataLayer.getSqlReadyName(finalRelationshipNameCamelCase);
 
@@ -237,12 +264,11 @@ class CodeGenerator extends DivbloxObjectBase {
                     format: "int32",
                 };
 
-                entityModelSpec += `    static ${relationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`
+                entityModelSpec += `    static ${relationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
                 userEditableFields += `        "${finalRelationshipNameCamelCase}",\n`;
 
                 if (linkedEntityRequiresForRelationship === "") {
-                    linkedEntityRequiresForRelationship +=
-                        `const ${relationshipNamePascalCase} = require("divbloxjs/dx-code-gen/generated-base/${relationshipNameKebabCase}/${relationshipNameKebabCase}.model-base");\n`
+                    linkedEntityRequiresForRelationship += `const ${relationshipNamePascalCase} = require("divbloxjs/dx-code-gen/generated-base/${relationshipNameKebabCase}/${relationshipNameKebabCase}.model-base");\n`;
                 }
 
                 if (linkedEntityGettersForRelationship === "") {
@@ -272,7 +298,9 @@ class CodeGenerator extends DivbloxObjectBase {
         schemaComplete[entityNameCamelCase] = entitySchemaData;
 
         entityModelSpec += `\n    static __entityName = "${entityNameCamelCase}";\n`;
-        entityModelSpec += `    static __moduleName = "${this.dataLayer.getModuleNameFromEntityName(entityNameCamelCase)}";\n`;
+        entityModelSpec += `    static __moduleName = "${this.dataLayer.getModuleNameFromEntityName(
+            entityNameCamelCase,
+        )}";\n`;
 
         userEditableFields += `    ]\n`;
 
@@ -298,8 +326,14 @@ class CodeGenerator extends DivbloxObjectBase {
             fileContentObjectSchemaStr = fileContentObjectSchemaStr.replaceAll(search, tokensToReplace[token]);
         }
 
-        fs.writeFileSync(`${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.model-base.js`, fileContentObjectModelStr);
-        fs.writeFileSync(`${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.schema-base.js`, fileContentObjectSchemaStr);
+        fs.writeFileSync(
+            `${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.model-base.js`,
+            fileContentObjectModelStr,
+        );
+        fs.writeFileSync(
+            `${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.schema-base.js`,
+            fileContentObjectSchemaStr,
+        );
     }
 
     async #generateDataSeriesClassForEntity(entityNameCamelCase, entityDataModel) {
@@ -326,29 +360,44 @@ class CodeGenerator extends DivbloxObjectBase {
         };
 
         let fileBaseStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/data-series/base-data-series.tpl`, "utf-8");
-        let fileConstraintFunctionStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/data-series/_base-data-series-relationships-function.tpl`, "utf-8");
-        let fileConstraintBlockStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/data-series/_base-data-series-relationship-block.tpl`, "utf-8");
+        let fileConstraintFunctionStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/data-series/_base-data-series-relationships-function.tpl`,
+            "utf-8",
+        );
+        let fileConstraintBlockStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/data-series/_base-data-series-relationship-block.tpl`,
+            "utf-8",
+        );
 
         const relationshipNames = Object.keys(entityDataModel.relationships);
 
         let relationshipTokenReplacementStr = fileConstraintFunctionStr;
-        relationshipTokenReplacementStr = relationshipTokenReplacementStr.replaceAll("[EntityNamePascalCase]", entityNamePascalCase)
-        relationshipTokenReplacementStr = relationshipTokenReplacementStr.replaceAll("[EntityNameCamelCase]", entityNameCamelCase)
+        relationshipTokenReplacementStr = relationshipTokenReplacementStr.replaceAll(
+            "[EntityNamePascalCase]",
+            entityNamePascalCase,
+        );
+        relationshipTokenReplacementStr = relationshipTokenReplacementStr.replaceAll(
+            "[EntityNameCamelCase]",
+            entityNameCamelCase,
+        );
         let relationshipBlocksStr = "";
 
         if (relationshipNames.length > 0) {
-            relationshipNames.forEach(relationshipNameCamelCase => {
+            relationshipNames.forEach((relationshipNameCamelCase) => {
                 let relationshipBlock = fileConstraintBlockStr;
                 for (const token of Object.keys(tokensToReplace)) {
                     const search = "[" + token + "]";
                     relationshipBlock = relationshipBlock.replaceAll(search, tokensToReplace[token]);
                 }
-                relationshipBlock = relationshipBlock.replaceAll("[RelatedEntityCamelCase]", relationshipNameCamelCase)
+                relationshipBlock = relationshipBlock.replaceAll("[RelatedEntityCamelCase]", relationshipNameCamelCase);
                 relationshipBlocksStr += relationshipBlock;
-            })
+            });
         }
 
-        relationshipTokenReplacementStr = relationshipTokenReplacementStr.replaceAll("[RelationshipBlocks]", relationshipBlocksStr);
+        relationshipTokenReplacementStr = relationshipTokenReplacementStr.replaceAll(
+            "[RelationshipBlocks]",
+            relationshipBlocksStr,
+        );
 
         tokensToReplace.relationshipConstraints = relationshipTokenReplacementStr;
 
@@ -357,7 +406,10 @@ class CodeGenerator extends DivbloxObjectBase {
             fileBaseStr = fileBaseStr.replaceAll(search, tokensToReplace[token]);
         }
 
-        fs.writeFileSync(`${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.data-series-base.js`, fileBaseStr);
+        fs.writeFileSync(
+            `${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.data-series-base.js`,
+            fileBaseStr,
+        );
     }
 
     async #generateBaseEndpointClassForEntity(entityNameCamelCase, entityDataModel) {
@@ -379,7 +431,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 } else if (entityDataModel.allowedAccess.includes("anonymous")) {
                     allowedAccessStr = `["anonymous"]`;
                 } else {
-                    allowedAccessStr = `['${entityDataModel.allowedAccess.join("', '")}']`
+                    allowedAccessStr = `['${entityDataModel.allowedAccess.join("', '")}']`;
                 }
             }
         }
@@ -394,21 +446,27 @@ class CodeGenerator extends DivbloxObjectBase {
             PackageNameKebabCase: packageNameKebabCase,
             AllowedAccess: allowedAccessStr,
             AllRelationshipConstraintsStr: "",
-            RelationshipDeclaredOperationList: ""
-            
+            RelationshipDeclaredOperationList: "",
         };
 
         let fileBaseStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/endpoint/endpoint-base.tpl`, "utf-8");
-        let fileRelationshipDeclarationStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/endpoint/_relationship-declaration.tpl`, "utf-8");
+        let fileRelationshipDeclarationStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/endpoint/_relationship-declaration.tpl`,
+            "utf-8",
+        );
 
         let allRelationshipsDeclarationsStr = "";
-        Object.keys(entityDataModel.relationships).forEach(relationshipNameCamelCase => {
+        Object.keys(entityDataModel.relationships).forEach((relationshipNameCamelCase) => {
             let relationshipConstraintDeclarationStr = fileRelationshipDeclarationStr;
             const relatedEntityNameCamelCase = relationshipNameCamelCase;
             const relatedEntityNamePascalCase = dxUtils.convertCamelCaseToPascalCase(relatedEntityNameCamelCase);
 
-            const relatedEntityNameCamelCasePlural = this.dataModelObj[relationshipNameCamelCase].pluralEntityName ?? this.pluralize(relationshipNameCamelCase);
-            const relatedEntityNamePascalCasePlural = dxUtils.convertCamelCaseToPascalCase(relatedEntityNameCamelCasePlural);
+            const relatedEntityNameCamelCasePlural =
+                this.dataModelObj[relationshipNameCamelCase].pluralEntityName ??
+                this.pluralize(relationshipNameCamelCase);
+            const relatedEntityNamePascalCasePlural = dxUtils.convertCamelCaseToPascalCase(
+                relatedEntityNameCamelCasePlural,
+            );
 
             const innerTokensToReplace = {
                 EntityNameCamelCase: tokensToReplace.EntityNameCamelCase,
@@ -421,19 +479,22 @@ class CodeGenerator extends DivbloxObjectBase {
                 RelatedEntityNameCamelCasePlural: relatedEntityNameCamelCasePlural,
                 RelatedEntityNamePascalCase: relatedEntityNamePascalCase,
                 RelatedEntityNamePascalCasePlural: relatedEntityNamePascalCasePlural,
-            }
+            };
 
             for (const token of Object.keys(innerTokensToReplace)) {
                 const search = "[" + token + "]";
-                relationshipConstraintDeclarationStr = relationshipConstraintDeclarationStr.replaceAll(search, innerTokensToReplace[token]);
+                relationshipConstraintDeclarationStr = relationshipConstraintDeclarationStr.replaceAll(
+                    search,
+                    innerTokensToReplace[token],
+                );
             }
 
-            tokensToReplace.RelationshipDeclaredOperationList += `\t\t\tthis.get${tokensToReplace.EntityNamePascalCasePlural}By${innerTokensToReplace.RelatedEntityNamePascalCase}Operation,\n`
+            tokensToReplace.RelationshipDeclaredOperationList += `\t\t\tthis.get${tokensToReplace.EntityNamePascalCasePlural}By${innerTokensToReplace.RelatedEntityNamePascalCase}Operation,\n`;
             allRelationshipsDeclarationsStr += relationshipConstraintDeclarationStr;
-        })
+        });
 
         if (allRelationshipsDeclarationsStr.length > 0) {
-            allRelationshipsDeclarationsStr = `\t//#region Relationship-constrained endpoint definitions\n${allRelationshipsDeclarationsStr}\n\t//#endregion`
+            allRelationshipsDeclarationsStr = `\t//#region Relationship-constrained endpoint definitions\n${allRelationshipsDeclarationsStr}\n\t//#endregion`;
         }
 
         tokensToReplace.AllRelationshipConstraintsStr = allRelationshipsDeclarationsStr;
@@ -443,7 +504,10 @@ class CodeGenerator extends DivbloxObjectBase {
             fileBaseStr = fileBaseStr.replaceAll(search, tokensToReplace[token]);
         }
 
-        fs.writeFileSync(`${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.endpoint-base.js`, fileBaseStr);
+        fs.writeFileSync(
+            `${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.endpoint-base.js`,
+            fileBaseStr,
+        );
     }
 
     async #generateBaseControllerClassForEntity(entityNameCamelCase, entityDataModel) {
@@ -467,35 +531,45 @@ class CodeGenerator extends DivbloxObjectBase {
             PackageNameCamelCase: packageNameCamelCase,
             ShowRelationshipDeclarations: "",
             RelationshipOptions: "",
-            RelationshipReturnOptions: ""
+            RelationshipReturnOptions: "",
         };
 
         let fileBaseStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/controller/base-controller.tpl`, "utf-8");
-        let fileContentRelationshipOptionsStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/controller/_base-relationship-options.tpl`, "utf-8");
-        
+        let fileContentRelationshipOptionsStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/controller/_base-relationship-options.tpl`,
+            "utf-8",
+        );
+
         let relationshipOptionsStr = "";
         let relationshipOptionDelclarationsStr = "";
         let relationshipReturnOptionsStr = "";
         for (const relatedEntityNameCamelCase of Object.keys(entityDataModel.relationships)) {
             const relatedEntityNamePascalCase = dxUtils.convertCamelCaseToPascalCase(relatedEntityNameCamelCase);
             const relatedEntityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(relatedEntityNameCamelCase, "-");
-            
+
             let currentRelationshipOptionStr = fileContentRelationshipOptionsStr;
 
-            currentRelationshipOptionStr = currentRelationshipOptionStr.replaceAll("[EntityNameCamelCase]", relatedEntityNameCamelCase);
-            currentRelationshipOptionStr = currentRelationshipOptionStr.replaceAll("[EntityNamePascalCase]", relatedEntityNamePascalCase);
+            currentRelationshipOptionStr = currentRelationshipOptionStr.replaceAll(
+                "[EntityNameCamelCase]",
+                relatedEntityNameCamelCase,
+            );
+            currentRelationshipOptionStr = currentRelationshipOptionStr.replaceAll(
+                "[EntityNamePascalCase]",
+                relatedEntityNamePascalCase,
+            );
 
             relationshipOptionsStr += currentRelationshipOptionStr;
-            relationshipReturnOptionsStr += `            ${relatedEntityNameCamelCase}Options: ${relatedEntityNameCamelCase}DataArr,\n`
-            relationshipOptionDelclarationsStr += `const ${relatedEntityNamePascalCase}DataSeries = require('../../../../../divblox-packages-local/test-package/${relatedEntityNameKebabCase}/${relatedEntityNameKebabCase}.data-series');\n`
+            relationshipReturnOptionsStr += `            ${relatedEntityNameCamelCase}Options: ${relatedEntityNameCamelCase}DataArr,\n`;
+            relationshipOptionDelclarationsStr += `const ${relatedEntityNamePascalCase}DataSeries = require('../../../../../divblox-packages-local/test-package/${relatedEntityNameKebabCase}/${relatedEntityNameKebabCase}.data-series');\n`;
         }
 
         if (relationshipOptionsStr.length > 0) {
-            relationshipOptionsStr = "        const relationshipDataSeriesConfig = {\n"+
-            "\t\t\tlimit: 20,\n"+ 
-            "\t\t\trelationshipDepth: 0,\n" +
-            "\t\t}\n" + 
-            relationshipOptionsStr;
+            relationshipOptionsStr =
+                "        const relationshipDataSeriesConfig = {\n" +
+                "\t\t\tlimit: 20,\n" +
+                "\t\t\trelationshipDepth: 0,\n" +
+                "\t\t}\n" +
+                relationshipOptionsStr;
         }
 
         tokensToReplace.ShowRelationshipDeclarations = relationshipOptionDelclarationsStr;
@@ -507,7 +581,10 @@ class CodeGenerator extends DivbloxObjectBase {
             fileBaseStr = fileBaseStr.replaceAll(search, tokensToReplace[token]);
         }
 
-        fs.writeFileSync(`${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.controller-base.js`, fileBaseStr);
+        fs.writeFileSync(
+            `${BASE_GEN_FILES_DIR}/${entityNameKebabCase}/${entityNameKebabCase}.controller-base.js`,
+            fileBaseStr,
+        );
     }
     //#endregion
 
@@ -515,44 +592,44 @@ class CodeGenerator extends DivbloxObjectBase {
         // Check for irregular plurals.
         const irregularPlurals = {
             // Add more irregular plurals as needed.
-            child: 'children',
-            person: 'people',
-            ox: 'oxen',
-            mouse: 'mice',
-            man: 'men',
-            woman: 'women',
-            tooth: 'teeth',
-            foot: 'feet',
-            goose: 'geese',
-            louse: 'lice',
-            cactus: 'cacti',
-            fungus: 'fungi',
-            focus: 'foci',
-            thesis: 'theses',
-            analysis: 'analyses',
-            diagnosis: 'diagnoses',
-            phenomenon: 'phenomena',
-            criterion: 'criteria',
-            radius: 'radii',
-            alumnus: 'alumni',
-            appendix: 'appendices',
-            index: 'indices',
-            formula: 'formulae',
-            syllabus: 'syllabi',
-            bacterium: 'bacteria',
-            curriculum: 'curricula',
-            datum: 'data',
-            analysis: 'analyses',
-            axis: 'axes',
-            crisis: 'crises',
-            diagnosis: 'diagnoses',
-            ellipsis: 'ellipses',
-            hypothesis: 'hypotheses',
-            thesis: 'theses',
-            basis: 'bases',
-            parenthesis: 'parentheses',
-            oasis: 'oases',
-            neurosis: 'neuroses',
+            child: "children",
+            person: "people",
+            ox: "oxen",
+            mouse: "mice",
+            man: "men",
+            woman: "women",
+            tooth: "teeth",
+            foot: "feet",
+            goose: "geese",
+            louse: "lice",
+            cactus: "cacti",
+            fungus: "fungi",
+            focus: "foci",
+            thesis: "theses",
+            analysis: "analyses",
+            diagnosis: "diagnoses",
+            phenomenon: "phenomena",
+            criterion: "criteria",
+            radius: "radii",
+            alumnus: "alumni",
+            appendix: "appendices",
+            index: "indices",
+            formula: "formulae",
+            syllabus: "syllabi",
+            bacterium: "bacteria",
+            curriculum: "curricula",
+            datum: "data",
+            analysis: "analyses",
+            axis: "axes",
+            crisis: "crises",
+            diagnosis: "diagnoses",
+            ellipsis: "ellipses",
+            hypothesis: "hypotheses",
+            thesis: "theses",
+            basis: "bases",
+            parenthesis: "parentheses",
+            oasis: "oases",
+            neurosis: "neuroses",
         };
 
         if (irregularPlurals[singularWord]) {
@@ -560,37 +637,66 @@ class CodeGenerator extends DivbloxObjectBase {
         }
 
         // Handle regular plurals.
-        if (singularWord.endsWith('y') && !['a', 'e', 'i', 'o', 'u'].includes(singularWord[singularWord.length - 2])) {
-          return singularWord.slice(0, -1) + 'ies'; // Change "y" to "ies" for most cases.
+        if (singularWord.endsWith("y") && !["a", "e", "i", "o", "u"].includes(singularWord[singularWord.length - 2])) {
+            return singularWord.slice(0, -1) + "ies"; // Change "y" to "ies" for most cases.
         }
-        
-        if (singularWord.endsWith('s') || singularWord.endsWith('x') || singularWord.endsWith('z') || singularWord.endsWith('sh') || singularWord.endsWith('ch')) {
-          return singularWord + 'es'; // Add "es" for certain endings.
-        } 
 
-        return singularWord + 's'; // Add "s" for most cases.
+        if (
+            singularWord.endsWith("s") ||
+            singularWord.endsWith("x") ||
+            singularWord.endsWith("z") ||
+            singularWord.endsWith("sh") ||
+            singularWord.endsWith("ch")
+        ) {
+            return singularWord + "es"; // Add "es" for certain endings.
+        }
+
+        return singularWord + "s"; // Add "s" for most cases.
     }
 
-    async generateSpecialisationClasses() {
+    async generateSpecialisationClasses(overwriteSpecialisationClasses = false) {
         for (const entityNameCamelCase of Object.keys(this.dataModelObj)) {
-            await this.#generateSpecialisationClass("controller", entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            await this.#generateSpecialisationClass("data-series", entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            await this.#generateSpecialisationClass("endpoint", entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            await this.#generateSpecialisationClass("model", entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
+            await this.#generateSpecialisationClass(
+                "model",
+                entityNameCamelCase,
+                this.dataModelObj[entityNameCamelCase],
+                overwriteSpecialisationClasses,
+            );
+            await this.#generateSpecialisationClass(
+                "data-series",
+                entityNameCamelCase,
+                this.dataModelObj[entityNameCamelCase],
+                overwriteSpecialisationClasses,
+            );
 
-            // await this.#generateSpecialisationControllerClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            // await this.#generateSpecialisationDataSeriesClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            // await this.#generateSpecialisationEndpointClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
-            // await this.#generateSpecialisationModelClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
+            if (this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
+                await this.#generateSpecialisationClass(
+                    "controller",
+                    entityNameCamelCase,
+                    this.dataModelObj[entityNameCamelCase],
+                    overwriteSpecialisationClasses,
+                );
+                await this.#generateSpecialisationClass(
+                    "endpoint",
+                    entityNameCamelCase,
+                    this.dataModelObj[entityNameCamelCase],
+                    overwriteSpecialisationClasses,
+                );
+            }
         }
     }
 
-    async #generateSpecialisationClass(classType = "controller", entityNameCamelCase, entityDataModel = {}) {
+    async #generateSpecialisationClass(
+        classType = "controller",
+        entityNameCamelCase,
+        entityDataModel = {},
+        overwriteSpecialisationClasses = false,
+    ) {
         const entityNamePascalCase = dxUtils.convertCamelCaseToPascalCase(entityNameCamelCase);
         const entityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(entityNameCamelCase, "-");
 
-        const packageNameKebabCase = entityDataModel.packageName  ?? this.corePackageName;
-        const packageNameCamelCase = entityDataModel.packageNameCamelCase  ?? this.corePackageName;
+        const packageNameKebabCase = entityDataModel.packageName ?? this.corePackageName;
+        const packageNameCamelCase = entityDataModel.packageNameCamelCase ?? this.corePackageName;
 
         const tokensToReplace = {
             EntityNameCamelCase: entityNameCamelCase,
@@ -600,19 +706,24 @@ class CodeGenerator extends DivbloxObjectBase {
             PackageNameCamelCase: packageNameCamelCase,
         };
 
-        let fileSpecialisationStr = fs.readFileSync(`${GEN_TEMPLATE_DIR}/${classType}/specialisation-${classType}.tpl`, "utf-8");
+        let fileSpecialisationStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/${classType}/specialisation-${classType}.tpl`,
+            "utf-8",
+        );
 
         for (const token of Object.keys(tokensToReplace)) {
             const search = "[" + token + "]";
             fileSpecialisationStr = fileSpecialisationStr.replaceAll(search, tokensToReplace[token]);
         }
 
-        const finalPath = `divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase}/${entityNameKebabCase}.${classType}.js`
-        if (!fs.existsSync(finalPath)) {
+        const finalPath = `divblox-packages-local/${packageNameKebabCase}/${entityNameKebabCase}/${entityNameKebabCase}.${classType}.js`;
+        if (overwriteSpecialisationClasses || !fs.existsSync(finalPath)) {
             fs.writeFileSync(finalPath, fileSpecialisationStr);
             dxUtils.printSuccessMessage(`Generated ${classType} for '${entityNameCamelCase}'`);
         } else {
-            dxUtils.printInfoMessage(`Skipped ${classType} for '${entityNameCamelCase}': Already exists (If you wish to regenerate it - delete the current ${entityNameKebabCase}.${classType}.js file)`);
+            dxUtils.printInfoMessage(
+                `Skipped ${classType} for '${entityNameCamelCase}': Already exists (If you wish to regenerate it - delete the current ${entityNameKebabCase}.${classType}.js file)`,
+            );
         }
     }
 }

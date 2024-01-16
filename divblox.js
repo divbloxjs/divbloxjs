@@ -1095,11 +1095,11 @@ class DivbloxBase extends divbloxObjectBase {
         return this.configObj["environmentArray"][process.env.NODE_ENV][variableName];
     }
 
-    async generateCrud() {
+    async generateCrud(overwriteSpecialisationClasses = false) {
         const codeGenerator = new CodeGenerator(this);
         await codeGenerator.checkAndCreateNecessaryFolders();
         await codeGenerator.generateBaseClasses();
-        await codeGenerator.generateSpecialisationClasses();
+        await codeGenerator.generateSpecialisationClasses(overwriteSpecialisationClasses);
     }
 
     //#endregion
