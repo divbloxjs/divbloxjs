@@ -377,9 +377,8 @@ class DivbloxEndpointBase extends divbloxObjectBase {
         };
     }
 
-    initEndpointOperations() {
-        console.log("BASE?");
-        // TODO Overwrite in base class
+    initEndpoint() {
+        // TODO Overwrite in implementation class
     }
 
     /**
@@ -400,9 +399,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             }
 
             const foundDeclaredOperationIndex = this.declaredOperations.findIndex(
-                (declaredOperation) => declaredOperation.operationName === newOperation.operationName &&  declaredOperation.requestType === newOperation.requestType
-            )
-            
+                (declaredOperation) =>
+                    declaredOperation.operationName === newOperation.operationName &&
+                    declaredOperation.requestType === newOperation.requestType,
+            );
+
             newOperation = this.getOperationDefinition(newOperation);
             if (foundDeclaredOperationIndex !== -1) {
                 this.declaredOperations[foundDeclaredOperationIndex] = newOperation;
@@ -425,6 +426,10 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
             return true;
         });
+    }
+
+    checkIfHiddenOperation(operationDefinitionName = "") {
+        return this.hiddenOperations.includes(operationDefinitionName);
     }
 
     /**
@@ -498,31 +503,33 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     getDataSeriesQueryParamDefinitions() {
         return [
             this.getInputParameter({
-                name: "searchValue", 
+                name: "searchValue",
                 description: "String value that will be searched on",
             }),
             this.getInputParameter({
-                name: "limit", 
+                name: "limit",
                 description: "Maximum entries to load for the given query",
-                example: 10
+                example: 10,
             }),
             this.getInputParameter({
-                name: "offset", 
+                name: "offset",
                 description: "Number of entries to skip before starting return result",
             }),
             this.getInputParameter({
-                name: "sort", 
-                description: "Defined attributes to sort by (including direction)\n```\n{\n  \"sort\": {\n    \"attributeName\": \"asc\",\n    \"attributeNameTwo\": \"asc\"\n  }\n}\n```\n", 
-                schema: { "$ref": "#/components/schemas/dataSeriesSort"},
-                example: ""
+                name: "sort",
+                description:
+                    'Defined attributes to sort by (including direction)\n```\n{\n  "sort": {\n    "attributeName": "asc",\n    "attributeNameTwo": "asc"\n  }\n}\n```\n',
+                schema: { $ref: "#/components/schemas/dataSeriesSort" },
+                example: "",
             }),
             this.getInputParameter({
-                name: "filter", 
-                "description": "Defined attributes to filter by (including type of filter)\n```\n{\n  \"filter\": {\n    \"attributeNameOne\": {\n      \"like\": \"string\",\n      \"eq\": \"string\",\n      \"ne\": \"string\"\n    },\n    \"attributeNameTwo\": {\n      \"lt\": \"string\",\n      \"lte\": \"string\"\n    },\n    \"attributeNameThree\": {\n      \"gt\": \"string\",\n      \"gte\": \"string\"\n    }\n  }\n}\n```\n",
-                schema: { "$ref": "#/components/schemas/dataSeriesFilter"},
-                example: ""
+                name: "filter",
+                description:
+                    'Defined attributes to filter by (including type of filter)\n```\n{\n  "filter": {\n    "attributeNameOne": {\n      "like": "string",\n      "eq": "string",\n      "ne": "string"\n    },\n    "attributeNameTwo": {\n      "lt": "string",\n      "lte": "string"\n    },\n    "attributeNameThree": {\n      "gt": "string",\n      "gte": "string"\n    }\n  }\n}\n```\n',
+                schema: { $ref: "#/components/schemas/dataSeriesFilter" },
+                example: "",
             }),
-        ]
+        ];
     }
 
     //#region Operations implemented.
@@ -639,22 +646,19 @@ class DivbloxEndpointBase extends divbloxObjectBase {
     }
 
     validateConfig(constraintData = {}) {
-        if (constraintData.hasOwnProperty("searchValue") && 
-            typeof constraintData.searchValue !== "string") {
-                this.populateError("'searchValue' property should be of type string");
-                return false;
+        if (constraintData.hasOwnProperty("searchValue") && typeof constraintData.searchValue !== "string") {
+            this.populateError("'searchValue' property should be of type string");
+            return false;
         }
 
-        if (constraintData.hasOwnProperty("limit") && 
-            typeof constraintData.limit !== "string") {
-                this.populateError("'limit' property should be of type string");
-                return false;
-        }   
+        if (constraintData.hasOwnProperty("limit") && typeof constraintData.limit !== "string") {
+            this.populateError("'limit' property should be of type string");
+            return false;
+        }
 
-        if (constraintData.hasOwnProperty("offset") && 
-            typeof constraintData.offset !== "string") {
-                this.populateError("'offset' property should be of type string");
-                return false;
+        if (constraintData.hasOwnProperty("offset") && typeof constraintData.offset !== "string") {
+            this.populateError("'offset' property should be of type string");
+            return false;
         }
 
         if (constraintData.sort) {
@@ -666,7 +670,11 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             const allowedSortOptions = ["asc", "desc"];
             for (const sortAttributeName of Object.keys(constraintData.sort)) {
                 if (!allowedSortOptions.includes(constraintData.sort[sortAttributeName])) {
-                    this.populateError(`Invalid 'sort' type provided for ${sortAttributeName}: ${constraintData.sort[sortAttributeName]}. Allowed options: ${allowedSortOptions.join(", ")}`);
+                    this.populateError(
+                        `Invalid 'sort' type provided for ${sortAttributeName}: ${
+                            constraintData.sort[sortAttributeName]
+                        }. Allowed options: ${allowedSortOptions.join(", ")}`,
+                    );
                     return false;
                 }
             }
@@ -676,25 +684,31 @@ class DivbloxEndpointBase extends divbloxObjectBase {
             if (!dxUtils.isValidObject(constraintData.filter)) {
                 this.populateError("'filter' property provided is not a valid object");
                 return false;
-            } 
+            }
 
             if (!dxUtils.isValidObject(constraintData.filter)) {
                 const allowedFilterTypes = ["like", "eq", "ne", "gt", "gte", "lt", "lte"];
                 for (const filterAttributeName of Object.keys(constraintData.filter)) {
                     const { filterTypeKeys, filterValues } = Object.entries(constraintData.filter[filterAttributeName]);
                     if (!allowedFilterTypes.includes(filterTypeKeys)) {
-                        this.populateError(`Invalid 'filter' type provided for ${filterAttributeName}: ${constraintData.filter[filterAttributeName]}. Allowed options: ${allowedFilterTypes.join(", ")}`);
+                        this.populateError(
+                            `Invalid 'filter' type provided for ${filterAttributeName}: ${
+                                constraintData.filter[filterAttributeName]
+                            }. Allowed options: ${allowedFilterTypes.join(", ")}`,
+                        );
                         return false;
                     }
 
                     for (const filterValue of filterValues) {
                         if (typeof filterValue !== "string") {
-                            this.populateError(`Invalid 'filter' value provided for ${filterAttributeName}: ${filterValue}. Should be of type string`);
+                            this.populateError(
+                                `Invalid 'filter' value provided for ${filterAttributeName}: ${filterValue}. Should be of type string`,
+                            );
                             return false;
                         }
                     }
                 }
-            } 
+            }
         }
 
         return true;

@@ -446,6 +446,7 @@ class CodeGenerator extends DivbloxObjectBase {
             PackageNameKebabCase: packageNameKebabCase,
             AllowedAccess: allowedAccessStr,
             AllRelationshipConstraintsStr: "",
+            AllRelationshipFunctionsStr: "",
             RelationshipDeclaredOperationList: "",
         };
 
@@ -454,10 +455,16 @@ class CodeGenerator extends DivbloxObjectBase {
             `${GEN_TEMPLATE_DIR}/endpoint/_relationship-declaration.tpl`,
             "utf-8",
         );
+        let fileRelationshipFunctionStr = fs.readFileSync(
+            `${GEN_TEMPLATE_DIR}/endpoint/_relationship-function.tpl`,
+            "utf-8",
+        );
 
-        let allRelationshipsDeclarationsStr = "";
-        Object.keys(entityDataModel.relationships).forEach((relationshipNameCamelCase) => {
+        let allRelationshipDeclarationsStr = "";
+        let allRelationshipFunctionsStr = "";
+        Object.keys(entityDataModel.relationships).forEach((relationshipNameCamelCase, index) => {
             let relationshipConstraintDeclarationStr = fileRelationshipDeclarationStr;
+            let relationshipFunctionStr = fileRelationshipFunctionStr;
             const relatedEntityNameCamelCase = relationshipNameCamelCase;
             const relatedEntityNamePascalCase = dxUtils.convertCamelCaseToPascalCase(relatedEntityNameCamelCase);
 
@@ -487,17 +494,29 @@ class CodeGenerator extends DivbloxObjectBase {
                     search,
                     innerTokensToReplace[token],
                 );
+                relationshipFunctionStr = relationshipFunctionStr.replaceAll(search, innerTokensToReplace[token]);
             }
 
-            tokensToReplace.RelationshipDeclaredOperationList += `\t\t\tthis.get${tokensToReplace.EntityNamePascalCasePlural}By${innerTokensToReplace.RelatedEntityNamePascalCase}Operation,\n`;
-            allRelationshipsDeclarationsStr += relationshipConstraintDeclarationStr;
+            tokensToReplace.RelationshipDeclaredOperationList += `\t\t\tthis.get${tokensToReplace.EntityNamePascalCasePlural}By${innerTokensToReplace.RelatedEntityNamePascalCase}Operation,`;
+            allRelationshipDeclarationsStr += relationshipConstraintDeclarationStr;
+            allRelationshipFunctionsStr += relationshipFunctionStr;
+            if (index !== Object.keys(entityDataModel.relationships).length - 1) {
+                tokensToReplace.RelationshipDeclaredOperationList += `\n`;
+                allRelationshipDeclarationsStr += `\n`;
+                allRelationshipFunctionsStr += `\n`;
+            }
         });
 
-        if (allRelationshipsDeclarationsStr.length > 0) {
-            allRelationshipsDeclarationsStr = `\t//#region Relationship-constrained endpoint definitions\n${allRelationshipsDeclarationsStr}\n\t//#endregion`;
+        if (allRelationshipDeclarationsStr.length > 0) {
+            allRelationshipDeclarationsStr = `\t//#region Relationship-constrained definitions\n${allRelationshipDeclarationsStr}\t//#endregion`;
         }
 
-        tokensToReplace.AllRelationshipConstraintsStr = allRelationshipsDeclarationsStr;
+        if (allRelationshipFunctionsStr.length > 0) {
+            allRelationshipFunctionsStr = `\t//#region Relationship-constrained functions\n${allRelationshipFunctionsStr}\t//#endregion`;
+        }
+
+        tokensToReplace.AllRelationshipConstraintsStr = allRelationshipDeclarationsStr;
+        tokensToReplace.AllRelationshipFunctionsStr = allRelationshipFunctionsStr;
 
         for (const token of Object.keys(tokensToReplace)) {
             const search = "[" + token + "]";

@@ -335,7 +335,7 @@ class DivbloxBase extends divbloxObjectBase {
             );
             throw new Error("Configuration invalid");
         }
-
+        packageNamesToLoad.push(this.corePackageName);
         for (const packageNameToLoad of packageNamesToLoad) {
             // If a package is already defined, it means we are specializing this package within a child package,
             // so its package root should be redeclared.
@@ -667,8 +667,8 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
-
-        const generateCrud = this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
+        const generateCrud =
+            this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
         if (generateCrud) {
             this.generateCrud();
         }
