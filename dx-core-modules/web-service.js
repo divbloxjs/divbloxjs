@@ -162,18 +162,16 @@ class DivbloxWebService extends divbloxObjectBase {
         result = result || [];
 
         filePaths.forEach((filePath) => {
-                const newRootDir = path.join(rootDir, filePath);
-                if (fs.statSync(newRootDir).isDirectory()) {
-                    result = this.getFilesByExtensionRecursive(newRootDir,ext,fs.readdirSync(newRootDir),result)
-                    return;
-                }
-
-                if (filePath.endsWith(ext)) {
-                    result.push(newRootDir);
-                } 
-                
+            const newRootDir = path.join(rootDir, filePath);
+            if (fs.statSync(newRootDir).isDirectory()) {
+                result = this.getFilesByExtensionRecursive(newRootDir, ext, fs.readdirSync(newRootDir), result);
+                return;
             }
-        )
+
+            if (filePath.endsWith(ext)) {
+                result.push(newRootDir);
+            }
+        });
         return result;
     }
 
@@ -184,22 +182,25 @@ class DivbloxWebService extends divbloxObjectBase {
     setupApiRouters() {
         dxUtils.printSubHeadingMessage("Configuring API routes");
 
-        let instantiatedPackages = {};
+        let instantiatedEndpointGroup = {};
         // Setup the API routes for each provided divblox package
         for (const packageNameKebabCase of Object.keys(this.dxInstance.packages)) {
             const packageObj = this.dxInstance.packages[packageNameKebabCase];
             const packageName = packageObj.packageNameCamelCase;
 
             let filePaths = [];
-            filePaths = this.getFilesByExtensionRecursive(path.join(path.resolve("./"), packageObj.packageRoot), "endpoint.js");
+            filePaths = this.getFilesByExtensionRecursive(
+                path.join(path.resolve("./"), packageObj.packageRoot),
+                "endpoint.js",
+            );
 
             filePaths.forEach((filePath) => {
                 const Endpoint = require(filePath);
                 const endpointConfigInstance = new Endpoint(this.dxInstance);
-                endpointConfigInstance.initEndpointOperations();
+                endpointConfigInstance.initEndpoint();
                 const endpointName = endpointConfigInstance.endpointName ?? "undefined";
 
-                instantiatedPackages[`${packageName}/${endpointName}`] = endpointConfigInstance;
+                instantiatedEndpointGroup[`${packageName} / ${endpointName}`] = endpointConfigInstance;
 
                 //#region Endpoint routes that do NOT receive operations
                 this.dxApiRouter.all("/" + endpointName, async (req, res, next) => {
@@ -214,7 +215,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     const finalPath = "/" + packageName + "/" + operationName;
                     // NOTE: Will be re-instantiated for every endpoint operation to prevent cross-pollination of data between requests
                     const endpoint = new Endpoint(this.dxInstance);
-                    endpoint.initEndpointOperations();
+                    endpoint.initEndpoint();
                     const declaredOperation = endpoint.declaredOperations.filter((declaredOperation) => {
                         return (
                             declaredOperation.operationName === configOperation.operationName &&
@@ -234,7 +235,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     this.dxApiRouter.all(finalPath, async (req, res, next) => {
                         // NOTE: Re-instantiating packageEndpoint to prevent cross-pollination of data between requests
                         const endpoint = new Endpoint(this.dxInstance);
-                        endpoint.initEndpointOperations();
+                        endpoint.initEndpoint();
                         await endpoint.executeOperation(operationName, req, res);
                         this.sendResponse(endpoint, operationName, req, res);
                     });
@@ -247,7 +248,7 @@ class DivbloxWebService extends divbloxObjectBase {
                             this.dxApiRouter.all(finalPath, async (req, res, next) => {
                                 // NOTE: Re-instantiating packageEndpoint to prevent cross-pollination of data between requests
                                 const endpoint = new Endpoint(this.dxInstance);
-                                endpoint.initEndpointOperations();
+                                endpoint.initEndpoint();
                                 await endpoint.executeOperation(operationName, req, res);
                                 this.sendResponse(endpoint, operationName, req, res);
                             });
@@ -262,9 +263,9 @@ class DivbloxWebService extends divbloxObjectBase {
 
         this.addRoute("/api", undefined, this.dxApiRouter);
 
-        this.writeSwaggerDoc(instantiatedPackages);
+        this.writeSwaggerDoc(instantiatedEndpointGroup);
 
-        this.serveSwaggerUi(this.getSwaggerConfig(instantiatedPackages));
+        this.serveSwaggerUi(this.getSwaggerConfig(instantiatedEndpointGroup));
     }
 
     /**
@@ -379,26 +380,26 @@ class DivbloxWebService extends divbloxObjectBase {
 
     /**
      * Writes the swagger config document to a json file that conforms to the openapi 3.0.3 spec
-     * @param {*} instantiatedPackages
+     * @param {*} instantiatedEndpointGroup
      */
-    writeSwaggerDoc(instantiatedPackages = null) {
+    writeSwaggerDoc(instantiatedEndpointGroup = null) {
         dxUtils.printSubHeadingMessage("Configuring Swagger UI");
 
-        if (instantiatedPackages === null) {
+        if (instantiatedEndpointGroup === null) {
             dxUtils.printErrorMessage("No packages instantiated");
         }
 
-        const swaggerDocument = this.getSwaggerConfig(instantiatedPackages);
+        const swaggerDocument = this.getSwaggerConfig(instantiatedEndpointGroup);
         fs.writeFileSync(DIVBLOX_ROOT_DIR + "/dx-orm/swagger.json", JSON.stringify(swaggerDocument, null, 2));
     }
 
     /**
      * Returns the openapi json configuration that will be used to setup swagger ui.
      * https://swagger.io/specification/
-     * @param {*} instantiatedPackages The packages that have be instantiated by the web-service
+     * @param {*} instantiatedEndpointGroup The packages that have be instantiated by the web-service
      * @return {*} A json object that conforms to the openapi 3.0.3 spec
      */
-    getSwaggerConfig(instantiatedPackages) {
+    getSwaggerConfig(instantiatedEndpointGroup) {
         const swaggerPath = this.dxInstance.configPath.replace("dxconfig.json", "swagger.json");
         if (fs.existsSync(swaggerPath)) {
             const staticConfigStr = fs.readFileSync(swaggerPath, "utf-8");
@@ -418,9 +419,10 @@ class DivbloxWebService extends divbloxObjectBase {
         let paths = {};
         let declaredEntitySchemas = [];
 
-        for (const packageInstance of Object.values(instantiatedPackages)) {
-            const packageName = packageInstance.controller.packageName;
+        for (const packageInstance of Object.values(instantiatedEndpointGroup)) {
+            packageInstance.initEndpoint();
             const endpointName = packageInstance.endpointName ?? "undefined";
+            const packageName = packageInstance?.controller?.packageName ?? endpointName;
             const endpointDescription = packageInstance.endpointDescription ?? "Not provided";
             const tagName = `${packageName} / ${endpointName}`;
 
@@ -548,7 +550,7 @@ class DivbloxWebService extends divbloxObjectBase {
                                 properties: {
                                     message: {
                                         type: "string",
-                                        example: "Description of problem presented here"
+                                        example: "Description of problem presented here",
                                     },
                                 },
                             },
@@ -570,7 +572,7 @@ class DivbloxWebService extends divbloxObjectBase {
                                 properties: {
                                     message: {
                                         type: "string",
-                                        example: "Internet connection poor. Please try again"
+                                        example: "Internet connection poor. Please try again",
                                     },
                                 },
                             },
@@ -617,75 +619,77 @@ class DivbloxWebService extends divbloxObjectBase {
                         securityDescription + paths[path][operation.requestType.toLowerCase()]["description"];
                 }
             }
+
+            // console.log("-----------------------------------");
         }
 
         let dataModelSchema = require(DIVBLOX_ROOT_DIR + "/dx-code-gen/generated-base/data-model.schema.js");
 
         let schemas = {
-            "dataSeriesSort": {
-                "type": "object",
-                "properties": {
-                    "sort": {
-                        "type": "object",
-                        "properties": {
-                            "attributeName": {
-                                "type": "string",
-                                "enum": ["asc", "desc"]
+            dataSeriesSort: {
+                type: "object",
+                properties: {
+                    sort: {
+                        type: "object",
+                        properties: {
+                            attributeName: {
+                                type: "string",
+                                enum: ["asc", "desc"],
                             },
-                            "attributeNameTwo": {
-                                "type": "string",
-                                "enum": ["asc", "desc"]
-                            }
-                        }
-                    }
-                }
+                            attributeNameTwo: {
+                                type: "string",
+                                enum: ["asc", "desc"],
+                            },
+                        },
+                    },
+                },
             },
-            "dataSeriesFilter": {
-                "type": "object",
-                "properties": {
-                    "filter": {
-                        "type": "object",
-                        "properties": {
-                            "attributeNameOne": {
-                                "type": "object",
-                                "properties": {
-                                    "like": {
-                                        "type": "string"
+            dataSeriesFilter: {
+                type: "object",
+                properties: {
+                    filter: {
+                        type: "object",
+                        properties: {
+                            attributeNameOne: {
+                                type: "object",
+                                properties: {
+                                    like: {
+                                        type: "string",
                                     },
-                                    "eq": {
-                                        "type": "string"
+                                    eq: {
+                                        type: "string",
                                     },
-                                    "ne": {
-                                        "type": "string"
-                                    }
-                                }
+                                    ne: {
+                                        type: "string",
+                                    },
+                                },
                             },
-                            "attributeNameTwo": {
-                                "type": "object",
-                                "properties": {
-                                    "lt": {
-                                        "type": "string"
+                            attributeNameTwo: {
+                                type: "object",
+                                properties: {
+                                    lt: {
+                                        type: "string",
                                     },
-                                    "lte": {
-                                        "type": "string"
-                                    }
-                                }
+                                    lte: {
+                                        type: "string",
+                                    },
+                                },
                             },
-                            "attributeNameThree": {
-                                "type": "object",
-                                "properties": {
-                                    "gt": {
-                                        "type": "string"
+                            attributeNameThree: {
+                                type: "object",
+                                properties: {
+                                    gt: {
+                                        type: "string",
                                     },
-                                    "gte": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                    gte: {
+                                        type: "string",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
 
         for (const entity of Object.keys(dataModelSchema)) {

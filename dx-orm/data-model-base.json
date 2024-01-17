@@ -1,6 +1,9 @@
 {
   "auditLogEntry": {
     "module": "main",
+    "generateCrud": true,
+    "singularEntityName": "auditLogEntry",
+    "pluralEntityName": "auditLogEntries",
     "attributes": {
       "entryTimeStamp": {
         "type": "datetime",
@@ -56,6 +59,9 @@
   },
   "globalIdentifier": {
     "module": "main",
+    "generateCrud": true,
+    "singularEntityName": "globalIdentifier",
+    "pluralEntityName": "globalIdentifiers",
     "attributes": {
       "uniqueIdentifier": {
         "type": "varchar",
@@ -117,6 +123,9 @@
   },
   "globalIdentifierGrouping": {
     "module": "main",
+    "generateCrud": true,
+    "singularEntityName": "globalIdentifierGrouping",
+    "pluralEntityName": "globalIdentifierGroupings",
     "attributes": {
       "name": {
         "type": "varchar",

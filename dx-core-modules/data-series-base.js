@@ -718,10 +718,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         const nestedResultArr = [];
         result.forEach((resultRow, index) => {
-            if (index !== 0) return;
             const nestedResult = result[index][this.entityName];
             buildStack(this.entityName, nestedResult, index);
-            nestedResultArr.push(JSON.parse(JSON.stringify(nestedResult)));
+            nestedResultArr.push(nestedResult);
         });
 
         return await this.getFinalResult(nestedResultArr);

@@ -667,8 +667,8 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
-
-        const generateCrud = this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
+        const generateCrud =
+            this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
         if (generateCrud) {
             this.generateCrud();
         }
