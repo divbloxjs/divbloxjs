@@ -12,7 +12,7 @@ class CodeGenerator extends DivbloxObjectBase {
     constructor(dxInstance) {
         super();
         this.dxInstance = dxInstance;
-
+        this.entityNamesToGenerateCrudFor = [];
         Object.keys(this.dxInstance.dataModelObj).forEach((entityNameCamelCase) => {
             if (this.dxInstance.dataModelObj[entityNameCamelCase]?.generateCrud) {
                 this.entityNamesToGenerateCrudFor.push(entityNameCamelCase);
@@ -566,6 +566,8 @@ class CodeGenerator extends DivbloxObjectBase {
             const relatedEntityNamePascalCase = dxUtils.convertCamelCaseToPascalCase(relatedEntityNameCamelCase);
             const relatedEntityNameKebabCase = dxUtils.getCamelCaseSplittedToLowerCase(relatedEntityNameCamelCase, "-");
 
+            const relatedEntityPackageNameKebabCase = this.dataModelObj[relatedEntityNameCamelCase].packageName;
+
             let currentRelationshipOptionStr = fileContentRelationshipOptionsStr;
 
             currentRelationshipOptionStr = currentRelationshipOptionStr.replaceAll(
@@ -579,7 +581,7 @@ class CodeGenerator extends DivbloxObjectBase {
 
             relationshipOptionsStr += currentRelationshipOptionStr;
             relationshipReturnOptionsStr += `            ${relatedEntityNameCamelCase}Options: ${relatedEntityNameCamelCase}DataArr,\n`;
-            relationshipOptionDelclarationsStr += `const ${relatedEntityNamePascalCase}DataSeries = require('../../../../../divblox-packages-local/test-package/${relatedEntityNameKebabCase}/${relatedEntityNameKebabCase}.data-series');\n`;
+            relationshipOptionDelclarationsStr += `const ${relatedEntityNamePascalCase}DataSeries = require('../../../../../divblox-packages-local/${relatedEntityPackageNameKebabCase}/${relatedEntityNameKebabCase}/${relatedEntityNameKebabCase}.data-series');\n`;
         }
 
         if (relationshipOptionsStr.length > 0) {
