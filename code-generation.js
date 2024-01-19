@@ -264,7 +264,7 @@ class CodeGenerator extends DivbloxObjectBase {
                     format: "int32",
                 };
 
-                entityModelSpec += `    static ${relationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
+                entityModelSpec += `    static ${finalRelationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
                 userEditableFields += `        "${finalRelationshipNameCamelCase}",\n`;
 
                 if (linkedEntityRequiresForRelationship === "") {
