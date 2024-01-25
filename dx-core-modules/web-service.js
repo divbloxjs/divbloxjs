@@ -422,7 +422,7 @@ class DivbloxWebService extends divbloxObjectBase {
         for (const packageInstance of Object.values(instantiatedEndpointGroup)) {
             packageInstance.initEndpoint();
             const endpointName = packageInstance.endpointName ?? "undefined";
-            const packageName = packageInstance?.controller?.packageName ?? endpointName;
+            const packageName = packageInstance?.controller?.packageNameCamelCase ?? endpointName;
             const endpointDescription = packageInstance.endpointDescription ?? "Not provided";
             const tagName = `${packageName} / ${endpointName}`;
 
