@@ -224,7 +224,7 @@ class DivbloxWebService extends divbloxObjectBase {
                     })?.["0"];
 
                     //#region Endpoint operations that use inline functions from operation definitions
-                    if (configOperation.f) {
+                    if (declaredOperation.f) {
                         this.executeInlineFunctionDefinition(finalPath, endpoint, declaredOperation);
                         continue;
                     }
