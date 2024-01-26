@@ -8,21 +8,37 @@ class [EntityNamePascalCase]ControllerBase extends PackageControllerBase {
     }
 
     async get[EntityNamePascalCasePlural](dataSeriesConfig = {}, additionalParams = {}) {
-        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(this.dxInstance, dataSeriesConfig, additionalParams);
-
-        const data = await [EntityNameCamelCase]DataSeries.getDataSeries();
+        const data = await this.get[EntityNamePascalCase]DataSeries(dataSeriesConfig, additionalParams);
         if (data === null) {
-            this.populateError([EntityNameCamelCase]DataSeries.getLastError());
             return { data: null, count: null };
         }
 
-        const count = await [EntityNameCamelCase]DataSeries.getTotalCount();
+        const count = await this.get[EntityNamePascalCase]TotalCount(dataSeriesConfig, additionalParams);
         if (count === null) {
-            this.populateError([EntityNameCamelCase]DataSeries.getLastError());
             return { data: null, count: null };
         }
 
         return { data: data, count: count };
+    }
+
+    async get[EntityNamePascalCase]DataSeries(dataSeriesConfig = {}, additionalParams = {}) {
+        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(this.dxInstance, dataSeriesConfig, additionalParams);
+        const data = await [EntityNameCamelCase]DataSeries.getDataSeries();
+        if (data === null) {
+            this.populateError([EntityNameCamelCase]DataSeries.getLastError());
+        }
+
+        return data;
+    }
+
+    async get[EntityNamePascalCase]TotalCount(dataSeriesConfig = {}, additionalParams = {}) {
+        const [EntityNameCamelCase]DataSeries = new [EntityNamePascalCase]DataSeries(this.dxInstance, dataSeriesConfig, additionalParams);
+        const count = await [EntityNameCamelCase]DataSeries.getTotalCount();
+        if (count === null) {
+            this.populateError([EntityNameCamelCase]DataSeries.getLastError());
+        }
+
+        return count;
     }
 
     async get[EntityNamePascalCase](id = null, showRelationshipOptions = false, additionalParams = {}) {
