@@ -290,15 +290,12 @@ class DivbloxEndpointBase extends divbloxObjectBase {
 
         delete this.result["message"];
 
+        this.result["responseCode"] = isSuccess ? 200 : 400;
+        this.statusCode = isSuccess ? 200 : 400;
+        this.result["message"] = isSuccess ? this.DEFAULT_SUCCESS_MESSAGE :this.DEFAULT_ERROR_MESSAGE;
+
         if (typeof message !== undefined && message?.length > 0) {
             this.result["message"] = message;
-            return;
-        }
-
-        if (isSuccess) {
-            this.result["message"] = this.DEFAULT_SUCCESS_MESSAGE;
-        } else {
-            this.result["message"] = this.DEFAULT_ERROR_MESSAGE;
         }
     }
 
