@@ -16,8 +16,8 @@ class [EntityNamePascalCase]Endpoint extends [EntityNamePascalCase]EndpointBase 
     /**
      * Initialisation function that declares any newly created operations or schemas
      */
-    async initEndpointOperations() {
-        super.initEndpointOperations();
+    async initEndpoint() {
+        super.initEndpoint();
 
         // TODO Declare new operation definitions
         this.declareOperations([

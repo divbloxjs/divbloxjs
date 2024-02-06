@@ -17,16 +17,17 @@ const dxUtils = require("dx-utilities");
  */
 class DxBaseDataSeries extends DivbloxObjectBase {
     #DEFAULT_LIMIT = 10;
-    #MAX_LIMIT = 100;
-    #relationshipDepth = 5;
-    #jointType = "LEFT";
     #ALLOWED_FILTER_TYPES = ["like", "eq", "ne", "gt", "gte", "lt", "lte"];
+
+    MAX_LIMIT = 100;
+
+    #relationshipDepth = 5;
+    #joinType = "LEFT";
     #offset = -1;
     #limit = this.#DEFAULT_LIMIT;
     #sort = {};
     #filter = {};
     #searchValue = "";
-    #configSuccessful = false;
 
     /**
      * @param {DivbloxBase} dxInstance
@@ -63,7 +64,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         this.#relationshipDepth = dataSeriesConfig?.relationshipDepth ?? 3;
         console.log("this.#relationshipDepth", this.#relationshipDepth);
-        this.#jointType = dataSeriesConfig?.joinType ?? "LEFT";
+        this.#joinType = dataSeriesConfig?.joinType ?? "LEFT";
 
         // console.log("dataSeriesConfig", dataSeriesConfig);
         this.#searchValue = dataSeriesConfig?.searchValue ?? "";
@@ -71,7 +72,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         if (dataSeriesConfig.hasOwnProperty("limit")) {
             this.#limit =
-                parseInt(dataSeriesConfig.limit) < this.#MAX_LIMIT ? parseInt(dataSeriesConfig.limit) : this.#MAX_LIMIT;
+                parseInt(dataSeriesConfig.limit) < this.MAX_LIMIT ? parseInt(dataSeriesConfig.limit) : this.MAX_LIMIT;
         }
 
         if (dataSeriesConfig.hasOwnProperty("offset")) {
@@ -186,7 +187,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
                     currentDepthCount++;
                 }
 
-                defaultJoinSql += `${this.#jointType} JOIN ${dxQ.getSqlReadyName(
+                defaultJoinSql += `${this.#joinType} JOIN ${dxQ.getSqlReadyName(
                     relatedEntityName,
                 )} ON ${dxQ.getSqlReadyName(entityName)}.${dxQ.getSqlReadyName(
                     `${relationshipName}`,
@@ -298,10 +299,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     /**
      * Sets the limit value on the query
      * @param {number} limit Default value of this.#DEFAULT_LIMIT,
-     * Max value of this.#MAX_LIMIT.
+     * Max value of this.MAX_LIMIT.
      */
     resetLimit(limit = this.#DEFAULT_LIMIT) {
-        this.#limit = limit < this.#MAX_LIMIT ? limit : this.#MAX_LIMIT;
+        this.#limit = limit < this.MAX_LIMIT ? limit : this.MAX_LIMIT;
         this.limitSql = `LIMIT ?`;
         this.limitValue = this.#limit;
     }
