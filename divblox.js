@@ -667,11 +667,14 @@ class DivbloxBase extends divbloxObjectBase {
             await dxUtils.sleep(1000);
         }
 
-        const generateCrud =
+        this.generateCrud =
             this.configObj.environmentArray[process.env.NODE_ENV]?.generateDataModelCrudOnStart ?? false;
-        if (generateCrud) {
-            this.generateCrud();
-        }
+
+        const overwriteSpecialisationClasses =
+            this.configObj.environmentArray[process.env.NODE_ENV]?.overwriteSpecialisationClasses ?? false;
+
+        this.generateCode(overwriteSpecialisationClasses);
+
         if (!(await this.ensureGlobalSuperUserPresent())) {
             dxUtils.printErrorMessage("Could not create super user grouping");
             this.printLastError();
@@ -741,6 +744,13 @@ class DivbloxBase extends divbloxObjectBase {
             dxUtils.printTerminalMessage("npm run register-package");
         }
         return true;
+    }
+
+    async generateCode(overwriteSpecialisationClasses = false) {
+        const codeGenerator = new CodeGenerator(this);
+        await codeGenerator.checkAndCreateNecessaryFolders();
+        await codeGenerator.generateBaseClasses();
+        await codeGenerator.generateSpecialisationClasses(overwriteSpecialisationClasses);
     }
 
     /**
@@ -1093,13 +1103,6 @@ class DivbloxBase extends divbloxObjectBase {
         }
 
         return this.configObj["environmentArray"][process.env.NODE_ENV][variableName];
-    }
-
-    async generateCrud(overwriteSpecialisationClasses = false) {
-        const codeGenerator = new CodeGenerator(this);
-        await codeGenerator.checkAndCreateNecessaryFolders();
-        await codeGenerator.generateBaseClasses();
-        await codeGenerator.generateSpecialisationClasses(overwriteSpecialisationClasses);
     }
 
     //#endregion

@@ -12,6 +12,7 @@ class CodeGenerator extends DivbloxObjectBase {
     constructor(dxInstance) {
         super();
         this.dxInstance = dxInstance;
+        this.generateCrud = dxInstance.generateCrud;
         this.entityNamesToGenerateCrudFor = [];
         Object.keys(this.dxInstance.dataModelObj).forEach((entityNameCamelCase) => {
             if (this.dxInstance.dataModelObj[entityNameCamelCase]?.generateCrud) {
@@ -94,7 +95,7 @@ class CodeGenerator extends DivbloxObjectBase {
             await this.#generateDataSeriesClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
             dxUtils.printSuccessMessage(`Generated base data-series|model|schema classes for '${entityNameCamelCase}'`);
 
-            if (this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
+            if (this.generateCrud && this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
                 await this.#generateBaseEndpointClassForEntity(
                     entityNameCamelCase,
                     this.dataModelObj[entityNameCamelCase],
@@ -693,7 +694,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 overwriteSpecialisationClasses,
             );
 
-            if (this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
+            if (this.generateCrud && this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
                 await this.#generateSpecialisationClass(
                     "controller",
                     entityNameCamelCase,
