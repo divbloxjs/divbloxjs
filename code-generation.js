@@ -138,6 +138,8 @@ class CodeGenerator extends DivbloxObjectBase {
         let entityModelSpec = `static id = "${entityNameSqlCase}.id";\n`;
 
         let userEditableFields = `static userEditableFields = [\n`;
+        let dataString = `data = {\n`;
+        let lastLoadedDataString = `lastLoadedData = {\n`;
 
         const attributes = entityDataModel["attributes"];
         const relationships = entityDataModel["relationships"];
@@ -190,6 +192,8 @@ class CodeGenerator extends DivbloxObjectBase {
 
             entityModelSpec += `    static ${attributeNameCamelCase} = "${entityNameSqlCase}.${attributeNameSqlCase}";\n`;
             userEditableFields += `        "${attributeNameCamelCase}",\n`;
+            dataString += `        "${attributeNameCamelCase}": null,\n`;
+            lastLoadedDataString += `        "${attributeNameCamelCase}": null,\n`;
 
             switch (attributes[attributeNameCamelCase]["type"]) {
                 case "date":
@@ -269,6 +273,8 @@ class CodeGenerator extends DivbloxObjectBase {
                 entityModelSpec += `    static ${finalRelationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
                 entityModelSpec += `    static ${relationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
                 userEditableFields += `        "${finalRelationshipNameCamelCase}",\n`;
+                dataString += `        "${finalRelationshipNameCamelCase}": null,\n`;
+                lastLoadedDataString += `        "${finalRelationshipNameCamelCase}": null,\n`;
 
                 if (linkedEntityRequiresForRelationship === "") {
                     linkedEntityRequiresForRelationship += `const ${relationshipNamePascalCase} = require("divbloxjs/dx-code-gen/generated-base/${relationshipNameKebabCase}/${relationshipNameKebabCase}.model-base");\n`;
@@ -306,6 +312,8 @@ class CodeGenerator extends DivbloxObjectBase {
         )}";\n`;
 
         userEditableFields += `    ]\n`;
+        lastLoadedDataString += `    }\n`;
+        dataString += `    }\n`;
 
         const tokensToReplace = {
             EntityNamePascalCase: entityNamePascalCase,
@@ -316,6 +324,8 @@ class CodeGenerator extends DivbloxObjectBase {
             EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
             EntityModelSpec: entityModelSpec,
             UserEditableFields: userEditableFields,
+            DataString: dataString,
+            LastLoadedDataString: lastLoadedDataString,
             LinkedEntityRequires: linkedEntityRequires,
             LinkedEntityGetters: linkedEntityGetters,
         };
