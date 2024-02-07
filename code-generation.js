@@ -138,6 +138,8 @@ class CodeGenerator extends DivbloxObjectBase {
         let entityModelSpec = `static id = "${entityNameSqlCase}.id";\n`;
 
         let userEditableFields = `static userEditableFields = [\n`;
+
+        // TODO Update the docs for this to type correctly based on data model types
         let dataString = `data = {\n`;
         let lastLoadedDataString = `lastLoadedData = {\n`;
 
