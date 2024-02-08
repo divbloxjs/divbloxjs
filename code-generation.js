@@ -326,9 +326,9 @@ class CodeGenerator extends DivbloxObjectBase {
             EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
             EntityModelSpec: entityModelSpec,
             UserEditableFields: userEditableFields,
-            DataString: dataString,
+            // DataString: dataString,
             // LastLoadedDataString: lastLoadedDataString, // TODO fix so that it is not trying to insert nulls everywhere
-            // LinkedEntityRequires: linkedEntityRequires,
+            LinkedEntityRequires: linkedEntityRequires,
             LinkedEntityGetters: linkedEntityGetters,
         };
 
