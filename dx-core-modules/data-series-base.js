@@ -178,6 +178,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             }
 
             Object.keys(relationships).forEach((relatedEntityName, idx) => {
+                if (this.defaultJoinedEntityNames.includes(relatedEntityName)) {
+                    return;
+                }
+
                 const relationshipName = `${relatedEntityName}_${relationships[relatedEntityName][0]}`;
                 if (idx === 0) {
                     // Multiple relationships from same table count as same depth away (idx > 0)
@@ -189,12 +193,16 @@ class DxBaseDataSeries extends DivbloxObjectBase {
                 )} ON ${dxQ.getSqlReadyName(entityName)}.${dxQ.getSqlReadyName(
                     `${relationshipName}`,
                 )} = ${dxQ.getSqlReadyName(`${relatedEntityName}.id`)}\n`;
+
+                this.defaultJoinedEntityNames.push(relatedEntityName);
+
                 if (Object.keys(this.dxInstance.dataModelObj[relatedEntityName].relationships).length > 0) {
                     recursivelyAddRelationships(relatedEntityName, currentDepthCount);
                 }
             });
         };
 
+        this.defaultJoinedEntityNames = [];
         if (this.#relationshipDepth > 0) {
             recursivelyAddRelationships(this.entityName);
         }
