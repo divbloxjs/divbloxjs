@@ -63,12 +63,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.additionalParams = additionalParams;
 
         this.#relationshipDepth = dataSeriesConfig?.relationshipDepth ?? 3;
-        console.log("this.#relationshipDepth", this.#relationshipDepth);
         this.#joinType = dataSeriesConfig?.joinType ?? "LEFT";
 
-        // console.log("dataSeriesConfig", dataSeriesConfig);
         this.#searchValue = dataSeriesConfig?.searchValue ?? "";
-        // console.log("this.#searchValue", this.#searchValue);
 
         if (dataSeriesConfig.hasOwnProperty("limit")) {
             this.#limit =
@@ -379,7 +376,6 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         let orderByClause = { field: orderColumnName, isDescending: false };
 
-        // console.log("this.#sort", this.#sort);
         if (Object.keys(this.#sort).length > 0) {
             for (const [attributeToSortName, sortDirection] of Object.entries(this.#sort)) {
                 orderByClause.field = dxQ.getSqlReadyName(attributeToSortName);
@@ -387,7 +383,6 @@ class DxBaseDataSeries extends DivbloxObjectBase {
             }
         }
 
-        // console.log("orderByClause", orderByClause);
         return orderByClause;
     }
 

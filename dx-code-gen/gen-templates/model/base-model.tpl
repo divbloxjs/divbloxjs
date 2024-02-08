@@ -14,6 +14,8 @@ class [EntityNamePascalCase]ModelBase extends ModelBase {
     [EntityModelSpec]
     // Only fields defined here are allowed in the generated create/update operations
     [UserEditableFields]
+    [DataString]
+    [LastLoadedDataString]
     /**
      * Basic initialization for the [EntityNameCamelCase] object model class.
      * @param {DivbloxBase} dxInstance An instance of divbloxjs to allow for access to the data layer

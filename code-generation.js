@@ -12,6 +12,7 @@ class CodeGenerator extends DivbloxObjectBase {
     constructor(dxInstance) {
         super();
         this.dxInstance = dxInstance;
+        this.generateCrud = dxInstance.generateCrud;
         this.entityNamesToGenerateCrudFor = [];
         Object.keys(this.dxInstance.dataModelObj).forEach((entityNameCamelCase) => {
             if (this.dxInstance.dataModelObj[entityNameCamelCase]?.generateCrud) {
@@ -94,7 +95,7 @@ class CodeGenerator extends DivbloxObjectBase {
             await this.#generateDataSeriesClassForEntity(entityNameCamelCase, this.dataModelObj[entityNameCamelCase]);
             dxUtils.printSuccessMessage(`Generated base data-series|model|schema classes for '${entityNameCamelCase}'`);
 
-            if (this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
+            if (this.generateCrud && this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
                 await this.#generateBaseEndpointClassForEntity(
                     entityNameCamelCase,
                     this.dataModelObj[entityNameCamelCase],
@@ -137,6 +138,10 @@ class CodeGenerator extends DivbloxObjectBase {
         let entityModelSpec = `static id = "${entityNameSqlCase}.id";\n`;
 
         let userEditableFields = `static userEditableFields = [\n`;
+
+        // TODO Update the docs for this to type correctly based on data model types
+        let dataString = `data = {\n`;
+        let lastLoadedDataString = `lastLoadedData = {\n`;
 
         const attributes = entityDataModel["attributes"];
         const relationships = entityDataModel["relationships"];
@@ -189,6 +194,8 @@ class CodeGenerator extends DivbloxObjectBase {
 
             entityModelSpec += `    static ${attributeNameCamelCase} = "${entityNameSqlCase}.${attributeNameSqlCase}";\n`;
             userEditableFields += `        "${attributeNameCamelCase}",\n`;
+            dataString += `        "${attributeNameCamelCase}": null,\n`;
+            lastLoadedDataString += `        "${attributeNameCamelCase}": null,\n`;
 
             switch (attributes[attributeNameCamelCase]["type"]) {
                 case "date":
@@ -268,6 +275,8 @@ class CodeGenerator extends DivbloxObjectBase {
                 entityModelSpec += `    static ${finalRelationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
                 entityModelSpec += `    static ${relationshipNameCamelCase} = "${entityNameSqlCase}.${finalRelationshipNameSqlCase}";\n`;
                 userEditableFields += `        "${finalRelationshipNameCamelCase}",\n`;
+                dataString += `        "${finalRelationshipNameCamelCase}": null,\n`;
+                lastLoadedDataString += `        "${finalRelationshipNameCamelCase}": null,\n`;
 
                 if (linkedEntityRequiresForRelationship === "") {
                     linkedEntityRequiresForRelationship += `const ${relationshipNamePascalCase} = require("divbloxjs/dx-code-gen/generated-base/${relationshipNameKebabCase}/${relationshipNameKebabCase}.model-base");\n`;
@@ -305,6 +314,8 @@ class CodeGenerator extends DivbloxObjectBase {
         )}";\n`;
 
         userEditableFields += `    ]\n`;
+        lastLoadedDataString += `    }\n`;
+        dataString += `    }\n`;
 
         const tokensToReplace = {
             EntityNamePascalCase: entityNamePascalCase,
@@ -315,6 +326,8 @@ class CodeGenerator extends DivbloxObjectBase {
             EntitySchemaData: JSON.stringify(entitySchemaData, null, 2),
             EntityModelSpec: entityModelSpec,
             UserEditableFields: userEditableFields,
+            DataString: dataString,
+            LastLoadedDataString: lastLoadedDataString,
             LinkedEntityRequires: linkedEntityRequires,
             LinkedEntityGetters: linkedEntityGetters,
         };
@@ -693,7 +706,7 @@ class CodeGenerator extends DivbloxObjectBase {
                 overwriteSpecialisationClasses,
             );
 
-            if (this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
+            if (this.generateCrud && this.entityNamesToGenerateCrudFor.includes(entityNameCamelCase)) {
                 await this.#generateSpecialisationClass(
                     "controller",
                     entityNameCamelCase,
