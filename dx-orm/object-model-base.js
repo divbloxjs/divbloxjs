@@ -263,7 +263,10 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         let saveResult = false;
         this.isSaving = true;
 
-        if (Object.keys(this.lastLoadedData).length === 0 || this.lastLoadedData === null) {
+        if (Object.keys(this.lastLoadedData).length === 0 || 
+            this.lastLoadedData === null || 
+            !this.lastLoadedData.id || 
+            this.lastLoadedData.id === null) {
             // Creating a new entry for this entity
             saveResult = await this.#doCreate(transaction);
         } else {
