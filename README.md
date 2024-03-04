@@ -1,5 +1,8 @@
 # divbloxjs
 
+>[!WARNING]
+>This tool has been deprecated. This repo will no longer be actively developed. To use Divblox in your project, please visit: https://github.com/divbloxjs/divblox
+
 The divbloxjs library is the core of an expanding collection of integrated packages for nodejs backend development.
 
 divbloxjs is a data-driven framework that comes prepackaged with an ORM, a wrapper for expressjs that is preconfigured with JWT support and several other useful features.
