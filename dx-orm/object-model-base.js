@@ -263,10 +263,12 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         let saveResult = false;
         this.isSaving = true;
 
-        if (Object.keys(this.lastLoadedData).length === 0 || 
-            this.lastLoadedData === null || 
-            !this.lastLoadedData.id || 
-            this.lastLoadedData.id === null) {
+        if (
+            Object.keys(this.lastLoadedData).length === 0 ||
+            this.lastLoadedData === null ||
+            !this.lastLoadedData.id ||
+            this.lastLoadedData.id === null
+        ) {
             // Creating a new entry for this entity
             saveResult = await this.#doCreate(transaction);
         } else {
@@ -310,7 +312,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     async #doCreate(transaction = null) {
         if (!this.isSaving) {
             this.populateError(
-                "Called doCreate() outside of save() scope. Please use the save() function when creating or updating this entity."
+                "Called doCreate() outside of save() scope. Please use the save() function when creating or updating this entity.",
             );
             return false;
         }
@@ -357,7 +359,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
     async #doUpdate(mustIgnoreLockingConstraints = false, transaction = null) {
         if (!this.isSaving) {
             this.populateError(
-                "Called doUpdate() outside of save() scope. Please use the save() function when creating or updating this entity."
+                "Called doUpdate() outside of save() scope. Please use the save() function when creating or updating this entity.",
             );
             return false;
         }
@@ -372,7 +374,11 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             }
 
             if (["date", "date-time"].includes(this.entitySchema[attributeName]?.["format"])) {
-                inputDataAttributeValue = new Date(inputDataAttributeValue).getTime();
+                if (inputDataAttributeValue) {
+                    inputDataAttributeValue = new Date(inputDataAttributeValue);
+                    inputDataAttributeValue = inputDataAttributeValue.getTime();
+                }
+
                 lastLoadedDataAttributeValue =
                     lastLoadedDataAttributeValue !== null ? lastLoadedDataAttributeValue.getTime() : null;
             }
@@ -381,14 +387,13 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
                 continue;
             }
 
-            if (["date", "date-time"].includes(this.entitySchema[attributeName]?.["format"])) {
-                inputDataAttributeValue = new Date(inputDataAttributeValue);
-            }
-
             if (this.entitySchema[attributeName].hasOwnProperty("enum")) {
                 if (!this.entitySchema[attributeName].enum.includes(inputDataAttributeValue)) {
                     this.populateError(
-                        "Invalid value provided from enum attribute '" + attributeName + "': " + inputDataAttributeValue
+                        "Invalid value provided from enum attribute '" +
+                            attributeName +
+                            "': " +
+                            inputDataAttributeValue,
                     );
                     return false;
                 }
@@ -407,12 +412,12 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
                 this.entityName,
                 this.data.id,
                 this.lastLoadedData["lastUpdated"].getTime(),
-                transaction
+                transaction,
             );
 
             if (isLockingConstraintActive) {
                 this.populateError(
-                    "A locking constraint is active for " + this.entityName + " with id: " + this.data.id
+                    "A locking constraint is active for " + this.entityName + " with id: " + this.data.id,
                 );
 
                 return false;
@@ -488,7 +493,7 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
         modificationType = this.modificationTypes.update,
         entryDetail = {},
         transaction = null,
-        additionalParams = {}
+        additionalParams = {},
     ) {
         const entry = {
             objectName: this.entityName,
