@@ -702,7 +702,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
                 if (result[index][relatedEntityName] !== undefined) {
                     // Defined FK relationship
-                    relatedEntity = result[index][relatedEntityName];
+                    relatedEntity = JSON.parse(JSON.stringify(result[index][relatedEntityName]));
                 } else {
                     // Undefined FK relationship - make sure we do not run the function again creating a null entry for the FK
                     endChain = true;
@@ -715,7 +715,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
                 }
 
                 if (!endChain && nestedResult[relatedEntityName]) {
-                    buildStack(relatedEntityName, nestedResult[relatedEntityName]);
+                    buildStack(relatedEntityName, nestedResult[relatedEntityName], index);
                 }
             });
         };

@@ -376,11 +376,13 @@ class DivbloxObjectModelBase extends DivbloxObjectBase {
             if (["date", "date-time"].includes(this.entitySchema[attributeName]?.["format"])) {
                 if (inputDataAttributeValue) {
                     inputDataAttributeValue = new Date(inputDataAttributeValue);
-                    inputDataAttributeValue = inputDataAttributeValue.getTime();
                 }
 
-                lastLoadedDataAttributeValue =
-                    lastLoadedDataAttributeValue !== null ? lastLoadedDataAttributeValue.getTime() : null;
+                if (lastLoadedDataAttributeValue && inputDataAttributeValue) {
+                    if (inputDataAttributeValue?.getTime() === lastLoadedDataAttributeValue?.getTime()) {
+                        continue;
+                    }
+                }
             }
 
             if (inputDataAttributeValue === lastLoadedDataAttributeValue) {
