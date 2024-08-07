@@ -625,18 +625,18 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
         if (this.searchAndFilterWhereSql) {
             // Overloaded search and filter clauses provided
-            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${this.searchAndFilterWhereSql}`;
+            this.whereSql += ` ${this.whereSql ? "AND" : "WHERE"} ${this.searchAndFilterWhereSql}`;
             this.whereValues = this.searchAndFilterWhereValues;
         } else if (whereClauses.preparedStatement) {
             // Default-built clauses used
-            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${whereClauses.preparedStatement}`;
+            this.whereSql += ` ${this.whereSql ? "AND" : "WHERE"} ${whereClauses.preparedStatement}`;
             this.whereValues = whereClauses.values;
         }
 
         this.setAdditionalWhereSql();
         if (this.additionalWhereSql) {
             // Use any further provided where clauses
-            this.whereSql = ` ${this.whereSql ? "AND" : "WHERE"} ${this.additionalWhereSql}`;
+            this.whereSql += ` ${this.whereSql ? "AND" : "WHERE"} ${this.additionalWhereSql}`;
             this.whereValues = [...this.whereValues, ...this.additionalWhereValues];
         }
 
