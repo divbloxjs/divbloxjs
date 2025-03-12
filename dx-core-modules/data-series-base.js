@@ -1,4 +1,5 @@
 const DivbloxObjectBase = require("divbloxjs/dx-core-modules/object-base");
+const Divblox = require("divbloxjs/divblox");
 const dxQ = require("divbloxjs/dx-orm/query-model-base");
 const dxUtils = require("dx-utilities");
 
@@ -28,6 +29,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     #sort = {};
     #filter = {};
     #searchValue = "";
+
+    /** @type {Divblox} */
+    dxInstance
 
     /**
      * @param {DivbloxBase} dxInstance
@@ -586,13 +590,13 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         const result = await this.dxInstance
-            .getDataLayer()
-            .executeQuery(
-                { sql: this.fullCountSql, nestTables: false },
-                this.moduleName,
-                this.countValues,
-                options?.transaction ?? null,
-            );
+        .getDataLayer()
+        .executeQuery(
+            { sql: this.fullCountSql, nestTables: false },
+            this.moduleName,
+            this.countValues,
+            options?.transaction ?? null,
+        );
         if (result === null) {
             this.populateError(this.dxInstance.getDataLayer().getLastError());
             return null;
@@ -618,6 +622,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.countSelect = countSelect;
     }
 
+    /**
+     * @param {{logQuery: boolean, transaction: null}} options
+     * @returns {Promise<Object[]>}
+     */
     async getDataSeries(options = {}) {
         if (!(await this.#doValidation())) return null;
 
@@ -651,13 +659,13 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         const result = await this.dxInstance
-            .getDataLayer()
-            .getArrayFromDatabase(
-                { sql: this.dataSeriesFullSql, nestTables: true },
-                this.moduleName,
-                this.dataSeriesValues,
-                options?.transaction ?? null,
-            );
+        .getDataLayer()
+        .getArrayFromDatabase(
+            { sql: this.dataSeriesFullSql, nestTables: true },
+            this.moduleName,
+            this.dataSeriesValues,
+            options?.transaction ?? null,
+        );
 
         if (this.enableDebugMode || options.logQuery) {
             dxUtils.printSubHeadingMessage(`\n Debug output:`);
@@ -724,6 +732,13 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         result.forEach((resultRow, index) => {
             const nestedResult = result[index][this.entityName];
             buildStack(this.entityName, nestedResult, index);
+
+            if (resultRow.hasOwnProperty("")) {
+                Object.entries(resultRow[""]).forEach(([key, value]) => {
+                    if (dxUtils.isJsonString(value)) value = JSON.parse(value);
+                    nestedResult[key] = value;
+                })
+            }
             nestedResultArr.push(nestedResult);
         });
 
@@ -743,10 +758,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.dataSeriesFullSql += this.offsetSql ? `\n${this.offsetSql}` : ``;
 
         this.dataSeriesValues = this.joinValues
-            .concat(this.whereValues)
-            .concat(this.groupByValues)
-            .concat(this.havingValues)
-            .concat(this.orderByValues);
+        .concat(this.whereValues)
+        .concat(this.groupByValues)
+        .concat(this.havingValues)
+        .concat(this.orderByValues);
 
         if (this.limitValue) {
             this.dataSeriesValues.push(this.limitValue);
@@ -767,9 +782,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.fullCountSql += this.havingSql ? `\n${this.havingSql}` : ``;
 
         this.countValues = this.joinValues
-            .concat(this.whereValues)
-            .concat(this.groupByValues)
-            .concat(this.havingValues);
+        .concat(this.whereValues)
+        .concat(this.groupByValues)
+        .concat(this.havingValues);
     }
 }
 
