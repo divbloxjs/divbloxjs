@@ -31,7 +31,8 @@ class DxBaseDataSeries extends DivbloxObjectBase {
     #searchValue = "";
 
     /** @type {Divblox} */
-    dxInstance
+    dxInstance;
+    enableDebugMode = false;
 
     /**
      * @param {DivbloxBase} dxInstance
@@ -569,7 +570,7 @@ class DxBaseDataSeries extends DivbloxObjectBase {
 
     /**
      * Returns the total count of the data series query without limit, offset or order by clauses
-     * @param {{}} options findCount() options
+     * @param {{logQuery: boolean, transaction: null}} options findCount() options
      * @returns {Promise<number|null>} The total count, or null if error occurred
      */
     async getTotalCount(options = {}) {
@@ -590,13 +591,22 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         const result = await this.dxInstance
-        .getDataLayer()
-        .executeQuery(
-            { sql: this.fullCountSql, nestTables: false },
-            this.moduleName,
-            this.countValues,
-            options?.transaction ?? null,
-        );
+            .getDataLayer()
+            .executeQuery(
+                { sql: this.fullCountSql, nestTables: false },
+                this.moduleName,
+                this.countValues,
+                options?.transaction ?? null,
+            );
+
+        if (this.enableDebugMode || options.logQuery) {
+            dxUtils.printSubHeadingMessage(`\n Debug output:`);
+            dxUtils.printWarningMessage(`SQL prepared statement:`);
+            dxUtils.printInfoMessage(`${this.fullCountSql}`);
+            dxUtils.printWarningMessage(`SQL query values:`);
+            dxUtils.printInfoMessage(`${JSON.stringify(this.countValues)}`);
+        }
+
         if (result === null) {
             this.populateError(this.dxInstance.getDataLayer().getLastError());
             return null;
@@ -659,13 +669,13 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         }
 
         const result = await this.dxInstance
-        .getDataLayer()
-        .getArrayFromDatabase(
-            { sql: this.dataSeriesFullSql, nestTables: true },
-            this.moduleName,
-            this.dataSeriesValues,
-            options?.transaction ?? null,
-        );
+            .getDataLayer()
+            .getArrayFromDatabase(
+                { sql: this.dataSeriesFullSql, nestTables: true },
+                this.moduleName,
+                this.dataSeriesValues,
+                options?.transaction ?? null,
+            );
 
         if (this.enableDebugMode || options.logQuery) {
             dxUtils.printSubHeadingMessage(`\n Debug output:`);
@@ -737,8 +747,16 @@ class DxBaseDataSeries extends DivbloxObjectBase {
                 Object.entries(resultRow[""]).forEach(([key, value]) => {
                     if (dxUtils.isJsonString(value)) value = JSON.parse(value);
                     nestedResult[key] = value;
-                })
+                });
             }
+
+            const relationships = this.dxInstance.dataModelObj[this.entityName].relationships;
+            const relatedEntityNames = Object.keys(relationships);
+            Object.keys(resultRow).forEach((entityName) => {
+                if (![this.entityName, "", ...relatedEntityNames].includes(entityName)) {
+                    nestedResult[entityName] = resultRow[entityName];
+                }
+            });
             nestedResultArr.push(nestedResult);
         });
 
@@ -758,10 +776,10 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.dataSeriesFullSql += this.offsetSql ? `\n${this.offsetSql}` : ``;
 
         this.dataSeriesValues = this.joinValues
-        .concat(this.whereValues)
-        .concat(this.groupByValues)
-        .concat(this.havingValues)
-        .concat(this.orderByValues);
+            .concat(this.whereValues)
+            .concat(this.groupByValues)
+            .concat(this.havingValues)
+            .concat(this.orderByValues);
 
         if (this.limitValue) {
             this.dataSeriesValues.push(this.limitValue);
@@ -782,9 +800,9 @@ class DxBaseDataSeries extends DivbloxObjectBase {
         this.fullCountSql += this.havingSql ? `\n${this.havingSql}` : ``;
 
         this.countValues = this.joinValues
-        .concat(this.whereValues)
-        .concat(this.groupByValues)
-        .concat(this.havingValues);
+            .concat(this.whereValues)
+            .concat(this.groupByValues)
+            .concat(this.havingValues);
     }
 }
 
